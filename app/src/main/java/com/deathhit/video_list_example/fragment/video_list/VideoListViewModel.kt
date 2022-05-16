@@ -31,7 +31,7 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
     )
 
     private val _stateFlow =
-        MutableStateFlow(State(0, emptyMap()))
+        MutableStateFlow(State(POS_INVALID, emptyMap()))
     val stateFlow = _stateFlow.asStateFlow()
 
     private var setPlayPosJob: Job? = null
