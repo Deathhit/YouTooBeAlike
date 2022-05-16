@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.Example.PlayerView.List" parent="">
+        <item name="resize_mode">zoom</item>
+        <item name="show_timeout">0</item>
+        <item name="surface_type">texture_view</item>
+    </style>
+</resources>

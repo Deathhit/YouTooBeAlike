@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="video_item_height" type="dimen">240dp</item>
+</resources>
