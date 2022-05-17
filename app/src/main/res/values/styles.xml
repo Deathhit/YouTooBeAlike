@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Widget.VideoListExample.PlayerView.VideoList" parent="">
-        <item name="android:minHeight">240dp</item>
+        <item name="android:minHeight">240dp</item> <!--For 4:3 video-->
         <item name="bar_height">2dp</item>
         <item name="buffered_color">@color/white</item>
         <item name="controller_layout_id">@layout/block_controller_video_list</item>

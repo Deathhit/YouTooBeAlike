@@ -58,6 +58,14 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
                 Glide.with(this).load(item.thumbUrl).into(this)
             }
 
+            with(holder.binding.textViewSubtitle) {
+                text = item.subtitle
+            }
+
+            with(holder.binding.textViewTitle) {
+                text = item.title
+            }
+
             bindPlayPos(holder, item, position)
         }
     }
@@ -118,10 +126,6 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
         val isAtPlayPos = position == playPos
         with(holder.binding.imageViewThumbnail) {
             visibility = if (isAtPlayPos) View.INVISIBLE else View.VISIBLE
-        }
-
-        with(holder.binding.styledPlayerView) {
-            visibility = if (isAtPlayPos) View.VISIBLE else View.INVISIBLE
         }
 
         var player: ExoPlayer? = null
