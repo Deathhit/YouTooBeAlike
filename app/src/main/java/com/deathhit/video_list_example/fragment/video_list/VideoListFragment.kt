@@ -68,10 +68,7 @@ class VideoListFragment : Fragment() {
                 }
 
                 override fun onPlaybackEnded() {
-                    linearLayoutManager.startSmoothScroll(object :
-                        LinearSmoothScroller(requireContext()) {
-                        override fun getVerticalSnapPreference(): Int = SNAP_TO_START
-                    }.apply { targetPosition = getPlayPos() + 1 })
+                    viewModel.scrollToNextItem()
                 }
 
                 override fun onSaveVideoPosition(sourceUrl: String, videoPosition: Long) {
@@ -84,13 +81,20 @@ class VideoListFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.stateFlow.collect { state ->
                     with(state) {
+                        eventOnClickVideo.sign(viewModel) {
+                            //todo implement
+                        }
+
                         eventPlayAtPos.sign(viewModel) {
                             videoAdapter.saveVideoPosition()
                             videoAdapter.notifyPlayPosChanged(it)
                         }
 
-                        eventOnClickVideo.sign(viewModel) {
-                            //todo implement
+                        eventScrollToNextItem.sign(viewModel) {
+                            linearLayoutManager.startSmoothScroll(object :
+                                LinearSmoothScroller(requireContext()) {
+                                override fun getVerticalSnapPreference(): Int = SNAP_TO_START
+                            }.apply { targetPosition = getPlayPos() + 1 })
                         }
 
                         statusVideoList.sign(binding) {
