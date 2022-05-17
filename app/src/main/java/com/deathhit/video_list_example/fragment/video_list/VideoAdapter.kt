@@ -38,9 +38,10 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder =
         VideoViewHolder(
             ItemVideoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        )/*.apply { //todo implement click
+        ).apply {
             itemView.setOnClickListener { item?.let { onClickItem(it) } }
-        }*/
+            binding.styledPlayerView.setOnClickListener { itemView.performClick() }
+        }
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         holder.item = getItem(position)?.also { item ->
@@ -79,8 +80,8 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
 
     fun notifyPlayPosChanged(playPos: Int) {
         if (this.playPos != playPos) {
-            this.playPos = playPos
             player.stop()
+            this.playPos = playPos
             notifyItemRangeChanged(0, itemCount, PAYLOAD_PLAY_POS_CHANGED)
         }
     }
@@ -129,6 +130,8 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
 
         with(holder.binding.styledPlayerView) {
             this.player = player
+            if (isAtPlayPos)
+                showController()
         }
     }
 

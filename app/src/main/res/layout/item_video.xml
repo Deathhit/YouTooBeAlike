@@ -7,18 +7,31 @@
     android:layout_marginBottom="16dp"
     app:cardCornerRadius="0dp">
 
-    <com.google.android.exoplayer2.ui.StyledPlayerView
-        android:id="@+id/styledPlayerView"
-        style="@style/Widget.Example.PlayerView.List"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/video_item_height" />
+        android:layout_height="wrap_content">
 
-    <ImageView
-        android:id="@+id/imageView_thumbnail"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/video_item_height"
-        android:contentDescription="@string/app_name"
-        android:scaleType="centerCrop"
-        tools:srcCompat="@tools:sample/backgrounds/scenic" />
+        <com.google.android.exoplayer2.ui.StyledPlayerView
+            android:id="@+id/styledPlayerView"
+            style="@style/Widget.VideoListExample.PlayerView.VideoList"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/imageView_thumbnail"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:contentDescription="@string/app_name"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="@+id/styledPlayerView"
+            app:layout_constraintEnd_toEndOf="@+id/styledPlayerView"
+            app:layout_constraintStart_toStartOf="@+id/styledPlayerView"
+            app:layout_constraintTop_toTopOf="@+id/styledPlayerView"
+            tools:srcCompat="@tools:sample/backgrounds/scenic" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>
