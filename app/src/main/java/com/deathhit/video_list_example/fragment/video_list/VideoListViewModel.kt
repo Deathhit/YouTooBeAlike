@@ -24,7 +24,7 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
 
     data class State(
         val argPlayPos: Int,
-        val argPositionMap: Map<String, Long>,
+        val argVideoPositionMap: Map<String, Long>,
         val eventPlayAtPos: SignAble<Int> = SignAble(),
         val eventOnClickVideo: SignAble<Uri> = SignAble(),
         val statusVideoList: SignAble<List<VideoVO>> = SignAble()
@@ -51,7 +51,7 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
     fun saveVideoPosition(sourceUrl: String, videoPosition: Long) {
         _stateFlow.update { state ->
             state.copy(
-                argPositionMap = state.argPositionMap.toMutableMap()
+                argVideoPositionMap = state.argVideoPositionMap.toMutableMap()
                     .apply { this[sourceUrl] = videoPosition })
         }
     }

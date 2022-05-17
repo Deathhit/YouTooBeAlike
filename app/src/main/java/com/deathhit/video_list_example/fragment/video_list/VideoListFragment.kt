@@ -11,6 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import com.deathhit.video_list_example.databinding.FragmentVideoListBinding
 import com.deathhit.video_list_example.model.VideoVO
@@ -37,7 +38,7 @@ class VideoListFragment : Fragment() {
     private val onScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
-            viewModel.setPlayPos(linearLayoutManager.findFirstCompletelyVisibleItemPosition())
+            viewModel.setPlayPos(getPlayPos())
         }
     }
 
@@ -55,15 +56,22 @@ class VideoListFragment : Fragment() {
         with(binding.recyclerView) {
             setHasFixedSize(true)
 
-            _linearLayoutManger = layoutManager!! as LinearLayoutManager
+            _linearLayoutManger = (layoutManager!! as LinearLayoutManager)
 
             _videoAdapter = object : VideoAdapter(requireContext()) {
                 override fun getVideoPosition(sourceUrl: String): Long =
-                    viewModel.stateFlow.value.argPositionMap.getOrElse(sourceUrl) { 0L }
+                    viewModel.stateFlow.value.argVideoPositionMap.getOrElse(sourceUrl) { 0L }
 
                 override fun onClickItem(item: VideoVO) {
                     //todo test
                     Toast.makeText(requireContext(), "FOO", Toast.LENGTH_LONG).show()
+                }
+
+                override fun onPlaybackEnded() {
+                    linearLayoutManager.startSmoothScroll(object :
+                        LinearSmoothScroller(requireContext()) {
+                        override fun getVerticalSnapPreference(): Int = SNAP_TO_START
+                    }.apply { targetPosition = getPlayPos() + 1 })
                 }
 
                 override fun onSaveVideoPosition(sourceUrl: String, videoPosition: Long) {
@@ -77,10 +85,8 @@ class VideoListFragment : Fragment() {
                 viewModel.stateFlow.collect { state ->
                     with(state) {
                         eventPlayAtPos.sign(viewModel) {
-                            binding.recyclerView.post {
-                                videoAdapter.saveVideoPosition()
-                                videoAdapter.notifyPlayPosChanged(it)
-                            }
+                            videoAdapter.saveVideoPosition()
+                            videoAdapter.notifyPlayPosChanged(it)
                         }
 
                         eventOnClickVideo.sign(viewModel) {
@@ -104,7 +110,7 @@ class VideoListFragment : Fragment() {
 
         videoAdapter.playVideo()
 
-        viewModel.setPlayPos(linearLayoutManager.findFirstCompletelyVisibleItemPosition())
+        viewModel.setPlayPos(getPlayPos())
     }
 
     override fun onPause() {
@@ -128,4 +134,6 @@ class VideoListFragment : Fragment() {
             null
         }
     }
+
+    private fun getPlayPos() = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
 }

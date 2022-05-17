@@ -30,8 +30,17 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
 
     private val mediaItemMap: MutableMap<String, MediaItem> = mutableMapOf()
 
-    private val player: ExoPlayer =
-        ExoPlayer.Builder(context).build().apply { repeatMode = ExoPlayer.REPEAT_MODE_ALL }
+    private val player: ExoPlayer = ExoPlayer.Builder(context).build().apply {
+        addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                super.onPlaybackStateChanged(playbackState)
+                if (playbackState == Player.STATE_ENDED) {
+                    seekTo(0L)
+                    onPlaybackEnded()
+                }
+            }
+        })
+    }
 
     private var playPos: Int = -1
 
@@ -120,9 +129,9 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
             player = this.player.apply {
                 if (playbackState == Player.STATE_IDLE) {
                     val sourceUrl = item.sourceUrl
-                    mediaItemMap.getOrPut(sourceUrl) {
+                    setMediaItem(mediaItemMap.getOrPut(sourceUrl) {
                         MediaItem.fromUri(sourceUrl)
-                    }.also { setMediaItem(it) }
+                    })
                     seekTo(getVideoPosition(sourceUrl))
                     prepare()
                 }
@@ -137,5 +146,6 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
 
     abstract fun getVideoPosition(sourceUrl: String): Long
     abstract fun onClickItem(item: VideoVO)
+    abstract fun onPlaybackEnded()
     abstract fun onSaveVideoPosition(sourceUrl: String, videoPosition: Long)
 }
