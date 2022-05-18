@@ -58,33 +58,30 @@ class VideoListFragment : Fragment() {
 
             _linearLayoutManger = (layoutManager!! as LinearLayoutManager)
 
-            _videoAdapter = object : VideoAdapter(requireContext()) {
-                override fun getVideoPosition(sourceUrl: String): Long =
-                    viewModel.stateFlow.value.argVideoPositionMap.getOrElse(sourceUrl) { 0L }
+            _videoAdapter =
+                object : VideoAdapter(requireContext()) {
+                    override fun getVideoPosition(itemPosition: Int): Long =
+                        viewModel.stateFlow.value.argVideoPositionMap.getOrElse(itemPosition) { 0L }
 
-                override fun onClickItem(item: VideoVO) {
-                    //todo test
-                    Toast.makeText(requireContext(), "FOO", Toast.LENGTH_LONG).show()
-                }
+                    override fun onClickItem(item: VideoVO) {
+                        //todo test
+                        Toast.makeText(requireContext(), "FOO", Toast.LENGTH_LONG).show()
+                    }
 
-                override fun onPlaybackEnded() {
-                    viewModel.scrollToNextItem()
-                }
+                    override fun onPlaybackEnded() {
+                        viewModel.scrollToNextItem()
+                    }
 
-                override fun onSaveVideoPosition(sourceUrl: String, videoPosition: Long) {
-                    viewModel.saveVideoPosition(sourceUrl, videoPosition)
-                }
-            }.also { adapter = it }
+                    override fun onSaveVideoPosition(itemPosition: Int, videoPosition: Long) {
+                        viewModel.saveVideoPosition(itemPosition, videoPosition)
+                    }
+                }.also { adapter = it }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.stateFlow.collect { state ->
                     with(state) {
-                        eventOnClickVideo.sign(viewModel) {
-                            //todo implement
-                        }
-
                         eventPlayAtPos.sign(viewModel) {
                             videoAdapter.saveVideoPosition()
                             videoAdapter.notifyPlayPosChanged(it)

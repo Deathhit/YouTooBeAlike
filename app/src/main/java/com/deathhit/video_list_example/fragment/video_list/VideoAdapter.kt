@@ -14,10 +14,11 @@ import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 
 //todo implement
-abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHolder>(COMPARATOR) {
+abstract class VideoAdapter(context: Context) :
+    ListAdapter<VideoVO, VideoViewHolder>(COMPARATOR) {
     companion object {
         private const val TAG = "VideoViewAdapter"
-        private const val PAYLOAD_PLAY_POS_CHANGED = "$TAG.PAYLOAD_PLAY_POS_CHANGED"
+        private const val PAYLOAD_PLAY_POS = "$TAG.PAYLOAD_PLAY_POS"
 
         private val COMPARATOR = object : DiffUtil.ItemCallback<VideoVO>() {
             override fun areItemsTheSame(oldItem: VideoVO, newItem: VideoVO): Boolean =
@@ -48,8 +49,18 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
         VideoViewHolder(
             ItemVideoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         ).apply {
-            itemView.setOnClickListener { item?.let { onClickItem(it) } }
             binding.styledPlayerView.setOnClickListener { itemView.performClick() }
+            itemView.setOnClickListener { item?.let { onClickItem(it) } }
+
+            player.addListener(object : Player.Listener {
+                override fun onRenderedFirstFrame() {
+                    super.onRenderedFirstFrame()
+                    with(binding.imageViewThumbnail) {
+                        if (isAtPlayPos(bindingAdapterPosition))
+                            visibility = View.INVISIBLE
+                    }
+                }
+            })
         }
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
@@ -81,7 +92,7 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
             holder.item = getItem(position)?.also { item ->
                 payloads.forEach { payload ->
                     when (payload) {
-                        PAYLOAD_PLAY_POS_CHANGED -> bindPlayPos(holder, item, position)
+                        PAYLOAD_PLAY_POS -> bindPlayPos(holder, item, position)
                     }
                 }
             }
@@ -99,7 +110,7 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
         if (this.playPos != playPos) {
             player.stop()
             this.playPos = playPos
-            notifyItemRangeChanged(0, itemCount, PAYLOAD_PLAY_POS_CHANGED)
+            notifyItemRangeChanged(0, itemCount, PAYLOAD_PLAY_POS)
         }
     }
 
@@ -117,17 +128,11 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
 
     fun saveVideoPosition() {
         if (playPos in 0 until itemCount)
-            getItem(playPos).run {
-                onSaveVideoPosition(sourceUrl, player.currentPosition)
-            }
+            onSaveVideoPosition(playPos, player.currentPosition)
     }
 
     private fun bindPlayPos(holder: VideoViewHolder, item: VideoVO, position: Int) {
-        val isAtPlayPos = position == playPos
-        with(holder.binding.imageViewThumbnail) {
-            visibility = if (isAtPlayPos) View.INVISIBLE else View.VISIBLE
-        }
-
+        val isAtPlayPos = isAtPlayPos(position)
         var player: ExoPlayer? = null
         if (isAtPlayPos)
             player = this.player.apply {
@@ -136,10 +141,14 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
                     setMediaItem(mediaItemMap.getOrPut(sourceUrl) {
                         MediaItem.fromUri(sourceUrl)
                     })
-                    seekTo(getVideoPosition(sourceUrl))
+                    seekTo(getVideoPosition(position))
                     prepare()
                 }
             }
+
+        with(holder.binding.imageViewThumbnail) {
+            visibility = View.VISIBLE
+        }
 
         with(holder.binding.styledPlayerView) {
             this.player = player
@@ -148,8 +157,10 @@ abstract class VideoAdapter(context: Context) : ListAdapter<VideoVO, VideoViewHo
         }
     }
 
-    abstract fun getVideoPosition(sourceUrl: String): Long
+    private fun isAtPlayPos(position: Int) = playPos == position
+
+    abstract fun getVideoPosition(itemPosition: Int): Long
     abstract fun onClickItem(item: VideoVO)
     abstract fun onPlaybackEnded()
-    abstract fun onSaveVideoPosition(sourceUrl: String, videoPosition: Long)
+    abstract fun onSaveVideoPosition(itemPosition: Int, videoPosition: Long)
 }
