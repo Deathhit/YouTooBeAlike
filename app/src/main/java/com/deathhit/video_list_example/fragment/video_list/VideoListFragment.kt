@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -64,8 +63,7 @@ class VideoListFragment : Fragment() {
                         viewModel.stateFlow.value.argVideoPositionMap.getOrElse(itemPosition) { 0L }
 
                     override fun onClickItem(item: VideoVO) {
-                        //todo test
-                        Toast.makeText(requireContext(), "FOO", Toast.LENGTH_LONG).show()
+                        viewModel.onClickItem(item)
                     }
 
                     override fun onPlaybackEnded() {

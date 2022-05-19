@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Video Activity Example</string>
+    <string name="app_name">Video List Example</string>
 
     <!--Sample-->
     <string name="sample_text">Sample Text</string>

@@ -1,6 +1,5 @@
 package com.deathhit.video_list_example.fragment.video_list
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deathhit.domain.repository.video.VideoRepository
@@ -25,7 +24,7 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
     data class State(
         val argPlayPos: Int,
         val argVideoPositionMap: Map<Int, Long>,
-        val eventOnClickVideo: SignAble<Uri> = SignAble(),
+        val eventOnClickItem: SignAble<VideoVO> = SignAble(),
         val eventPlayAtPos: SignAble<Int> = SignAble(),
         val eventScrollToNextItem: SignAble<Unit> = SignAble(),
         val statusVideoList: SignAble<List<VideoVO>> = SignAble()
@@ -46,6 +45,12 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
                     state.copy(statusVideoList = SignAble(list))
                 }
             }
+        }
+    }
+
+    fun onClickItem(item: VideoVO) {
+        _stateFlow.update { state ->
+            state.copy(eventOnClickItem = SignAble(item))
         }
     }
 

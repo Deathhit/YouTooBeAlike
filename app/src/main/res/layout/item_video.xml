@@ -20,6 +20,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <com.google.android.exoplayer2.ui.StyledPlayerControlView
+            android:id="@+id/styledPlayerControllerView"
+            style="@style/Widget.VideoListExample.PlayerControllerView.VideoList"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginBottom="-7dp"
+            app:layout_constraintBottom_toBottomOf="@+id/styledPlayerView"
+            app:layout_constraintEnd_toEndOf="@+id/styledPlayerView"
+            app:layout_constraintStart_toStartOf="@+id/styledPlayerView"
+            app:layout_constraintTop_toTopOf="@+id/styledPlayerView" />
+
         <ImageView
             android:id="@+id/imageView_thumbnail"
             android:layout_width="0dp"

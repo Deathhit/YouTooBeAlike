@@ -13,7 +13,6 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 
-//todo implement
 abstract class VideoAdapter(context: Context) :
     ListAdapter<VideoVO, VideoViewHolder>(COMPARATOR) {
     companion object {
@@ -49,15 +48,20 @@ abstract class VideoAdapter(context: Context) :
         VideoViewHolder(
             ItemVideoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         ).apply {
-            binding.styledPlayerView.setOnClickListener { itemView.performClick() }
             itemView.setOnClickListener { item?.let { onClickItem(it) } }
 
             player.addListener(object : Player.Listener {
                 override fun onRenderedFirstFrame() {
                     super.onRenderedFirstFrame()
+                    val isAtPlayPos = isAtPlayPos(bindingAdapterPosition)
                     with(binding.imageViewThumbnail) {
-                        if (isAtPlayPos(bindingAdapterPosition))
+                        if (isAtPlayPos)
                             visibility = View.INVISIBLE
+                    }
+
+                    with(binding.styledPlayerControllerView) {
+                        if (isAtPlayPos)
+                            show()
                     }
                 }
             })
@@ -150,10 +154,13 @@ abstract class VideoAdapter(context: Context) :
             visibility = View.VISIBLE
         }
 
+        with(holder.binding.styledPlayerControllerView) {
+            this.player = player
+            hide()
+        }
+
         with(holder.binding.styledPlayerView) {
             this.player = player
-            if (isAtPlayPos)
-                showController()
         }
     }
 
