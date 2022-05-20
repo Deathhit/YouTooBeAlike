@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -12,6 +13,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
+import com.deathhit.video_list_example.R
 import com.deathhit.video_list_example.databinding.FragmentVideoListBinding
 import com.deathhit.video_list_example.model.VideoVO
 import dagger.hilt.android.AndroidEntryPoint
@@ -80,6 +82,14 @@ class VideoListFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.stateFlow.collect { state ->
                     with(state) {
+                        eventOnClickItem.sign(viewModel) {
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.video_list_video_x_clicked, it.title),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+
                         eventPlayAtPos.sign(viewModel) {
                             videoAdapter.saveVideoPosition()
                             videoAdapter.notifyPlayPosChanged(it)
@@ -99,6 +109,8 @@ class VideoListFragment : Fragment() {
                 }
             }
         }
+
+        viewModel.setPlayPos(getPlayPos())
     }
 
     override fun onResume() {
@@ -108,8 +120,6 @@ class VideoListFragment : Fragment() {
         }
 
         videoAdapter.playVideo()
-
-        viewModel.setPlayPos(getPlayPos())
     }
 
     override fun onPause() {
