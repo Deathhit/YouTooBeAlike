@@ -1,5 +1,6 @@
 # VideoListExample
-Template Android application of UDF structure implemented using SignAble wrapper class. It is also an example of how to play video in recyclerview while scrolling.
+Template Android application of UDF structure implemented using SignAble wrapper class. 
+It is also an example of how to play video in recyclerview while scrolling.
 # Goal
 Follow the UI layer structure in [Google's guidelines](https://developer.android.com/jetpack/guide/ui-layer), handle single-use events and avoid duplicate view state setting.
 # License
