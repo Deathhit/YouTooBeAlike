@@ -109,8 +109,6 @@ class VideoListFragment : Fragment() {
                 }
             }
         }
-
-        viewModel.setPlayPos(getPlayPos())
     }
 
     override fun onResume() {

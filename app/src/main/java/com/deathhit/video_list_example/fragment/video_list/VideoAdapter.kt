@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.bumptech.glide.Glide
+import com.deathhit.video_list_example.R
 import com.deathhit.video_list_example.databinding.ItemVideoBinding
 import com.deathhit.video_list_example.model.VideoVO
 import com.google.android.exoplayer2.ExoPlayer
@@ -42,26 +43,27 @@ abstract class VideoAdapter(context: Context) :
         })
     }
 
-    private var playPos: Int = -1
+    private var playPos: Int = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder =
         VideoViewHolder(
             ItemVideoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         ).apply {
             itemView.setOnClickListener { item?.let { onClickItem(it) } }
-
             player.addListener(object : Player.Listener {
-                override fun onRenderedFirstFrame() {
-                    super.onRenderedFirstFrame()
-                    val isAtPlayPos = isAtPlayPos(bindingAdapterPosition)
-                    with(binding.imageViewThumbnail) {
-                        if (isAtPlayPos)
-                            visibility = View.INVISIBLE
-                    }
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    super.onPlaybackStateChanged(playbackState)
+                    if (player.playbackState == Player.STATE_READY) {
+                        val isAtPlayPos = isAtPlayPos(bindingAdapterPosition)
+                        with(binding.imageViewThumbnail) {
+                            if (isAtPlayPos)
+                                visibility = View.INVISIBLE
+                        }
 
-                    with(binding.styledPlayerControllerView) {
-                        if (isAtPlayPos)
-                            show()
+                        with(binding.styledPlayerControllerView) {
+                            if (isAtPlayPos)
+                                show()
+                        }
                     }
                 }
             })
@@ -70,7 +72,7 @@ abstract class VideoAdapter(context: Context) :
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         holder.item = getItem(position)?.also { item ->
             with(holder.binding.imageViewThumbnail) {
-                Glide.with(this).load(item.thumbUrl).into(this)
+                Glide.with(this).load(item.thumbUrl).placeholder(R.color.black).into(this)
             }
 
             with(holder.binding.textViewSubtitle) {
@@ -137,6 +139,7 @@ abstract class VideoAdapter(context: Context) :
 
     private fun bindPlayPos(holder: VideoViewHolder, item: VideoVO, position: Int) {
         val isAtPlayPos = isAtPlayPos(position)
+        val isPlayerViewVisible = isAtPlayPos && player.playbackState == Player.STATE_READY
         var player: ExoPlayer? = null
         if (isAtPlayPos)
             player = this.player.apply {
@@ -151,12 +154,18 @@ abstract class VideoAdapter(context: Context) :
             }
 
         with(holder.binding.imageViewThumbnail) {
-            visibility = View.VISIBLE
+            visibility = if (isPlayerViewVisible)
+                View.INVISIBLE
+            else
+                View.VISIBLE
         }
 
         with(holder.binding.styledPlayerControllerView) {
             this.player = player
-            hide()
+            if (isPlayerViewVisible)
+                show()
+            else
+                hide()
         }
 
         with(holder.binding.styledPlayerView) {
