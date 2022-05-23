@@ -83,7 +83,7 @@ abstract class VideoAdapter(context: Context) :
                 text = item.title
             }
 
-            bindPlayPos(holder, item, position)
+            bindPlayPosition(holder, item, position)
         }
     }
 
@@ -98,7 +98,7 @@ abstract class VideoAdapter(context: Context) :
             holder.item = getItem(position)?.also { item ->
                 payloads.forEach { payload ->
                     when (payload) {
-                        PAYLOAD_PLAY_POSITION -> bindPlayPos(holder, item, position)
+                        PAYLOAD_PLAY_POSITION -> bindPlayPosition(holder, item, position)
                     }
                 }
             }
@@ -137,7 +137,7 @@ abstract class VideoAdapter(context: Context) :
         player.release()
     }
 
-    private fun bindPlayPos(holder: VideoViewHolder, item: VideoVO, position: Int) {
+    private fun bindPlayPosition(holder: VideoViewHolder, item: VideoVO, position: Int) {
         val isAtPlayPosition = isAtPlayPosition(position)
         val isPlayerViewVisible = isAtPlayPosition && player.playbackState == Player.STATE_READY
         var player: ExoPlayer? = null
