@@ -17,24 +17,24 @@ import javax.inject.Inject
 class VideoListViewModel @Inject constructor(private val videoRepository: VideoRepository) :
     ViewModel() {
     companion object {
-        private const val DELAY_PLAY_AT_POS = 1500L
-        private const val POS_INVALID = -1
+        private const val DELAY_PLAY_AT_POSITION = 1500L
+        private const val POSITION_INVALID = -1
     }
 
     data class State(
-        val argPlayPos: Int,
+        val argPlayPosition: Int,
         val argVideoPositionMap: Map<Int, Long>,
         val eventOnClickItem: SignAble<VideoVO> = SignAble(),
-        val eventPlayAtPos: SignAble<Int> = SignAble(),
+        val eventPlayAtPosition: SignAble<Int> = SignAble(),
         val eventScrollToNextItem: SignAble<Unit> = SignAble(),
         val statusVideoList: SignAble<List<VideoVO>> = SignAble()
     )
 
     private val _stateFlow =
-        MutableStateFlow(State(POS_INVALID, emptyMap()))
+        MutableStateFlow(State(POSITION_INVALID, emptyMap()))
     val stateFlow = _stateFlow.asStateFlow()
 
-    private var setPlayPosJob: Job? = null
+    private var setPlayPositionJob: Job? = null
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -68,20 +68,20 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
         }
     }
 
-    fun setPlayPos(newPos: Int) {
+    fun setPlayPosition(newPlayPosition: Int) {
         with(stateFlow.value) {
-            if (newPos == argPlayPos)
+            if (newPlayPosition == argPlayPosition)
                 return
 
             _stateFlow.update { state ->
-                state.copy(argPlayPos = newPos, eventPlayAtPos = SignAble(POS_INVALID))
+                state.copy(argPlayPosition = newPlayPosition, eventPlayAtPosition = SignAble(POSITION_INVALID))
             }
 
-            setPlayPosJob?.cancel()
-            setPlayPosJob = viewModelScope.launch {
-                delay(DELAY_PLAY_AT_POS)
+            setPlayPositionJob?.cancel()
+            setPlayPositionJob = viewModelScope.launch {
+                delay(DELAY_PLAY_AT_POSITION)
                 _stateFlow.update { state ->
-                    state.copy(eventPlayAtPos = SignAble(newPos))
+                    state.copy(eventPlayAtPosition = SignAble(newPlayPosition))
                 }
             }
         }

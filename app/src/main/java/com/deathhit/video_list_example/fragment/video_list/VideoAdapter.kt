@@ -18,7 +18,7 @@ abstract class VideoAdapter(context: Context) :
     ListAdapter<VideoVO, VideoViewHolder>(COMPARATOR) {
     companion object {
         private const val TAG = "VideoViewAdapter"
-        private const val PAYLOAD_PLAY_POS = "$TAG.PAYLOAD_PLAY_POS"
+        private const val PAYLOAD_PLAY_POSITION = "$TAG.PAYLOAD_PLAY_POSITION"
 
         private val COMPARATOR = object : DiffUtil.ItemCallback<VideoVO>() {
             override fun areItemsTheSame(oldItem: VideoVO, newItem: VideoVO): Boolean =
@@ -43,7 +43,7 @@ abstract class VideoAdapter(context: Context) :
         })
     }
 
-    private var playPos: Int = 0
+    private var playPosition: Int = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder =
         VideoViewHolder(
@@ -54,14 +54,14 @@ abstract class VideoAdapter(context: Context) :
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     super.onPlaybackStateChanged(playbackState)
                     if (player.playbackState == Player.STATE_READY) {
-                        val isAtPlayPos = isAtPlayPos(bindingAdapterPosition)
+                        val isAtPlayPosition = isAtPlayPosition(bindingAdapterPosition)
                         with(binding.imageViewThumbnail) {
-                            if (isAtPlayPos)
+                            if (isAtPlayPosition)
                                 visibility = View.INVISIBLE
                         }
 
                         with(binding.styledPlayerControllerView) {
-                            if (isAtPlayPos)
+                            if (isAtPlayPosition)
                                 show()
                         }
                     }
@@ -98,7 +98,7 @@ abstract class VideoAdapter(context: Context) :
             holder.item = getItem(position)?.also { item ->
                 payloads.forEach { payload ->
                     when (payload) {
-                        PAYLOAD_PLAY_POS -> bindPlayPos(holder, item, position)
+                        PAYLOAD_PLAY_POSITION -> bindPlayPos(holder, item, position)
                     }
                 }
             }
@@ -112,12 +112,15 @@ abstract class VideoAdapter(context: Context) :
         }
     }
 
-    fun notifyPlayPosChanged(playPos: Int) {
-        if (this.playPos != playPos) {
+    fun notifyPlayPositionChanged(playPosition: Int) {
+        if (this.playPosition != playPosition) {
             player.stop()
             saveVideoPosition()
-            this.playPos = playPos
-            notifyItemRangeChanged(0, itemCount, PAYLOAD_PLAY_POS)
+
+            val previousPlayPosition = this.playPosition
+            this.playPosition = playPosition
+            notifyItemChanged(previousPlayPosition, PAYLOAD_PLAY_POSITION)
+            notifyItemChanged(playPosition, PAYLOAD_PLAY_POSITION)
         }
     }
 
@@ -135,10 +138,10 @@ abstract class VideoAdapter(context: Context) :
     }
 
     private fun bindPlayPos(holder: VideoViewHolder, item: VideoVO, position: Int) {
-        val isAtPlayPos = isAtPlayPos(position)
-        val isPlayerViewVisible = isAtPlayPos && player.playbackState == Player.STATE_READY
+        val isAtPlayPosition = isAtPlayPosition(position)
+        val isPlayerViewVisible = isAtPlayPosition && player.playbackState == Player.STATE_READY
         var player: ExoPlayer? = null
-        if (isAtPlayPos)
+        if (isAtPlayPosition)
             player = this.player.apply {
                 if (playbackState == Player.STATE_IDLE) {
                     val sourceUrl = item.sourceUrl
@@ -170,11 +173,11 @@ abstract class VideoAdapter(context: Context) :
         }
     }
 
-    private fun isAtPlayPos(position: Int) = playPos == position
+    private fun isAtPlayPosition(position: Int) = playPosition == position
 
     private fun saveVideoPosition() {
-        if (playPos in 0 until itemCount)
-            onSaveVideoPosition(playPos, player.currentPosition)
+        if (playPosition in 0 until itemCount)
+            onSaveVideoPosition(playPosition, player.currentPosition)
     }
 
     abstract fun getVideoPosition(itemPosition: Int): Long

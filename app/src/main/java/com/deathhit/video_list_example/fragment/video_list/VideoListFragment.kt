@@ -39,7 +39,7 @@ class VideoListFragment : Fragment() {
     private val onScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
-            viewModel.setPlayPos(getPlayPos())
+            viewModel.setPlayPosition(getPlayPosition())
         }
     }
 
@@ -90,15 +90,15 @@ class VideoListFragment : Fragment() {
                             ).show()
                         }
 
-                        eventPlayAtPos.sign(viewModel) {
-                            videoAdapter.notifyPlayPosChanged(it)
+                        eventPlayAtPosition.sign(viewModel) {
+                            videoAdapter.notifyPlayPositionChanged(it)
                         }
 
                         eventScrollToNextItem.sign(viewModel) {
                             linearLayoutManager.startSmoothScroll(object :
                                 LinearSmoothScroller(requireContext()) {
                                 override fun getVerticalSnapPreference(): Int = SNAP_TO_START
-                            }.apply { targetPosition = getPlayPos() + 1 })
+                            }.apply { targetPosition = getPlayPosition() + 1 })
                         }
 
                         statusVideoList.sign(binding) {
@@ -140,5 +140,5 @@ class VideoListFragment : Fragment() {
         }
     }
 
-    private fun getPlayPos() = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
+    private fun getPlayPosition() = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
 }
