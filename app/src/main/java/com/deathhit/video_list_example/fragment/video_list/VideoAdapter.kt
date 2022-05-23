@@ -115,6 +115,7 @@ abstract class VideoAdapter(context: Context) :
     fun notifyPlayPosChanged(playPos: Int) {
         if (this.playPos != playPos) {
             player.stop()
+            saveVideoPosition()
             this.playPos = playPos
             notifyItemRangeChanged(0, itemCount, PAYLOAD_PLAY_POS)
         }
@@ -129,12 +130,8 @@ abstract class VideoAdapter(context: Context) :
     }
 
     fun release() {
+        saveVideoPosition()
         player.release()
-    }
-
-    fun saveVideoPosition() {
-        if (playPos in 0 until itemCount)
-            onSaveVideoPosition(playPos, player.currentPosition)
     }
 
     private fun bindPlayPos(holder: VideoViewHolder, item: VideoVO, position: Int) {
@@ -174,6 +171,11 @@ abstract class VideoAdapter(context: Context) :
     }
 
     private fun isAtPlayPos(position: Int) = playPos == position
+
+    private fun saveVideoPosition() {
+        if (playPos in 0 until itemCount)
+            onSaveVideoPosition(playPos, player.currentPosition)
+    }
 
     abstract fun getVideoPosition(itemPosition: Int): Long
     abstract fun onClickItem(item: VideoVO)

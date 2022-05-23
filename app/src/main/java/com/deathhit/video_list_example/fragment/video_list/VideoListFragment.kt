@@ -91,7 +91,6 @@ class VideoListFragment : Fragment() {
                         }
 
                         eventPlayAtPos.sign(viewModel) {
-                            videoAdapter.saveVideoPosition()
                             videoAdapter.notifyPlayPosChanged(it)
                         }
 
@@ -136,7 +135,6 @@ class VideoListFragment : Fragment() {
         _linearLayoutManger = null
 
         _videoAdapter = with(videoAdapter) {
-            saveVideoPosition()
             release()
             null
         }
