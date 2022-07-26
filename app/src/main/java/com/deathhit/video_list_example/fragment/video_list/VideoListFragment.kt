@@ -17,6 +17,8 @@ import com.deathhit.video_list_example.R
 import com.deathhit.video_list_example.databinding.FragmentVideoListBinding
 import com.deathhit.video_list_example.model.VideoVO
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -39,7 +41,7 @@ class VideoListFragment : Fragment() {
     private val onScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
-            viewModel.setPlayPosition(getPlayPosition())
+            viewModel.onScrolled(getPlayPosition())
         }
     }
 
@@ -61,49 +63,48 @@ class VideoListFragment : Fragment() {
 
             _videoAdapter =
                 object : VideoAdapter(requireContext()) {
-                    override fun getVideoPosition(itemPosition: Int): Long =
-                        viewModel.stateFlow.value.argVideoPositionMap.getOrElse(itemPosition) { 0L }
+                    override fun getItemPosition(playPosition: Int): Long =
+                        viewModel.stateFlow.value.itemPositionMap.getOrElse(playPosition) { 0L }
 
                     override fun onClickItem(item: VideoVO) {
                         viewModel.onClickItem(item)
                     }
 
                     override fun onPlaybackEnded() {
-                        viewModel.scrollToNextItem()
+                        viewModel.onPlaybackEnded()
                     }
 
-                    override fun onSaveVideoPosition(itemPosition: Int, videoPosition: Long) {
-                        viewModel.saveVideoPosition(itemPosition, videoPosition)
+                    override fun onSaveItemPosition(itemPosition: Long, playPosition: Int) {
+                        viewModel.onSaveItemPosition(itemPosition, playPosition)
                     }
                 }.also { adapter = it }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.stateFlow.collect { state ->
-                    with(state) {
-                        eventOnClickItem.sign(viewModel) {
-                            Toast.makeText(
+                launch {
+                    viewModel.eventFlow.collect { event ->
+                        when (event) {
+                            is VideoListViewModel.Event.PlayItemAtPosition -> videoAdapter.notifyPlayPositionChanged(
+                                event.position
+                            )
+                            VideoListViewModel.Event.ScrollToNextItem -> linearLayoutManager.startSmoothScroll(
+                                object :
+                                    LinearSmoothScroller(requireContext()) {
+                                    override fun getVerticalSnapPreference(): Int = SNAP_TO_START
+                                }.apply { targetPosition = getPlayPosition() + 1 })
+                            is VideoListViewModel.Event.ShowItemClicked -> Toast.makeText(
                                 requireContext(),
-                                getString(R.string.video_list_video_x_clicked, it.title),
+                                getString(R.string.video_list_video_x_clicked, event.item.title),
                                 Toast.LENGTH_LONG
                             ).show()
                         }
+                    }
+                }
 
-                        eventPlayAtPosition.sign(viewModel) {
-                            videoAdapter.notifyPlayPositionChanged(it)
-                        }
-
-                        eventScrollToNextItem.sign(viewModel) {
-                            linearLayoutManager.startSmoothScroll(object :
-                                LinearSmoothScroller(requireContext()) {
-                                override fun getVerticalSnapPreference(): Int = SNAP_TO_START
-                            }.apply { targetPosition = getPlayPosition() + 1 })
-                        }
-
-                        statusVideoList.sign(binding) {
-                            videoAdapter.submitList(it)
-                        }
+                launch {
+                    viewModel.stateFlow.map { it.itemList }.distinctUntilChanged().collect {
+                        videoAdapter.submitList(it)
                     }
                 }
             }

@@ -12,7 +12,6 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/domain" />
-            <option value="$PROJECT_DIR$/lib_sign_able" />
           </set>
         </option>
       </GradleProjectSettings>

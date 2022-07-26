@@ -22,7 +22,7 @@ abstract class VideoAdapter(context: Context) :
 
         private val COMPARATOR = object : DiffUtil.ItemCallback<VideoVO>() {
             override fun areItemsTheSame(oldItem: VideoVO, newItem: VideoVO): Boolean =
-                oldItem.sourceUrl == newItem.sourceUrl
+                oldItem == newItem
 
             override fun areContentsTheSame(oldItem: VideoVO, newItem: VideoVO): Boolean =
                 oldItem == newItem
@@ -115,7 +115,7 @@ abstract class VideoAdapter(context: Context) :
     fun notifyPlayPositionChanged(playPosition: Int) {
         if (this.playPosition != playPosition) {
             player.stop()
-            saveVideoPosition()
+            saveItemPosition()
 
             val previousPlayPosition = this.playPosition
             this.playPosition = playPosition
@@ -133,7 +133,7 @@ abstract class VideoAdapter(context: Context) :
     }
 
     fun release() {
-        saveVideoPosition()
+        saveItemPosition()
         player.release()
     }
 
@@ -148,7 +148,7 @@ abstract class VideoAdapter(context: Context) :
                     setMediaItem(mediaItemMap.getOrPut(sourceUrl) {
                         MediaItem.fromUri(sourceUrl)
                     })
-                    seekTo(getVideoPosition(position))
+                    seekTo(getItemPosition(position))
                     prepare()
                 }
             }
@@ -175,13 +175,13 @@ abstract class VideoAdapter(context: Context) :
 
     private fun isAtPlayPosition(position: Int) = playPosition == position
 
-    private fun saveVideoPosition() {
+    private fun saveItemPosition() {
         if (playPosition in 0 until itemCount)
-            onSaveVideoPosition(playPosition, player.currentPosition)
+            onSaveItemPosition(player.currentPosition, playPosition)
     }
 
-    abstract fun getVideoPosition(itemPosition: Int): Long
+    abstract fun getItemPosition(playPosition: Int): Long
     abstract fun onClickItem(item: VideoVO)
     abstract fun onPlaybackEnded()
-    abstract fun onSaveVideoPosition(itemPosition: Int, videoPosition: Long)
+    abstract fun onSaveItemPosition(itemPosition: Long, playPosition: Int)
 }
