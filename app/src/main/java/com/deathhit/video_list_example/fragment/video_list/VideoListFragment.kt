@@ -89,7 +89,11 @@ class VideoListFragment : Fragment() {
                                 object :
                                     LinearSmoothScroller(requireContext()) {
                                     override fun getVerticalSnapPreference(): Int = SNAP_TO_START
-                                }.apply { targetPosition = getPlayPosition() + 1 })
+                                }.apply {
+                                    getPlayPosition()?.let {
+                                        targetPosition = it + 1
+                                    }
+                                })
                             is VideoListViewModel.Event.ShowItemClicked -> Toast.makeText(
                                 requireContext(),
                                 getString(R.string.video_list_video_x_clicked, event.item.title),
@@ -144,5 +148,11 @@ class VideoListFragment : Fragment() {
         }
     }
 
-    private fun getPlayPosition() = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
+    private fun getPlayPosition() =
+        linearLayoutManager.findFirstCompletelyVisibleItemPosition().let {
+            if (it == RecyclerView.NO_POSITION)
+                null
+            else
+                it
+        }
 }

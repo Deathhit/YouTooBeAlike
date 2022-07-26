@@ -18,7 +18,7 @@ import javax.inject.Inject
 class VideoListViewModel @Inject constructor(private val videoRepository: VideoRepository) :
     ViewModel() {
     companion object {
-        private const val VALUE_DELAY_PLAY_ITEM = 1500L
+        private const val VALUE_DELAY_PLAY_ITEM = 1000L
         private const val VALUE_POSITION_INVALID = -1
     }
 
@@ -80,13 +80,13 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
         }
     }
 
-    fun onScrolled(newPlayPosition: Int) {
+    fun onScrolled(newPlayPosition: Int?) {
         if (newPlayPosition == pendingPlayPosition)
             return
 
         _stateFlow.update { state ->
             state.copy(
-                pendingPlayPosition = newPlayPosition,
+                pendingPlayPosition = newPlayPosition ?: VALUE_POSITION_INVALID,
                 playPosition = VALUE_POSITION_INVALID
             )
         }
@@ -95,7 +95,10 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
         setPlayPositionJob = viewModelScope.launch {
             delay(VALUE_DELAY_PLAY_ITEM)
             _stateFlow.update { state ->
-                state.copy(playPosition = pendingPlayPosition)
+                state.copy(
+                    pendingPlayPosition = VALUE_POSITION_INVALID,
+                    playPosition = pendingPlayPosition
+                )
             }
         }
     }
