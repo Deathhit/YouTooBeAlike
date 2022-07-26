@@ -23,7 +23,6 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
     }
 
     sealed class Event {
-        data class PlayItemAtPosition(val position: Int) : Event()
         object ScrollToNextItem : Event()
         data class ShowItemClicked(val item: VideoVO) : Event()
     }
@@ -31,6 +30,7 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
     data class State(
         val itemList: List<VideoVO>,
         val itemPositionMap: Map<Int, Long>,
+        val pendingPlayPosition: Int,
         val playPosition: Int
     )
 
@@ -38,8 +38,17 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
     val eventFlow = _eventChannel.receiveAsFlow()
 
     private val _stateFlow =
-        MutableStateFlow(State(emptyList(), emptyMap(), VALUE_POSITION_INVALID))
+        MutableStateFlow(
+            State(
+                emptyList(),
+                emptyMap(),
+                VALUE_POSITION_INVALID,
+                VALUE_POSITION_INVALID
+            )
+        )
     val stateFlow = _stateFlow.asStateFlow()
+
+    private val pendingPlayPosition get() = stateFlow.value.pendingPlayPosition
 
     private var setPlayPositionJob: Job? = null
 
@@ -72,24 +81,21 @@ class VideoListViewModel @Inject constructor(private val videoRepository: VideoR
     }
 
     fun onScrolled(newPlayPosition: Int) {
-        with(stateFlow.value) {
-            if (newPlayPosition == playPosition)
-                return
+        if (newPlayPosition == pendingPlayPosition)
+            return
 
+        _stateFlow.update { state ->
+            state.copy(
+                pendingPlayPosition = newPlayPosition,
+                playPosition = VALUE_POSITION_INVALID
+            )
+        }
+
+        setPlayPositionJob?.cancel()
+        setPlayPositionJob = viewModelScope.launch {
+            delay(VALUE_DELAY_PLAY_ITEM)
             _stateFlow.update { state ->
-                state.copy(playPosition = newPlayPosition)
-            }
-
-            viewModelScope.launch {
-                _eventChannel.send(Event.PlayItemAtPosition(VALUE_POSITION_INVALID))
-            }
-
-            setPlayPositionJob?.cancel()
-            setPlayPositionJob = viewModelScope.launch {
-                delay(VALUE_DELAY_PLAY_ITEM)
-                viewModelScope.launch {
-                    _eventChannel.send(Event.PlayItemAtPosition(newPlayPosition))
-                }
+                state.copy(playPosition = pendingPlayPosition)
             }
         }
     }

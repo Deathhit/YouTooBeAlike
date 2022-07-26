@@ -85,9 +85,6 @@ class VideoListFragment : Fragment() {
                 launch {
                     viewModel.eventFlow.collect { event ->
                         when (event) {
-                            is VideoListViewModel.Event.PlayItemAtPosition -> videoAdapter.notifyPlayPositionChanged(
-                                event.position
-                            )
                             VideoListViewModel.Event.ScrollToNextItem -> linearLayoutManager.startSmoothScroll(
                                 object :
                                     LinearSmoothScroller(requireContext()) {
@@ -105,6 +102,12 @@ class VideoListFragment : Fragment() {
                 launch {
                     viewModel.stateFlow.map { it.itemList }.distinctUntilChanged().collect {
                         videoAdapter.submitList(it)
+                    }
+                }
+
+                launch {
+                    viewModel.stateFlow.map { it.playPosition }.distinctUntilChanged().collect {
+                        videoAdapter.notifyPlayPositionChanged(it)
                     }
                 }
             }
