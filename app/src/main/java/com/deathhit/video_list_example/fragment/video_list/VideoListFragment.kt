@@ -111,7 +111,7 @@ class VideoListFragment : Fragment() {
 
                 launch {
                     viewModel.stateFlow.map { it.playPosition }.distinctUntilChanged().collect {
-                        videoAdapter.notifyPlayPositionChanged(it)
+                        binding.recyclerView.post { videoAdapter.notifyPlayPositionChanged(it) }
                     }
                 }
             }
