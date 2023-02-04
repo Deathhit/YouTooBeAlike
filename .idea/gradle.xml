@@ -12,14 +12,12 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/core" />
             <option value="$PROJECT_DIR$/core/database" />
             <option value="$PROJECT_DIR$/core/media_api" />
             <option value="$PROJECT_DIR$/core/ui" />
-            <option value="$PROJECT_DIR$/data" />
             <option value="$PROJECT_DIR$/data/media_item" />
             <option value="$PROJECT_DIR$/data/media_progress" />
-            <option value="$PROJECT_DIR$/domain" />
+            <option value="$PROJECT_DIR$/feature/video_list" />
           </set>
         </option>
       </GradleProjectSettings>

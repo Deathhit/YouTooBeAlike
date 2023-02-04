@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">Video List Example</string>
-
-    <!--Sample-->
-    <string name="sample_text">Sample Text</string>
-
-    <!--Video List-->
-    <string name="video_list_video_x_clicked">Video [%1s] is clicked.</string>
-</resources>

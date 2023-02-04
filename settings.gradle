@@ -16,9 +16,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "Video List Example"
 include ':app'
-include ':domain'
 include ':core:database'
 include ':core:ui'
 include ':data:media_item'
 include ':core:media_api'
 include ':data:media_progress'
+include ':feature:video_list'

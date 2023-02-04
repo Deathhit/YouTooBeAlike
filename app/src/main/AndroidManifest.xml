@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VideoListExample">
         <activity
-            android:name="com.deathhit.video_list_example.activity.main.MainActivity"
+            android:name="com.deathhit.feature.video_list.activity.video_list.VideoListActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
