@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.VideoListExample.PlayerView.VideoList" parent="">
+        <item name="android:minHeight">240dp</item> <!--For 4:3 video-->
+        <item name="resize_mode">zoom</item>
+        <item name="surface_type">texture_view</item>
+        <item name="use_controller">false</item>
+    </style>
+
+    <style name="Widget.VideoListExample.PlayerControllerView.VideoList" parent="">
+        <item name="bar_height">3dp</item>
+        <item name="buffered_color">@color/grey_200</item>
+        <item name="controller_layout_id">@layout/block_controller_video_list</item>
+        <item name="played_color">@color/purple_200</item>
+        <item name="scrubber_color">@color/purple_200</item>
+        <item name="scrubber_dragged_size">16dp</item>
+        <item name="scrubber_enabled_size">12dp</item>
+        <item name="show_timeout">0</item>
+    </style>
+</resources>

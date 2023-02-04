@@ -2,104 +2,109 @@ package com.deathhit.video_list_example.fragment.video_list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.deathhit.domain.repository.video.VideoRepository
-import com.deathhit.video_list_example.model.VideoVO
+import androidx.paging.cachedIn
+import androidx.paging.map
+import com.deathhit.data.media_item.repository.MediaItemRepository
+import com.deathhit.data.media_progress.MediaProgressDO
+import com.deathhit.data.media_progress.repository.MediaProgressRepository
+import com.deathhit.video_list_example.model.MediaItemVO
 import com.deathhit.video_list_example.model.toVO
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class VideoListViewModel @Inject constructor(private val videoRepository: VideoRepository) :
-    ViewModel() {
+class VideoListViewModel @Inject constructor(
+    mediaItemRepository: MediaItemRepository,
+    private val mediaProgressRepository: MediaProgressRepository
+) : ViewModel() {
     companion object {
-        private const val VALUE_DELAY_PLAY_ITEM = 1000L
-        private const val VALUE_POSITION_INVALID = -1
-    }
-
-    sealed class Event {
-        object ScrollToNextItem : Event()
-        data class ShowItemClicked(val item: VideoVO) : Event()
+        private const val MEDIA_SWITCHING_DELAY = 500L
     }
 
     data class State(
-        val itemList: List<VideoVO>,
-        val itemPositionMap: Map<Int, Long>,
-        val pendingPlayPosition: Int,
-        val playPosition: Int
-    )
-
-    private val _eventChannel = Channel<Event>()
-    val eventFlow = _eventChannel.receiveAsFlow()
+        val actions: List<Action>,
+        val currentPlayingMedia: MediaItemVO?
+    ) {
+        sealed interface Action {
+            data class PrepareMedia(val item: MediaItemVO, val position: Long) : Action
+            data class ShowItemClicked(val item: MediaItemVO) : Action
+            object StopMedia : Action
+        }
+    }
 
     private val _stateFlow =
         MutableStateFlow(
             State(
-                emptyList(),
-                emptyMap(),
-                VALUE_POSITION_INVALID,
-                VALUE_POSITION_INVALID
+                actions = emptyList(),
+                currentPlayingMedia = null
             )
         )
     val stateFlow = _stateFlow.asStateFlow()
 
-    private val pendingPlayPosition get() = stateFlow.value.pendingPlayPosition
+    val mediaItemPagingDataFlow =
+        mediaItemRepository.getThumbnailPagingDataFlow()
+            .map { pagingData -> pagingData.map { it.toVO() } }
+            .cachedIn(viewModelScope)
 
-    private var setPlayPositionJob: Job? = null
+    private val currentPlayingMedia get() = stateFlow.value.currentPlayingMedia
 
-    init {
-        viewModelScope.launch {
-            _stateFlow.update { state ->
-                state.copy(itemList = videoRepository.getVideoList().map { it.toVO() })
-            }
-        }
-    }
+    private var prepareMediaJob: Job? = null
 
-    fun onClickItem(item: VideoVO) {
-        viewModelScope.launch {
-            _eventChannel.send(Event.ShowItemClicked(item))
-        }
-    }
-
-    fun onPlaybackEnded() {
-        viewModelScope.launch {
-            _eventChannel.send(Event.ScrollToNextItem)
-        }
-    }
-
-    fun onSaveItemPosition(itemPosition: Long, playPosition: Int) {
+    fun onAction(action: State.Action) {
         _stateFlow.update { state ->
-            state.copy(
-                itemPositionMap = state.itemPositionMap.toMutableMap()
-                    .apply { this[playPosition] = itemPosition })
+            state.copy(actions = state.actions - action)
         }
     }
 
-    fun onScrolled(newPlayPosition: Int?) {
-        if (newPlayPosition == pendingPlayPosition)
+    fun prepareNewMedia(currentMediaPosition: Long, newMediaItem: MediaItemVO) {
+        if (currentPlayingMedia == newMediaItem)
             return
 
+        saveCurrentMediaProgress(currentMediaPosition)
+
         _stateFlow.update { state ->
-            state.copy(
-                pendingPlayPosition = newPlayPosition ?: VALUE_POSITION_INVALID,
-                playPosition = VALUE_POSITION_INVALID
-            )
+            state.copy(actions = state.actions + State.Action.StopMedia, currentPlayingMedia = newMediaItem)
         }
 
-        setPlayPositionJob?.cancel()
-        setPlayPositionJob = viewModelScope.launch {
-            delay(VALUE_DELAY_PLAY_ITEM)
+        prepareMediaJob?.cancel()
+        prepareMediaJob = viewModelScope.launch {
+            delay(MEDIA_SWITCHING_DELAY)
+
             _stateFlow.update { state ->
                 state.copy(
-                    pendingPlayPosition = VALUE_POSITION_INVALID,
-                    playPosition = pendingPlayPosition
+                    actions = state.actions + State.Action.PrepareMedia(
+                        newMediaItem,
+                        mediaProgressRepository.getMediaProgressBySourceUrl(newMediaItem.sourceUrl)?.position
+                            ?: 0L
+                    )
                 )
             }
+        }
+    }
+
+    fun saveCurrentMediaProgress(currentMediaPosition: Long) {
+        currentPlayingMedia?.let {
+            viewModelScope.launch {
+                mediaProgressRepository.setMediaProgress(
+                    MediaProgressDO(
+                        currentMediaPosition,
+                        it.sourceUrl
+                    )
+                )
+            }
+        }
+    }
+
+    fun showItemClicked(item: MediaItemVO) {
+        _stateFlow.update { state ->
+            state.copy(actions = state.actions + State.Action.ShowItemClicked(item))
         }
     }
 }

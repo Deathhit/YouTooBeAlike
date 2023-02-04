@@ -11,12 +11,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import com.deathhit.video_list_example.R
 import com.deathhit.video_list_example.databinding.FragmentVideoListBinding
-import com.deathhit.video_list_example.model.VideoVO
+import com.deathhit.video_list_example.model.MediaItemVO
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -35,13 +38,21 @@ class VideoListFragment : Fragment() {
     private val linearLayoutManager get() = _linearLayoutManger!!
     private var _linearLayoutManger: LinearLayoutManager? = null
 
+    private val player get() = _player!!
+    private var _player: Player? = null
+
     private val videoAdapter get() = _videoAdapter!!
     private var _videoAdapter: VideoAdapter? = null
 
     private val onScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
-            viewModel.onScrolled(getPlayPosition())
+            getPlayPosition()?.let {
+                viewModel.prepareNewMedia(
+                    player.currentPosition,
+                    videoAdapter.snapshot().items[it]
+                )
+            }
         }
     }
 
@@ -62,20 +73,9 @@ class VideoListFragment : Fragment() {
             _linearLayoutManger = (layoutManager!! as LinearLayoutManager)
 
             _videoAdapter =
-                object : VideoAdapter(requireContext()) {
-                    override fun getItemPosition(playPosition: Int): Long =
-                        viewModel.stateFlow.value.itemPositionMap.getOrElse(playPosition) { 0L }
-
-                    override fun onClickItem(item: VideoVO) {
-                        viewModel.onClickItem(item)
-                    }
-
-                    override fun onPlaybackEnded() {
-                        viewModel.onPlaybackEnded()
-                    }
-
-                    override fun onSaveItemPosition(itemPosition: Long, playPosition: Int) {
-                        viewModel.onSaveItemPosition(itemPosition, playPosition)
+                object : VideoAdapter(ExoPlayer.Builder(context).build().also { _player = it }) {
+                    override fun onClickItem(item: MediaItemVO) {
+                        viewModel.showItemClicked(item)
                     }
                 }.also { adapter = it }
         }
@@ -83,37 +83,49 @@ class VideoListFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.eventFlow.collect { event ->
-                        when (event) {
-                            VideoListViewModel.Event.ScrollToNextItem -> linearLayoutManager.startSmoothScroll(
-                                object :
-                                    LinearSmoothScroller(requireContext()) {
-                                    override fun getVerticalSnapPreference(): Int = SNAP_TO_START
-                                }.apply {
-                                    getPlayPosition()?.let {
-                                        targetPosition = it + 1
+                    viewModel.stateFlow.map { it.actions }.distinctUntilChanged()
+                        .collect { actions ->
+                            actions.forEach { action ->
+                                when (action) {
+                                    is VideoListViewModel.State.Action.PrepareMedia -> with(player) {
+                                        setMediaItem(
+                                            MediaItem.fromUri(action.item.sourceUrl),
+                                            action.position
+                                        )
+                                        prepare()
                                     }
-                                })
-                            is VideoListViewModel.Event.ShowItemClicked -> Toast.makeText(
-                                requireContext(),
-                                getString(R.string.video_list_video_x_clicked, event.item.title),
-                                Toast.LENGTH_LONG
-                            ).show()
+                                    is VideoListViewModel.State.Action.ShowItemClicked -> Toast.makeText(
+                                        requireContext(),
+                                        getString(
+                                            R.string.video_list_video_x_clicked,
+                                            action.item.title
+                                        ),
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    VideoListViewModel.State.Action.StopMedia -> player.stop()
+                                }
+
+                                viewModel.onAction(action)
+                            }
                         }
-                    }
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.itemList }.distinctUntilChanged().collect {
-                        videoAdapter.submitList(it)
-                    }
+                    viewModel.stateFlow.map { it.currentPlayingMedia }.distinctUntilChanged()
+                        .collect {
+                            binding.recyclerView.post {
+                                videoAdapter.notifyCurrentPlayingItemChanged(
+                                    it
+                                )
+                            }
+                        }
                 }
+            }
+        }
 
-                launch {
-                    viewModel.stateFlow.map { it.playPosition }.distinctUntilChanged().collect {
-                        binding.recyclerView.post { videoAdapter.notifyPlayPositionChanged(it) }
-                    }
-                }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.mediaItemPagingDataFlow.collectLatest {
+                videoAdapter.submitData(lifecycle, it)
             }
         }
     }
@@ -124,7 +136,7 @@ class VideoListFragment : Fragment() {
             recyclerView.addOnScrollListener(onScrollListener)
         }
 
-        videoAdapter.playVideo()
+        player.play()
     }
 
     override fun onPause() {
@@ -133,7 +145,9 @@ class VideoListFragment : Fragment() {
             recyclerView.removeOnScrollListener(onScrollListener)
         }
 
-        videoAdapter.pauseVideo()
+        player.pause()
+
+        viewModel.saveCurrentMediaProgress(player.currentPosition)
     }
 
     override fun onDestroyView() {
@@ -142,10 +156,10 @@ class VideoListFragment : Fragment() {
 
         _linearLayoutManger = null
 
-        _videoAdapter = with(videoAdapter) {
-            release()
-            null
-        }
+        player.release()
+        _player = null
+
+        _videoAdapter = null
     }
 
     private fun getPlayPosition() =

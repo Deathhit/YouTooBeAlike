@@ -1,11 +1,11 @@
 package com.deathhit.video_list_example.model
 
 import android.os.Parcelable
-import com.deathhit.domain.model.VideoDO
+import com.deathhit.data.media_item.MediaItemDO
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class VideoVO(
+data class MediaItemVO(
     val description: String,
     val sourceUrl: String,
     val subtitle: String,
@@ -13,4 +13,4 @@ data class VideoVO(
     val title: String
 ) : Parcelable
 
-fun VideoDO.toVO() = VideoVO(description, sourceUrl, subtitle, thumbUrl, title)
+fun MediaItemDO.toVO() = MediaItemVO(description, sourceUrl, subtitle, thumbUrl, title)
