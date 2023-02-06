@@ -49,7 +49,7 @@ class VideoListFragment : Fragment() {
             getPlayPosition()?.let {
                 viewModel.prepareNewMedia(
                     player.currentPosition,
-                    videoAdapter.snapshot().items[it]
+                    videoAdapter.peek(it)
                 )
             }
         }

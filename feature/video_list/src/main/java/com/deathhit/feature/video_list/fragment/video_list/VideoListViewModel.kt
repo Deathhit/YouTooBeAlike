@@ -63,7 +63,7 @@ class VideoListViewModel @Inject constructor(
         }
     }
 
-    fun prepareNewMedia(currentMediaPosition: Long, newMediaItem: MediaItemVO) {
+    fun prepareNewMedia(currentMediaPosition: Long, newMediaItem: MediaItemVO?) {
         if (currentPlayingMedia == newMediaItem)
             return
 
@@ -76,6 +76,9 @@ class VideoListViewModel @Inject constructor(
         prepareMediaJob?.cancel()
         prepareMediaJob = viewModelScope.launch {
             delay(MEDIA_SWITCHING_DELAY)
+
+            if (newMediaItem == null)
+                return@launch
 
             _stateFlow.update { state ->
                 state.copy(
