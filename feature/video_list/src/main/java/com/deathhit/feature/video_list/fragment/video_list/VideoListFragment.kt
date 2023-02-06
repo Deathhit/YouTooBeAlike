@@ -113,9 +113,7 @@ class VideoListFragment : Fragment() {
                     viewModel.stateFlow.map { it.currentPlayingMedia }.distinctUntilChanged()
                         .collect {
                             binding.recyclerView.post {
-                                videoAdapter.notifyCurrentPlayingItemChanged(
-                                    it
-                                )
+                                videoAdapter.notifyCurrentPlayingItemChanged(it)
                             }
                         }
                 }

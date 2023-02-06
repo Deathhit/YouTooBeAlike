@@ -45,7 +45,7 @@ abstract class VideoAdapter(private val player: Player) :
         }
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
-        holder.item = getItem(position)?.also { item ->
+        holder.item = peek(position)?.also { item ->
             with(holder.binding.imageViewThumbnail) {
                 Glide.with(this).load(item.thumbUrl).placeholder(com.deathhit.core.ui.R.color.black).into(this)
             }
@@ -70,7 +70,7 @@ abstract class VideoAdapter(private val player: Player) :
         if (payloads.isEmpty())
             super.onBindViewHolder(holder, position, payloads)
         else {
-            holder.item = getItem(position)?.also { item ->
+            holder.item = peek(position)?.also { item ->
                 payloads.forEach { payload ->
                     when (payload) {
                         PAYLOAD_PLAY_POSITION -> bindPlayPosition(holder, item)
