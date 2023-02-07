@@ -100,7 +100,7 @@ internal class MediaApiServiceImp : MediaApiService {
     )
 
     override suspend fun getMediaList(page: Int?, pageSize: Int): List<Media> {
-        delay(Random.nextLong(500))
+        delay(Random.nextLong(2000))
 
         val offset = (page ?: MediaApiService.DEFAULT_PAGE) * pageSize
         val limit = offset + pageSize

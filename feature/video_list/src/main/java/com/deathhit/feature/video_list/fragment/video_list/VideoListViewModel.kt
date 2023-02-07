@@ -30,7 +30,7 @@ class VideoListViewModel @Inject constructor(
 
     data class State(
         val actions: List<Action>,
-        val currentPlayingMedia: VideoVO?
+        val playItem: VideoVO?
     ) {
         sealed interface Action {
             data class PrepareMedia(val item: VideoVO, val position: Long) : Action
@@ -43,7 +43,7 @@ class VideoListViewModel @Inject constructor(
         MutableStateFlow(
             State(
                 actions = emptyList(),
-                currentPlayingMedia = null
+                playItem = null
             )
         )
     val stateFlow = _stateFlow.asStateFlow()
@@ -53,9 +53,15 @@ class VideoListViewModel @Inject constructor(
             .map { pagingData -> pagingData.map { it.toVideoVO() } }
             .cachedIn(viewModelScope)
 
-    private val currentPlayingMedia get() = stateFlow.value.currentPlayingMedia
+    private val playItem get() = stateFlow.value.playItem
 
     private var prepareMediaJob: Job? = null
+
+    fun clearPlayItem() {
+        _stateFlow.update { state ->
+            state.copy(playItem = null)
+        }
+    }
 
     fun onAction(action: State.Action) {
         _stateFlow.update { state ->
@@ -63,28 +69,28 @@ class VideoListViewModel @Inject constructor(
         }
     }
 
-    fun prepareNewMedia(currentMediaPosition: Long, newMediaItem: VideoVO?) {
-        if (currentPlayingMedia == newMediaItem)
+    fun prepareNewPlayItem(currentMediaPosition: Long, newPlayItem: VideoVO?) {
+        if (playItem == newPlayItem)
             return
 
         saveCurrentMediaProgress(currentMediaPosition)
 
         _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.StopMedia, currentPlayingMedia = newMediaItem)
+            state.copy(actions = state.actions + State.Action.StopMedia, playItem = newPlayItem)
         }
 
         prepareMediaJob?.cancel()
         prepareMediaJob = viewModelScope.launch {
             delay(MEDIA_SWITCHING_DELAY)
 
-            if (newMediaItem == null)
+            if (newPlayItem == null)
                 return@launch
 
             _stateFlow.update { state ->
                 state.copy(
                     actions = state.actions + State.Action.PrepareMedia(
-                        newMediaItem,
-                        mediaProgressRepository.getMediaProgressBySourceUrl(newMediaItem.sourceUrl)?.position
+                        newPlayItem,
+                        mediaProgressRepository.getMediaProgressBySourceUrl(newPlayItem.sourceUrl)?.position
                             ?: 0L
                     )
                 )
@@ -93,7 +99,7 @@ class VideoListViewModel @Inject constructor(
     }
 
     fun saveCurrentMediaProgress(currentMediaPosition: Long) {
-        currentPlayingMedia?.let {
+        playItem?.let {
             viewModelScope.launch {
                 mediaProgressRepository.setMediaProgress(
                     MediaProgressDO(

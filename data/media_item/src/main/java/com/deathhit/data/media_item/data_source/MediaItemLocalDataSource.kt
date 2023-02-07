@@ -14,7 +14,11 @@ internal class MediaItemLocalDataSource @Inject constructor(private val appDatab
         private const val REMOTE_KEY_LABEL = "73c61cde3d515e24bad2f3239c30099f"
     }
 
-    suspend fun getNextMediaItemPageKey() = appDatabase.remoteKeyDao().getByLabel(REMOTE_KEY_LABEL)?.nextKey
+    suspend fun getNextMediaItemPageKey() = with(appDatabase) {
+        withTransaction {
+            remoteKeyDao().getByLabel(REMOTE_KEY_LABEL)?.nextKey
+        }
+    }
 
     fun getMediaItemPagingSource(): PagingSource<Int, MediaItemEntity> =
         appDatabase.mediaItemDao().getPagingSource()

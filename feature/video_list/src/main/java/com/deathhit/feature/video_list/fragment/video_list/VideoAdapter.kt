@@ -10,8 +10,7 @@ import com.deathhit.feature.video_list.databinding.ItemVideoBinding
 import com.deathhit.feature.video_list.model.VideoVO
 import com.google.android.exoplayer2.Player
 
-abstract class VideoAdapter(private val player: Player) :
-    PagingDataAdapter<VideoVO, VideoViewHolder>(COMPARATOR) {
+abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPARATOR) {
     companion object {
         private const val TAG = "VideoAdapter"
         private const val PAYLOAD_PLAY_POSITION = "$TAG.PAYLOAD_PLAY_POSITION"
@@ -25,17 +24,16 @@ abstract class VideoAdapter(private val player: Player) :
         }
     }
 
-    private var currentPlayingItem: VideoVO? = null
-
-    init {
-        player.addListener(object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                super.onPlaybackStateChanged(playbackState)
-                if (player.playbackState == Player.STATE_READY)
-                    notifyCurrentPlayingItemChanged(currentPlayingItem)
-            }
-        })
+    private val playerListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            super.onPlaybackStateChanged(playbackState)
+            if (playbackState == Player.STATE_READY)
+                notifyPlayItemChanged(playItem)
+        }
     }
+
+    private var player: Player? = null
+    private var playItem: VideoVO? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder =
         VideoViewHolder(
@@ -87,19 +85,26 @@ abstract class VideoAdapter(private val player: Player) :
         }
     }
 
-    fun notifyCurrentPlayingItemChanged(newPlayingItem: VideoVO?) {
+    fun notifyPlayItemChanged(newPlayItem: VideoVO?) {
         val items = snapshot().items
-        val currentPlayPos = items.indexOf(currentPlayingItem)
-        val newPlayPos = items.indexOf(newPlayingItem)
+        val currentPlayPos = items.indexOf(playItem)
+        val newPlayPos = items.indexOf(newPlayItem)
 
-        currentPlayingItem = newPlayingItem
+        playItem = newPlayItem
         notifyItemChanged(currentPlayPos, PAYLOAD_PLAY_POSITION)
         notifyItemChanged(newPlayPos, PAYLOAD_PLAY_POSITION)
     }
 
+    fun setPlayer(player: Player?) {
+        this.player?.removeListener(playerListener)
+        this.player = player?.apply { addListener(playerListener) }
+
+        notifyPlayItemChanged(playItem)
+    }
+
     private fun bindPlayPosition(holder: VideoViewHolder, item: VideoVO) {
         val isItemPlaying = isItemPlaying(item)
-        val isPlayerViewVisible = isItemPlaying && player.playbackState == Player.STATE_READY
+        val isPlayerViewVisible = isItemPlaying && player?.playbackState == Player.STATE_READY
         val player = if (isItemPlaying) this@VideoAdapter.player else null
 
         with(holder.binding.imageViewThumbnail) {
@@ -122,7 +127,7 @@ abstract class VideoAdapter(private val player: Player) :
         }
     }
 
-    private fun isItemPlaying(item: VideoVO) = currentPlayingItem == item
+    private fun isItemPlaying(item: VideoVO) = playItem == item
 
     abstract fun onClickItem(item: VideoVO)
 }
