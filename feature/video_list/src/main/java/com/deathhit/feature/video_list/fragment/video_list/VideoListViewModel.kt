@@ -7,8 +7,8 @@ import androidx.paging.map
 import com.deathhit.data.media_item.repository.MediaItemRepository
 import com.deathhit.data.media_progress.MediaProgressDO
 import com.deathhit.data.media_progress.repository.MediaProgressRepository
-import com.deathhit.feature.video_list.model.MediaItemVO
-import com.deathhit.feature.video_list.model.toVO
+import com.deathhit.feature.video_list.model.VideoVO
+import com.deathhit.feature.video_list.model.toVideoVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -30,11 +30,11 @@ class VideoListViewModel @Inject constructor(
 
     data class State(
         val actions: List<Action>,
-        val currentPlayingMedia: MediaItemVO?
+        val currentPlayingMedia: VideoVO?
     ) {
         sealed interface Action {
-            data class PrepareMedia(val item: MediaItemVO, val position: Long) : Action
-            data class ShowItemClicked(val item: MediaItemVO) : Action
+            data class PrepareMedia(val item: VideoVO, val position: Long) : Action
+            data class ShowItemClicked(val item: VideoVO) : Action
             object StopMedia : Action
         }
     }
@@ -50,7 +50,7 @@ class VideoListViewModel @Inject constructor(
 
     val mediaItemPagingDataFlow =
         mediaItemRepository.getThumbnailPagingDataFlow()
-            .map { pagingData -> pagingData.map { it.toVO() } }
+            .map { pagingData -> pagingData.map { it.toVideoVO() } }
             .cachedIn(viewModelScope)
 
     private val currentPlayingMedia get() = stateFlow.value.currentPlayingMedia
@@ -63,7 +63,7 @@ class VideoListViewModel @Inject constructor(
         }
     }
 
-    fun prepareNewMedia(currentMediaPosition: Long, newMediaItem: MediaItemVO?) {
+    fun prepareNewMedia(currentMediaPosition: Long, newMediaItem: VideoVO?) {
         if (currentPlayingMedia == newMediaItem)
             return
 
@@ -105,7 +105,7 @@ class VideoListViewModel @Inject constructor(
         }
     }
 
-    fun showItemClicked(item: MediaItemVO) {
+    fun showItemClicked(item: VideoVO) {
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.ShowItemClicked(item))
         }

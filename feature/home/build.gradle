@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace 'com.deathhit.feature.video_list'
+    namespace 'com.deathhit.feature.home'
     compileSdk 33
 
     defaultConfig {
@@ -15,10 +15,6 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-    }
-
-    buildFeatures {
-        viewBinding true
     }
 
     buildTypes {
@@ -68,10 +64,6 @@ dependencies {
     //KTX
     implementation 'androidx.fragment:fragment-ktx:1.5.5'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
-
-    //Paging
-    def paging_version = "3.1.1"
-    implementation "androidx.paging:paging-runtime-ktx:$paging_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

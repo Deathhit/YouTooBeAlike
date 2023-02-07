@@ -7,25 +7,25 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.bumptech.glide.Glide
 import com.deathhit.feature.video_list.databinding.ItemVideoBinding
-import com.deathhit.feature.video_list.model.MediaItemVO
+import com.deathhit.feature.video_list.model.VideoVO
 import com.google.android.exoplayer2.Player
 
 abstract class VideoAdapter(private val player: Player) :
-    PagingDataAdapter<MediaItemVO, VideoViewHolder>(COMPARATOR) {
+    PagingDataAdapter<VideoVO, VideoViewHolder>(COMPARATOR) {
     companion object {
         private const val TAG = "VideoAdapter"
         private const val PAYLOAD_PLAY_POSITION = "$TAG.PAYLOAD_PLAY_POSITION"
 
-        private val COMPARATOR = object : DiffUtil.ItemCallback<MediaItemVO>() {
-            override fun areItemsTheSame(oldItem: MediaItemVO, newItem: MediaItemVO): Boolean =
+        private val COMPARATOR = object : DiffUtil.ItemCallback<VideoVO>() {
+            override fun areItemsTheSame(oldItem: VideoVO, newItem: VideoVO): Boolean =
                 oldItem == newItem
 
-            override fun areContentsTheSame(oldItem: MediaItemVO, newItem: MediaItemVO): Boolean =
+            override fun areContentsTheSame(oldItem: VideoVO, newItem: VideoVO): Boolean =
                 oldItem == newItem
         }
     }
 
-    private var currentPlayingItem: MediaItemVO? = null
+    private var currentPlayingItem: VideoVO? = null
 
     init {
         player.addListener(object : Player.Listener {
@@ -45,7 +45,7 @@ abstract class VideoAdapter(private val player: Player) :
         }
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
-        holder.item = peek(position)?.also { item ->
+        holder.item = getItem(position)?.also { item ->
             with(holder.binding.imageViewThumbnail) {
                 Glide.with(this).load(item.thumbUrl).placeholder(com.deathhit.core.ui.R.color.black).into(this)
             }
@@ -70,7 +70,7 @@ abstract class VideoAdapter(private val player: Player) :
         if (payloads.isEmpty())
             super.onBindViewHolder(holder, position, payloads)
         else {
-            holder.item = peek(position)?.also { item ->
+            holder.item = getItem(position)?.also { item ->
                 payloads.forEach { payload ->
                     when (payload) {
                         PAYLOAD_PLAY_POSITION -> bindPlayPosition(holder, item)
@@ -87,7 +87,7 @@ abstract class VideoAdapter(private val player: Player) :
         }
     }
 
-    fun notifyCurrentPlayingItemChanged(newPlayingItem: MediaItemVO?) {
+    fun notifyCurrentPlayingItemChanged(newPlayingItem: VideoVO?) {
         val items = snapshot().items
         val currentPlayPos = items.indexOf(currentPlayingItem)
         val newPlayPos = items.indexOf(newPlayingItem)
@@ -97,7 +97,7 @@ abstract class VideoAdapter(private val player: Player) :
         notifyItemChanged(newPlayPos, PAYLOAD_PLAY_POSITION)
     }
 
-    private fun bindPlayPosition(holder: VideoViewHolder, item: MediaItemVO) {
+    private fun bindPlayPosition(holder: VideoViewHolder, item: VideoVO) {
         val isItemPlaying = isItemPlaying(item)
         val isPlayerViewVisible = isItemPlaying && player.playbackState == Player.STATE_READY
         val player = if (isItemPlaying) this@VideoAdapter.player else null
@@ -122,7 +122,7 @@ abstract class VideoAdapter(private val player: Player) :
         }
     }
 
-    private fun isItemPlaying(item: MediaItemVO) = currentPlayingItem == item
+    private fun isItemPlaying(item: VideoVO) = currentPlayingItem == item
 
-    abstract fun onClickItem(item: MediaItemVO)
+    abstract fun onClickItem(item: VideoVO)
 }

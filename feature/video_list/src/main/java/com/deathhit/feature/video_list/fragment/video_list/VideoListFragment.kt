@@ -13,7 +13,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.deathhit.feature.video_list.databinding.FragmentVideoListBinding
-import com.deathhit.feature.video_list.model.MediaItemVO
+import com.deathhit.feature.video_list.model.VideoVO
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -73,7 +73,7 @@ class VideoListFragment : Fragment() {
 
             _videoAdapter =
                 object : VideoAdapter(ExoPlayer.Builder(context).build().also { _player = it }) {
-                    override fun onClickItem(item: MediaItemVO) {
+                    override fun onClickItem(item: VideoVO) {
                         viewModel.showItemClicked(item)
                     }
                 }.also { adapter = it }
