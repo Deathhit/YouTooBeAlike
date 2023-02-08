@@ -31,6 +31,7 @@ internal class MediaItemLocalDataSource @Inject constructor(private val appDatab
         withTransaction {
             if (isRefreshing) {
                 mediaItemDao().clearAll()
+                mediaProgressDao().clearAll()
                 remoteKeyDao().clearAll()
             }
 
@@ -42,7 +43,7 @@ internal class MediaItemLocalDataSource @Inject constructor(private val appDatab
             // Insert the new data into database, which invalidates the
             // current PagingData, allowing Paging to present the updates
             // in the DB.
-            mediaItemDao().insertOrReplaceAll(mediaItemList)
+            mediaItemDao().upsert(mediaItemList)
         }
     }
 }

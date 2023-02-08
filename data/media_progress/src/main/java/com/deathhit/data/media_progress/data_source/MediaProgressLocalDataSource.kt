@@ -11,5 +11,5 @@ internal class MediaProgressLocalDataSource @Inject constructor(private val appD
         appDatabase.mediaProgressDao().getBySourceUrl(sourceUrl)
 
     suspend fun setMediaProgress(mediaProgressEntity: MediaProgressEntity) =
-        appDatabase.mediaProgressDao().insertOrReplace(mediaProgressEntity)
+        appDatabase.mediaProgressDao().upsert(mediaProgressEntity)
 }

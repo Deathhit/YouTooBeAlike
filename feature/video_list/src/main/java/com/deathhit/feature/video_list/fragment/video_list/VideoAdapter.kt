@@ -123,11 +123,11 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
         }
 
         if (isAtPlayPosition(position))
-            onPlayItemLoaded(item)
+            onBindPlayPosition(item)
     }
 
     private fun isAtPlayPosition(position: Int) = position == playPosition
 
+    abstract fun onBindPlayPosition(item: VideoVO)
     abstract fun onClickItem(item: VideoVO)
-    abstract fun onPlayItemLoaded(item: VideoVO)
 }

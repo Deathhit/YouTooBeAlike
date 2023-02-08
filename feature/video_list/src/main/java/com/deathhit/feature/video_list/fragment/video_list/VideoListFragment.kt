@@ -52,6 +52,12 @@ class VideoListFragment : Fragment() {
     }
 
     private val playerListener = object : Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            super.onIsPlayingChanged(isPlaying)
+            if (!isPlaying)
+                viewModel.saveMediaPosition(player.currentPosition)
+        }
+
         override fun onRenderedFirstFrame() {
             super.onRenderedFirstFrame()
             viewModel.notifyFirstFrameRendered()
@@ -75,12 +81,12 @@ class VideoListFragment : Fragment() {
             _linearLayoutManger = (layoutManager!! as LinearLayoutManager)
 
             _videoAdapter = object : VideoAdapter() {
-                override fun onClickItem(item: VideoVO) {
-                    viewModel.showItemClicked(item)
+                override fun onBindPlayPosition(item: VideoVO) {
+                    viewModel.preparePlayItem(item)
                 }
 
-                override fun onPlayItemLoaded(item: VideoVO) {
-                    viewModel.prepareNewPlayItem(player.currentPosition, item)
+                override fun onClickItem(item: VideoVO) {
+                    viewModel.showItemClicked(item)
                 }
             }.apply {
                 setPlayer(
@@ -167,8 +173,6 @@ class VideoListFragment : Fragment() {
         binding.recyclerView.removeOnScrollListener(onScrollListener)
 
         player.pause()
-
-        viewModel.saveCurrentMediaProgress(player.currentPosition)
     }
 
     override fun onDestroyView() {

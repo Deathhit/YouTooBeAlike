@@ -11,6 +11,7 @@ import com.deathhit.feature.video_list.model.VideoVO
 import com.deathhit.feature.video_list.model.toVideoVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -80,28 +81,26 @@ class VideoListViewModel @Inject constructor(
         }
     }
 
-    fun prepareNewPlayItem(currentMediaPosition: Long, newPlayItem: VideoVO?) {
-        if (playItem == newPlayItem)
+    fun preparePlayItem(playItem: VideoVO?) {
+        if (this.playItem == playItem)
             return
 
-        saveCurrentMediaProgress(currentMediaPosition)
-
         _stateFlow.update { state ->
-            state.copy(playItem = newPlayItem)
+            state.copy(playItem = playItem)
         }
 
         prepareMediaJob?.cancel()
         prepareMediaJob = viewModelScope.launch {
             delay(MEDIA_SWITCHING_DELAY)
 
-            if (newPlayItem == null)
+            if (playItem == null)
                 return@launch
 
             _stateFlow.update { state ->
                 state.copy(
                     actions = state.actions + State.Action.PrepareMedia(
-                        newPlayItem,
-                        mediaProgressRepository.getMediaProgressBySourceUrl(newPlayItem.sourceUrl)?.position
+                        playItem,
+                        mediaProgressRepository.getMediaProgressBySourceUrl(playItem.sourceUrl)?.position
                             ?: 0L
                     )
                 )
@@ -109,13 +108,12 @@ class VideoListViewModel @Inject constructor(
         }
     }
 
-    //todo need to think of a proper way to save media progress
-    fun saveCurrentMediaProgress(currentMediaPosition: Long) {
+    fun saveMediaPosition(mediaPosition: Long) {
         playItem?.let {
-            viewModelScope.launch {
+            viewModelScope.launch(NonCancellable) {
                 mediaProgressRepository.setMediaProgress(
                     MediaProgressDO(
-                        currentMediaPosition,
+                        mediaPosition,
                         it.sourceUrl
                     )
                 )

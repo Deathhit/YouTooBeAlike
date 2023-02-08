@@ -2,27 +2,21 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "06bc3f2b0bc0ffd2a9c004bddd032952",
+    "identityHash": "4787182a473004676fdf0e5f73694de1",
     "entities": [
       {
         "tableName": "MediaItemEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `description` TEXT NOT NULL, `sourceUrl` TEXT NOT NULL, `subtitle` TEXT NOT NULL, `thumbUrl` TEXT NOT NULL, `title` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sourceUrl` TEXT NOT NULL, `description` TEXT NOT NULL, `subtitle` TEXT NOT NULL, `thumbUrl` TEXT NOT NULL, `title` TEXT NOT NULL, PRIMARY KEY(`sourceUrl`))",
         "fields": [
           {
-            "fieldPath": "_id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": false
-          },
-          {
-            "fieldPath": "description",
-            "columnName": "description",
+            "fieldPath": "sourceUrl",
+            "columnName": "sourceUrl",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "sourceUrl",
-            "columnName": "sourceUrl",
+            "fieldPath": "description",
+            "columnName": "description",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -46,77 +40,39 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
-            "id"
+            "sourceUrl"
           ]
         },
-        "indices": [
-          {
-            "name": "index_MediaItemEntity_sourceUrl",
-            "unique": true,
-            "columnNames": [
-              "sourceUrl"
-            ],
-            "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_MediaItemEntity_sourceUrl` ON `${TABLE_NAME}` (`sourceUrl`)"
-          }
-        ],
+        "indices": [],
         "foreignKeys": []
       },
       {
         "tableName": "MediaProgressEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `position` INTEGER NOT NULL, `sourceUrl` TEXT NOT NULL, FOREIGN KEY(`sourceUrl`) REFERENCES `MediaItemEntity`(`sourceUrl`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sourceUrl` TEXT NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`sourceUrl`))",
         "fields": [
           {
-            "fieldPath": "_id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": false
+            "fieldPath": "sourceUrl",
+            "columnName": "sourceUrl",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "position",
             "columnName": "position",
             "affinity": "INTEGER",
             "notNull": true
-          },
-          {
-            "fieldPath": "sourceUrl",
-            "columnName": "sourceUrl",
-            "affinity": "TEXT",
-            "notNull": true
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
-            "id"
+            "sourceUrl"
           ]
         },
-        "indices": [
-          {
-            "name": "index_MediaProgressEntity_sourceUrl",
-            "unique": true,
-            "columnNames": [
-              "sourceUrl"
-            ],
-            "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_MediaProgressEntity_sourceUrl` ON `${TABLE_NAME}` (`sourceUrl`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "MediaItemEntity",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "sourceUrl"
-            ],
-            "referencedColumns": [
-              "sourceUrl"
-            ]
-          }
-        ]
+        "indices": [],
+        "foreignKeys": []
       },
       {
         "tableName": "RemoteKeyEntity",
@@ -148,7 +104,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '06bc3f2b0bc0ffd2a9c004bddd032952')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4787182a473004676fdf0e5f73694de1')"
     ]
   }
 }
