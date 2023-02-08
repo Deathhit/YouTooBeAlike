@@ -30,7 +30,9 @@ class VideoListViewModel @Inject constructor(
 
     data class State(
         val actions: List<Action>,
-        val playItem: VideoVO?
+        val isFirstFrameRendered: Boolean,
+        val playItem: VideoVO?,
+        val playPosition: Int?
     ) {
         sealed interface Action {
             data class PrepareMedia(val item: VideoVO, val position: Long) : Action
@@ -43,23 +45,32 @@ class VideoListViewModel @Inject constructor(
         MutableStateFlow(
             State(
                 actions = emptyList(),
-                playItem = null
+                isFirstFrameRendered = false,
+                playItem = null,
+                playPosition = null
             )
         )
     val stateFlow = _stateFlow.asStateFlow()
 
-    val mediaItemPagingDataFlow =
+    val videoPagingDataFlow =
         mediaItemRepository.getThumbnailPagingDataFlow()
             .map { pagingData -> pagingData.map { it.toVideoVO() } }
             .cachedIn(viewModelScope)
 
     private val playItem get() = stateFlow.value.playItem
+    private val playPosition get() = stateFlow.value.playPosition
 
     private var prepareMediaJob: Job? = null
 
-    fun clearPlayItem() {
+    fun clearPlaybackState() {
         _stateFlow.update { state ->
-            state.copy(playItem = null)
+            state.copy(isFirstFrameRendered = false, playItem = null, playPosition = null)
+        }
+    }
+
+    fun notifyFirstFrameRendered() {
+        _stateFlow.update { state ->
+            state.copy(isFirstFrameRendered = true)
         }
     }
 
@@ -76,7 +87,7 @@ class VideoListViewModel @Inject constructor(
         saveCurrentMediaProgress(currentMediaPosition)
 
         _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.StopMedia, playItem = newPlayItem)
+            state.copy(playItem = newPlayItem)
         }
 
         prepareMediaJob?.cancel()
@@ -98,6 +109,7 @@ class VideoListViewModel @Inject constructor(
         }
     }
 
+    //todo need to think of a proper way to save media progress
     fun saveCurrentMediaProgress(currentMediaPosition: Long) {
         playItem?.let {
             viewModelScope.launch {
@@ -108,6 +120,19 @@ class VideoListViewModel @Inject constructor(
                     )
                 )
             }
+        }
+    }
+
+    fun setPlayPosition(playPosition: Int?) {
+        if (playPosition == this.playPosition)
+            return
+
+        _stateFlow.update { state ->
+            state.copy(
+                actions = state.actions + State.Action.StopMedia,
+                isFirstFrameRendered = false,
+                playPosition = playPosition
+            )
         }
     }
 

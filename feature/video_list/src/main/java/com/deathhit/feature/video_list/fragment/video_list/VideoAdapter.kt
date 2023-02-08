@@ -24,16 +24,9 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
         }
     }
 
-    private val playerListener = object : Player.Listener {
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            super.onPlaybackStateChanged(playbackState)
-            if (playbackState == Player.STATE_READY)
-                notifyPlayItemChanged(playItem)
-        }
-    }
-
+    private var isFirstFrameRendered = false
     private var player: Player? = null
-    private var playItem: VideoVO? = null
+    private var playPosition: Int? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder =
         VideoViewHolder(
@@ -45,7 +38,8 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         holder.item = getItem(position)?.also { item ->
             with(holder.binding.imageViewThumbnail) {
-                Glide.with(this).load(item.thumbUrl).placeholder(com.deathhit.core.ui.R.color.black).into(this)
+                Glide.with(this).load(item.thumbUrl).placeholder(com.deathhit.core.ui.R.color.black)
+                    .into(this)
             }
 
             with(holder.binding.textViewSubtitle) {
@@ -56,7 +50,7 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
                 text = item.title
             }
 
-            bindPlayPosition(holder, item)
+            bindPlayPosition(holder, item, position)
         }
     }
 
@@ -67,15 +61,14 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
     ) {
         if (payloads.isEmpty())
             super.onBindViewHolder(holder, position, payloads)
-        else {
+        else
             holder.item = getItem(position)?.also { item ->
                 payloads.forEach { payload ->
                     when (payload) {
-                        PAYLOAD_PLAY_POSITION -> bindPlayPosition(holder, item)
+                        PAYLOAD_PLAY_POSITION -> bindPlayPosition(holder, item, position)
                     }
                 }
             }
-        }
     }
 
     override fun onViewRecycled(holder: VideoViewHolder) {
@@ -85,30 +78,33 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
         }
     }
 
-    fun notifyPlayItemChanged(newPlayItem: VideoVO?) {
-        val items = snapshot().items
-        val currentPlayPos = items.indexOf(playItem)
-        val newPlayPos = items.indexOf(newPlayItem)
+    fun notifyIsFirstFrameRendered(isFirstFrameRendered: Boolean) {
+        this.isFirstFrameRendered = isFirstFrameRendered
 
-        playItem = newPlayItem
-        notifyItemChanged(currentPlayPos, PAYLOAD_PLAY_POSITION)
-        notifyItemChanged(newPlayPos, PAYLOAD_PLAY_POSITION)
+        notifyPlayPositionChanged(playPosition)
+    }
+
+    fun notifyPlayPositionChanged(playPosition: Int?) {
+        val oldPlayPos = this.playPosition
+        this.playPosition = playPosition
+
+        oldPlayPos?.let { notifyItemChanged(it, PAYLOAD_PLAY_POSITION) }
+        this.playPosition?.let { notifyItemChanged(it, PAYLOAD_PLAY_POSITION) }
     }
 
     fun setPlayer(player: Player?) {
-        this.player?.removeListener(playerListener)
-        this.player = player?.apply { addListener(playerListener) }
+        this.player = player
 
-        notifyPlayItemChanged(playItem)
+        notifyIsFirstFrameRendered(false)
     }
 
-    private fun bindPlayPosition(holder: VideoViewHolder, item: VideoVO) {
-        val isItemPlaying = isItemPlaying(item)
-        val isPlayerViewVisible = isItemPlaying && player?.playbackState == Player.STATE_READY
-        val player = if (isItemPlaying) this@VideoAdapter.player else null
+    private fun bindPlayPosition(holder: VideoViewHolder, item: VideoVO, position: Int) {
+        val isAtPlayPosition = isAtPlayPosition(position)
+        val isPlaybackPrepared = isAtPlayPosition && isFirstFrameRendered
+        val player = if (isAtPlayPosition) player else null
 
         with(holder.binding.imageViewThumbnail) {
-            visibility = if (isPlayerViewVisible)
+            visibility = if (isPlaybackPrepared)
                 View.INVISIBLE
             else
                 View.VISIBLE
@@ -116,7 +112,7 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
 
         with(holder.binding.styledPlayerControllerView) {
             this.player = player
-            if (isPlayerViewVisible)
+            if (isPlaybackPrepared)
                 show()
             else
                 hide()
@@ -125,9 +121,13 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
         with(holder.binding.styledPlayerView) {
             this.player = player
         }
+
+        if (isAtPlayPosition(position))
+            onPlayItemLoaded(item)
     }
 
-    private fun isItemPlaying(item: VideoVO) = playItem == item
+    private fun isAtPlayPosition(position: Int) = position == playPosition
 
     abstract fun onClickItem(item: VideoVO)
+    abstract fun onPlayItemLoaded(item: VideoVO)
 }
