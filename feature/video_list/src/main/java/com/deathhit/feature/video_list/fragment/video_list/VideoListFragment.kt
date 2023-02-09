@@ -93,7 +93,13 @@ class VideoListFragment : Fragment() {
                     ExoPlayer.Builder(context).build().apply { addListener(playerListener) }
                         .also { _player = it }
                 )
-            }.also { adapter = it }
+            }.also {
+                adapter = it.withLoadStateFooter(object : LoadStateAdapter() {
+                    override fun onRetryLoading() {
+                        videoAdapter.retry()
+                    }
+                })
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
