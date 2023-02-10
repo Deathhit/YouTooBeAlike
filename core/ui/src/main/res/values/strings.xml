@@ -2,6 +2,13 @@
     <string name="app_name">Video List Example</string>
 
     <!--Common-->
+    <string name="common_dashboard">Dashboard</string>
+    <string name="common_home">Home</string>
+    <string name="common_next">Next</string>
+    <string name="common_notifications">Notifications</string>
+    <string name="common_pause">Pause</string>
+    <string name="common_play">Play</string>
+    <string name="common_previous">Previous</string>
     <string name="common_retry">Retry</string>
     <string name="common_video_x_clicked">Video [%1s] is clicked.</string>
 
