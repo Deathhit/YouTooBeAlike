@@ -12,6 +12,8 @@
     </style>
 
     <style name="Widget.VideoListExample.PlayerView.List" parent="Widget.VideoListExample.PlayerView">
+        <item name="android:clickable">false</item>
+        <item name="android:focusable">false</item>
         <item name="auto_show">false</item>
         <item name="controller_layout_id">@layout/block_player_controller_list</item>
         <item name="hide_on_touch">false</item>
