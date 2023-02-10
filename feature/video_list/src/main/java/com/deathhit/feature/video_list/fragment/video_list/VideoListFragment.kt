@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.deathhit.core.ui.R
 import com.deathhit.feature.video_list.databinding.FragmentVideoListBinding
 import com.deathhit.feature.video_list.model.VideoVO
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -37,6 +38,12 @@ class VideoListFragment : Fragment() {
 
     private val linearLayoutManager get() = _linearLayoutManger!!
     private var _linearLayoutManger: LinearLayoutManager? = null
+    private val playPosition get() = linearLayoutManager.findFirstCompletelyVisibleItemPosition().let {
+        if (it == RecyclerView.NO_POSITION)
+            null
+        else
+            it
+    }
 
     private val player get() = _player!!
     private var _player: Player? = null
@@ -47,7 +54,7 @@ class VideoListFragment : Fragment() {
     private val onScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
-            viewModel.setPlayPosition(getPlayPosition())
+            viewModel.setPlayPosition(playPosition)
         }
     }
 
@@ -55,7 +62,11 @@ class VideoListFragment : Fragment() {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
             if (!isPlaying)
-                viewModel.saveMediaPosition(player.currentPosition)
+                viewModel.saveMediaPosition(
+                    with(player) {
+                        if (playbackState == Player.STATE_ENDED) C.TIME_UNSET else currentPosition
+                    }
+                )
         }
 
         override fun onRenderedFirstFrame() {
@@ -115,6 +126,9 @@ class VideoListFragment : Fragment() {
                                             action.position
                                         )
                                         prepare()
+
+                                        if (playbackState == Player.STATE_ENDED)
+                                            seekToDefaultPosition()
                                     }
                                     is VideoListViewModel.State.Action.ShowItemClicked -> Toast.makeText(
                                         requireContext(),
@@ -197,12 +211,4 @@ class VideoListFragment : Fragment() {
 
         viewModel.clearPlaybackState()
     }
-
-    private fun getPlayPosition() =
-        linearLayoutManager.findFirstCompletelyVisibleItemPosition().let {
-            if (it == RecyclerView.NO_POSITION)
-                null
-            else
-                it
-        }
 }
