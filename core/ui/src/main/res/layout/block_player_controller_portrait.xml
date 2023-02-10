@@ -1,102 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/black_alpha_a8">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <ImageButton
-        android:id="@id/exo_next"
-        style="@style/ExoMediaButton.Next"
-        android:contentDescription="@string/common_next"
-        android:src="@drawable/ic_player_next"
-        app:layout_constraintBottom_toBottomOf="@+id/frameLayout_playPause"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/frameLayout_playPause"
-        app:layout_constraintTop_toTopOf="@+id/frameLayout_playPause"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageButton
-        android:id="@id/exo_prev"
-        style="@style/ExoMediaButton.Previous"
-        android:contentDescription="@string/common_previous"
-        android:src="@drawable/ic_player_previous"
-        app:layout_constraintBottom_toBottomOf="@+id/frameLayout_playPause"
-        app:layout_constraintEnd_toStartOf="@+id/frameLayout_playPause"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/frameLayout_playPause"
-        tools:ignore="ImageContrastCheck" />
-
-    <FrameLayout
-        android:id="@+id/frameLayout_playPause"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black_alpha_a8">
 
         <ImageButton
-            android:id="@id/exo_pause"
-            style="@style/ExoMediaButton.Pause"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@string/common_pause"
-            android:src="@drawable/ic_player_pause"
-            tools:ignore="DuplicateClickableBoundsCheck,ImageContrastCheck" />
+            android:id="@id/exo_next"
+            style="@style/ExoMediaButton.Next"
+            android:contentDescription="@string/common_next"
+            android:src="@drawable/ic_player_next"
+            app:layout_constraintBottom_toBottomOf="@+id/frameLayout_playPause"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/frameLayout_playPause"
+            app:layout_constraintTop_toTopOf="@+id/frameLayout_playPause"
+            tools:ignore="ImageContrastCheck" />
 
         <ImageButton
-            android:id="@id/exo_play"
-            style="@style/ExoMediaButton.Play"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@string/common_play"
-            android:src="@drawable/ic_player_play"
-            tools:ignore="DuplicateClickableBoundsCheck,ImageContrastCheck" />
+            android:id="@id/exo_prev"
+            style="@style/ExoMediaButton.Previous"
+            android:contentDescription="@string/common_previous"
+            android:src="@drawable/ic_player_previous"
+            app:layout_constraintBottom_toBottomOf="@+id/frameLayout_playPause"
+            app:layout_constraintEnd_toStartOf="@+id/frameLayout_playPause"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/frameLayout_playPause"
+            tools:ignore="ImageContrastCheck" />
 
-    </FrameLayout>
+        <FrameLayout
+            android:id="@+id/frameLayout_playPause"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:layout_marginBottom="16dp"
-        app:cardBackgroundColor="@color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+            <ImageButton
+                android:id="@id/exo_pause"
+                style="@style/ExoMediaButton.Pause"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/common_pause"
+                android:src="@drawable/ic_player_pause"
+                tools:ignore="DuplicateClickableBoundsCheck,ImageContrastCheck" />
 
-        <LinearLayout
-            android:id="@id/exo_time"
+            <ImageButton
+                android:id="@id/exo_play"
+                style="@style/ExoMediaButton.Play"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/common_play"
+                android:src="@drawable/ic_player_play"
+                tools:ignore="DuplicateClickableBoundsCheck,ImageContrastCheck" />
+
+        </FrameLayout>
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|start">
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/black"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
 
-            <TextView
-                android:id="@id/exo_position"
-                style="@style/ExoStyledControls.TimeText.Position"
-                android:textSize="12sp" />
+            <LinearLayout
+                android:id="@id/exo_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start">
 
-            <TextView
-                style="@style/ExoStyledControls.TimeText.Separator"
-                android:textSize="12sp" />
+                <TextView
+                    android:id="@id/exo_position"
+                    style="@style/ExoStyledControls.TimeText.Position"
+                    android:textSize="12sp" />
 
-            <TextView
-                android:id="@id/exo_duration"
-                style="@style/ExoStyledControls.TimeText.Duration"
-                android:textSize="12sp" />
+                <TextView
+                    style="@style/ExoStyledControls.TimeText.Separator"
+                    android:textSize="12sp" />
 
-        </LinearLayout>
+                <TextView
+                    android:id="@id/exo_duration"
+                    style="@style/ExoStyledControls.TimeText.Duration"
+                    android:textSize="12sp" />
 
-    </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
-    <View
-        android:id="@id/exo_progress_placeholder"
-        android:layout_width="match_parent"
-        android:layout_height="26dp"
-        android:layout_gravity="bottom"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        </com.google.android.material.card.MaterialCardView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <View
+            android:id="@id/exo_progress_placeholder"
+            android:layout_width="match_parent"
+            android:layout_height="26dp"
+            android:layout_gravity="bottom"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</merge>

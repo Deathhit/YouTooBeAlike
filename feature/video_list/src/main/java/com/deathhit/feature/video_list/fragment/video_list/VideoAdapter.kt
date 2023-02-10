@@ -33,6 +33,11 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
             ItemVideoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         ).apply {
             itemView.setOnClickListener { item?.let { onClickItem(it) } }
+
+            with(binding.styledPlayerView) {
+                isClickable = false
+                isFocusable = false
+            }
         }
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
@@ -110,16 +115,13 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
                 View.VISIBLE
         }
 
-        with(holder.binding.styledPlayerControllerView) {
-            this.player = player
-            if (isPlaybackPrepared)
-                show()
-            else
-                hide()
-        }
-
         with(holder.binding.styledPlayerView) {
             this.player = player
+
+            if (isPlaybackPrepared)
+                showController()
+            else
+                hideController()
         }
 
         if (isAtPlayPosition(position))

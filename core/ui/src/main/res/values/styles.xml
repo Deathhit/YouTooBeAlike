@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Widget.VideoListExample.PlayerView.List" parent="">
+    <style name="Widget.VideoListExample.PlayerView" parent="">
         <item name="android:minHeight">240dp</item> <!--For 4:3 video-->
-        <item name="resize_mode">zoom</item>
-        <item name="surface_type">texture_view</item>
-        <item name="use_controller">false</item>
-    </style>
-
-    <style name="Widget.VideoListExample.PlayerView.Portrait" parent="">
-        <item name="android:background">@color/black_alpha_a8</item>
-        <item name="controller_layout_id">@layout/block_player_controller_portrait</item>
-    </style>
-
-    <style name="Widget.VideoListExample.PlayerControllerView.VideoList" parent="">
         <item name="bar_height">3dp</item>
         <item name="buffered_color">@color/grey_200</item>
-        <item name="controller_layout_id">@layout/block_player_controller_list</item>
         <item name="played_color">@color/purple_200</item>
+        <item name="player_layout_id">@layout/block_player</item>
         <item name="scrubber_color">@color/purple_200</item>
         <item name="scrubber_dragged_size">16dp</item>
         <item name="scrubber_enabled_size">12dp</item>
+    </style>
+
+    <style name="Widget.VideoListExample.PlayerView.List" parent="Widget.VideoListExample.PlayerView">
+        <item name="auto_show">false</item>
+        <item name="controller_layout_id">@layout/block_player_controller_list</item>
+        <item name="hide_on_touch">false</item>
+        <item name="resize_mode">zoom</item>
+        <item name="surface_type">texture_view</item>
         <item name="show_timeout">0</item>
+    </style>
+
+    <style name="Widget.VideoListExample.PlayerView.Portrait" parent="Widget.VideoListExample.PlayerView">
+        <item name="android:background">@color/black_alpha_a8</item>
+        <item name="controller_layout_id">@layout/block_player_controller_portrait</item>
     </style>
 </resources>
