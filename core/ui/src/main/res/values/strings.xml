@@ -12,7 +12,6 @@
     <string name="common_play">Play</string>
     <string name="common_previous">Previous</string>
     <string name="common_retry">Retry</string>
-    <string name="common_video_x_clicked">Video [%1s] is clicked.</string>
 
     <!--Sample-->
     <string name="sample_text">Sample Text</string>

@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#444"
+    app:currentState="@id/end"
     app:layoutDescription="@xml/scene_home_activity"
     tools:ignore="contentDescription">
 
@@ -17,7 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:name="com.deathhit.feature.video_list.fragment.video_list.VideoListFragment" />
+        tools:name="com.deathhit.feature.video_list.fragment.video_list.VideoListFragment" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/container_playerView"

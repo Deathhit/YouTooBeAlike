@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -12,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.deathhit.core.ui.R
 import com.deathhit.core.ui.adapter.load_state.LoadStateAdapter
 import com.deathhit.feature.video_list.adapter.video.VideoAdapter
 import com.deathhit.feature.video_list.databinding.FragmentVideoListBinding
@@ -31,6 +29,12 @@ class VideoListFragment : Fragment() {
     companion object {
         fun create() = VideoListFragment()
     }
+
+    interface Callback {
+        fun onClickItem(item: VideoVO)
+    }
+
+    var callback: Callback? = null
 
     var player: Player? = null
         set(value) {
@@ -106,7 +110,7 @@ class VideoListFragment : Fragment() {
                 }
 
                 override fun onClickItem(item: VideoVO) {
-                    viewModel.showItemClicked(item)
+                    viewModel.clickItem(item)
                 }
             }.apply { setPlayer(player) }.also {
                 adapter = it.withLoadStateFooter(object : LoadStateAdapter() {
@@ -124,6 +128,9 @@ class VideoListFragment : Fragment() {
                         .collect { actions ->
                             actions.forEach { action ->
                                 when (action) {
+                                    is VideoListViewModel.State.Action.ClickItem -> callback?.onClickItem(
+                                        action.item
+                                    )
                                     is VideoListViewModel.State.Action.PrepareMedia -> player?.apply {
                                         setMediaItem(
                                             MediaItem.fromUri(action.item.sourceUrl),
@@ -134,14 +141,6 @@ class VideoListFragment : Fragment() {
                                         if (playbackState == Player.STATE_ENDED)
                                             seekToDefaultPosition()
                                     }
-                                    is VideoListViewModel.State.Action.ShowItemClicked -> Toast.makeText(
-                                        requireContext(),
-                                        getString(
-                                            R.string.common_video_x_clicked,
-                                            action.item.title
-                                        ),
-                                        Toast.LENGTH_LONG
-                                    ).show()
                                     VideoListViewModel.State.Action.StopMedia -> player?.stop()
                                 }
 
@@ -205,6 +204,11 @@ class VideoListFragment : Fragment() {
 
         _videoAdapter = null
 
-        viewModel.clearPlaybackState()
+        viewModel.setPlayPosition(null)
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        viewModel.setPlayPosition(if (hidden) null else playPosition)
     }
 }

@@ -32,6 +32,12 @@ abstract class VideoAdapter : PagingDataAdapter<VideoVO, VideoViewHolder>(COMPAR
         VideoViewHolder(
             ItemVideoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         ).apply {
+            with(binding.styledPlayerView) {
+                //Prevents StyledPlayerView from blocking item views from being clicked.
+                isClickable = false
+                isFocusable = false
+            }
+
             itemView.setOnClickListener { item?.let { onClickItem(it) } }
         }
 

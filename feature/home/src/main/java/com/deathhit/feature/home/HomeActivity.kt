@@ -9,8 +9,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.deathhit.feature.home.databinding.ActivityHomeBinding
 import com.deathhit.feature.video_list.fragment.video_list.VideoListFragment
+import com.deathhit.feature.video_list.model.VideoVO
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
+import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -32,12 +34,30 @@ class HomeActivity : AppCompatActivity() {
     private val videoListFragment
         get() = supportFragmentManager.findFragmentByTag(TAG_VIDEO_LIST) as VideoListFragment?
 
+    private val onNavigationSelectedListener = OnItemSelectedListener {
+        viewModel.setTab(
+            when (it.itemId) {
+                R.id.dashboard -> HomeActivityViewModel.State.Tab.DASHBOARD
+                R.id.notifications -> HomeActivityViewModel.State.Tab.NOTIFICATIONS
+                R.id.home -> HomeActivityViewModel.State.Tab.HOME
+                else -> throw java.lang.RuntimeException("Unexpected item id of ${it.itemId}!")
+            }
+        )
+        true
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         player = ExoPlayer.Builder(this).build()
 
-        supportFragmentManager.addFragmentOnAttachListener{ _, fragment ->
-            when(fragment) {
+        supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
+            when (fragment) {
                 is VideoListFragment -> {
+                    fragment.callback = object : VideoListFragment.Callback {
+                        override fun onClickItem(item: VideoVO) {
+                            viewModel.playVideo(item)
+                        }
+                    }
+
                     fragment.player = player
                 }
             }
@@ -85,11 +105,20 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        with(binding) {
+            bottomNavigationView.setOnItemSelectedListener(onNavigationSelectedListener)
+        }
+
+
         player.play()
     }
 
     override fun onPause() {
         super.onPause()
+        with(binding) {
+            bottomNavigationView.setOnItemSelectedListener(null)
+        }
+
         player.pause()
     }
 

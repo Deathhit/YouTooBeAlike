@@ -36,8 +36,8 @@ class VideoListViewModel @Inject constructor(
         val playPosition: Int?
     ) {
         sealed interface Action {
+            data class ClickItem(val item: VideoVO) : Action
             data class PrepareMedia(val item: VideoVO, val position: Long) : Action
-            data class ShowItemClicked(val item: VideoVO) : Action
             object StopMedia : Action
         }
     }
@@ -63,9 +63,9 @@ class VideoListViewModel @Inject constructor(
 
     private var prepareMediaJob: Job? = null
 
-    fun clearPlaybackState() {
+    fun clickItem(item: VideoVO) {
         _stateFlow.update { state ->
-            state.copy(isFirstFrameRendered = false, playItem = null, playPosition = null)
+            state.copy(actions = state.actions + State.Action.ClickItem(item))
         }
     }
 
@@ -125,8 +125,6 @@ class VideoListViewModel @Inject constructor(
         if (playPosition == this.playPosition)
             return
 
-        preparePlayItem(null)
-
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.StopMedia,
@@ -134,11 +132,7 @@ class VideoListViewModel @Inject constructor(
                 playPosition = playPosition
             )
         }
-    }
 
-    fun showItemClicked(item: VideoVO) {
-        _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.ShowItemClicked(item))
-        }
+        preparePlayItem(null)
     }
 }
