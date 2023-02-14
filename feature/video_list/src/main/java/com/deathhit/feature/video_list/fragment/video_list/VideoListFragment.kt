@@ -13,10 +13,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.deathhit.core.ui.R
+import com.deathhit.core.ui.adapter.load_state.LoadStateAdapter
+import com.deathhit.feature.video_list.adapter.video.VideoAdapter
 import com.deathhit.feature.video_list.databinding.FragmentVideoListBinding
 import com.deathhit.feature.video_list.model.VideoVO
 import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,6 +32,13 @@ class VideoListFragment : Fragment() {
         fun create() = VideoListFragment()
     }
 
+    var player: Player? = null
+        set(value) {
+            field?.removeListener(playerListener)
+            field = value?.apply { addListener(playerListener) }
+            _videoAdapter?.setPlayer(player)
+        }
+
     private val binding get() = _binding!!
     private var _binding: FragmentVideoListBinding? = null
 
@@ -38,15 +46,13 @@ class VideoListFragment : Fragment() {
 
     private val linearLayoutManager get() = _linearLayoutManger!!
     private var _linearLayoutManger: LinearLayoutManager? = null
-    private val playPosition get() = linearLayoutManager.findFirstCompletelyVisibleItemPosition().let {
-        if (it == RecyclerView.NO_POSITION)
-            null
-        else
-            it
-    }
-
-    private val player get() = _player!!
-    private var _player: Player? = null
+    private val playPosition
+        get() = linearLayoutManager.findFirstCompletelyVisibleItemPosition().let {
+            if (it == RecyclerView.NO_POSITION)
+                null
+            else
+                it
+        }
 
     private val videoAdapter get() = _videoAdapter!!
     private var _videoAdapter: VideoAdapter? = null
@@ -62,11 +68,14 @@ class VideoListFragment : Fragment() {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
             if (!isPlaying)
-                viewModel.saveMediaPosition(
-                    with(player) {
-                        if (playbackState == Player.STATE_ENDED) C.TIME_UNSET else currentPosition
-                    }
-                )
+                player?.let {
+                    viewModel.saveMediaPosition(
+                        if (it.playbackState == Player.STATE_ENDED)
+                            C.TIME_UNSET
+                        else
+                            it.currentPosition
+                    )
+                }
         }
 
         override fun onRenderedFirstFrame() {
@@ -99,12 +108,7 @@ class VideoListFragment : Fragment() {
                 override fun onClickItem(item: VideoVO) {
                     viewModel.showItemClicked(item)
                 }
-            }.apply {
-                setPlayer(
-                    ExoPlayer.Builder(context).build().apply { addListener(playerListener) }
-                        .also { _player = it }
-                )
-            }.also {
+            }.apply { setPlayer(player) }.also {
                 adapter = it.withLoadStateFooter(object : LoadStateAdapter() {
                     override fun onRetryLoading() {
                         videoAdapter.retry()
@@ -120,7 +124,7 @@ class VideoListFragment : Fragment() {
                         .collect { actions ->
                             actions.forEach { action ->
                                 when (action) {
-                                    is VideoListViewModel.State.Action.PrepareMedia -> with(player) {
+                                    is VideoListViewModel.State.Action.PrepareMedia -> player?.apply {
                                         setMediaItem(
                                             MediaItem.fromUri(action.item.sourceUrl),
                                             action.position
@@ -138,7 +142,7 @@ class VideoListFragment : Fragment() {
                                         ),
                                         Toast.LENGTH_LONG
                                     ).show()
-                                    VideoListViewModel.State.Action.StopMedia -> player.stop()
+                                    VideoListViewModel.State.Action.StopMedia -> player?.stop()
                                 }
 
                                 viewModel.onAction(action)
@@ -184,28 +188,20 @@ class VideoListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         binding.recyclerView.addOnScrollListener(onScrollListener)
-
-        player.play()
     }
 
     override fun onPause() {
         super.onPause()
         binding.recyclerView.removeOnScrollListener(onScrollListener)
-
-        player.pause()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        player = null
+
         _binding = null
 
         _linearLayoutManger = null
-
-        with(player) {
-            release()
-            removeListener(playerListener)
-        }
-        _player = null
 
         _videoAdapter = null
 

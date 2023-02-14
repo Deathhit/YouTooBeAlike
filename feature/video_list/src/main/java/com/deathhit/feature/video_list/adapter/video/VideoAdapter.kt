@@ -1,4 +1,4 @@
-package com.deathhit.feature.video_list.fragment.video_list
+package com.deathhit.feature.video_list.adapter.video
 
 import android.view.LayoutInflater
 import android.view.View

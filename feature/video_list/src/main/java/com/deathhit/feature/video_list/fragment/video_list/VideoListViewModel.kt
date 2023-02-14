@@ -82,7 +82,7 @@ class VideoListViewModel @Inject constructor(
     }
 
     fun preparePlayItem(playItem: VideoVO?) {
-        if (this.playItem == playItem)
+        if (playItem == this.playItem)
             return
 
         _stateFlow.update { state ->
@@ -91,10 +91,10 @@ class VideoListViewModel @Inject constructor(
 
         prepareMediaJob?.cancel()
         prepareMediaJob = viewModelScope.launch {
-            delay(MEDIA_SWITCHING_DELAY)
-
             if (playItem == null)
                 return@launch
+
+            delay(MEDIA_SWITCHING_DELAY)
 
             _stateFlow.update { state ->
                 state.copy(
@@ -124,6 +124,8 @@ class VideoListViewModel @Inject constructor(
     fun setPlayPosition(playPosition: Int?) {
         if (playPosition == this.playPosition)
             return
+
+        preparePlayItem(null)
 
         _stateFlow.update { state ->
             state.copy(

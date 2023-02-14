@@ -2,7 +2,9 @@
     <string name="app_name">Video List Example</string>
 
     <!--Common-->
+    <string name="common_artwork">Artwork</string>
     <string name="common_dashboard">Dashboard</string>
+    <string name="common_fullscreen">Fullscreen</string>
     <string name="common_home">Home</string>
     <string name="common_next">Next</string>
     <string name="common_notifications">Notifications</string>

@@ -15,6 +15,10 @@ android {
         consumerProguardFiles "consumer-rules.pro"
     }
 
+    buildFeatures {
+        viewBinding true
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -34,7 +38,7 @@ android {
 
 dependencies {
     //Appcompat
-    api 'androidx.appcompat:appcompat:1.6.0'
+    api 'androidx.appcompat:appcompat:1.6.1'
 
     //Constraint Layout
     api 'androidx.constraintlayout:constraintlayout:2.1.4'
@@ -44,10 +48,15 @@ dependencies {
 
     //Exo Player
     def exo_version = '2.18.2'
+    api "com.google.android.exoplayer:exoplayer:$exo_version"
     api "com.google.android.exoplayer:exoplayer-ui:$exo_version"
 
     //Material
     api 'com.google.android.material:material:1.8.0'
+
+    //Paging
+    def paging_version = "3.1.1"
+    api "androidx.paging:paging-runtime-ktx:$paging_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

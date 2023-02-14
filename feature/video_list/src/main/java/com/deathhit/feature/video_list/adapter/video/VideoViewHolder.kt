@@ -1,4 +1,4 @@
-package com.deathhit.feature.video_list.fragment.video_list
+package com.deathhit.feature.video_list.adapter.video
 
 import androidx.recyclerview.widget.RecyclerView
 import com.deathhit.feature.video_list.databinding.ItemVideoBinding

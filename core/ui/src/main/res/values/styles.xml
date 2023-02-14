@@ -11,11 +11,18 @@
         <item name="scrubber_enabled_size">12dp</item>
     </style>
 
+    <style name="Widget.VideoListExample.PlayerView.Compact" parent="Widget.VideoListExample.PlayerView">
+        <item name="android:minHeight">48dp</item>
+        <item name="auto_show">false</item>
+        <item name="controller_layout_id">@layout/block_player_control_compact</item>
+        <item name="show_timeout">0</item>
+    </style>
+
     <style name="Widget.VideoListExample.PlayerView.List" parent="Widget.VideoListExample.PlayerView">
         <item name="android:clickable">false</item>
         <item name="android:focusable">false</item>
         <item name="auto_show">false</item>
-        <item name="controller_layout_id">@layout/block_player_controller_list</item>
+        <item name="controller_layout_id">@layout/block_player_control_list</item>
         <item name="hide_on_touch">false</item>
         <item name="resize_mode">zoom</item>
         <item name="surface_type">texture_view</item>
@@ -23,7 +30,7 @@
     </style>
 
     <style name="Widget.VideoListExample.PlayerView.Portrait" parent="Widget.VideoListExample.PlayerView">
-        <item name="android:background">@color/black_alpha_a8</item>
-        <item name="controller_layout_id">@layout/block_player_controller_portrait</item>
+        <item name="android:background">@color/black</item>
+        <item name="controller_layout_id">@layout/block_player_control_portrait</item>
     </style>
 </resources>

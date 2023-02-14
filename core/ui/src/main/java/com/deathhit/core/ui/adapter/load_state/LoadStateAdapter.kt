@@ -1,17 +1,15 @@
-package com.deathhit.feature.video_list.fragment.video_list
+package com.deathhit.core.ui.adapter.load_state
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.paging.LoadState
-import androidx.paging.LoadStateAdapter
-import com.deathhit.feature.video_list.databinding.ItemVideoListLoadStateBinding
+import com.deathhit.core.ui.databinding.ItemLoadStateBinding
 
-abstract class LoadStateAdapter :
-    LoadStateAdapter<LoadStateViewHolder>() {
+abstract class LoadStateAdapter : androidx.paging.LoadStateAdapter<LoadStateViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, loadState: LoadState): LoadStateViewHolder =
         LoadStateViewHolder(
-            ItemVideoListLoadStateBinding.inflate(
+            ItemLoadStateBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
                 false

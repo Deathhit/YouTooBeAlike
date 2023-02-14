@@ -48,11 +48,6 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutine_version"
     androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutine_version"
 
-    //Exo Player
-    def exo_version = '2.18.2'
-    implementation "com.google.android.exoplayer:exoplayer:$exo_version"
-    implementation "com.google.android.exoplayer:extension-mediasession:$exo_version"
-
     //Glide
     def glide_version = '4.14.2'
     kapt "com.github.bumptech.glide:compiler:$glide_version"
@@ -68,10 +63,6 @@ dependencies {
     //KTX
     implementation 'androidx.fragment:fragment-ktx:1.5.5'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
-
-    //Paging
-    def paging_version = "3.1.1"
-    implementation "androidx.paging:paging-runtime-ktx:$paging_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

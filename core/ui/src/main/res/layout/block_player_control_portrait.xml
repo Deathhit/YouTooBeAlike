@@ -59,39 +59,6 @@
 
         </FrameLayout>
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/black"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
-
-            <LinearLayout
-                android:id="@id/exo_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|start">
-
-                <TextView
-                    android:id="@id/exo_position"
-                    style="@style/ExoStyledControls.TimeText.Position"
-                    android:textSize="12sp" />
-
-                <TextView
-                    style="@style/ExoStyledControls.TimeText.Separator"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@id/exo_duration"
-                    style="@style/ExoStyledControls.TimeText.Duration"
-                    android:textSize="12sp" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
         <View
             android:id="@id/exo_progress_placeholder"
             android:layout_width="match_parent"
@@ -100,6 +67,39 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+
+        <LinearLayout
+            android:id="@id/exo_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|start"
+            android:layout_marginStart="4dp"
+            app:layout_constraintBottom_toBottomOf="@+id/exo_fullscreen"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/exo_fullscreen">
+
+            <TextView
+                android:id="@id/exo_position"
+                style="@style/ExoStyledControls.TimeText.Position"
+                android:textSize="12sp" />
+
+            <TextView
+                style="@style/ExoStyledControls.TimeText.Separator"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@id/exo_duration"
+                style="@style/ExoStyledControls.TimeText.Duration"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@id/exo_fullscreen"
+            style="@style/ExoStyledControls.Button.Bottom.FullScreen"
+            android:contentDescription="@string/common_fullscreen"
+            app:layout_constraintBottom_toTopOf="@+id/exo_progress_placeholder"
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </merge>
