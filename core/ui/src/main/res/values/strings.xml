@@ -3,6 +3,7 @@
 
     <!--Common-->
     <string name="common_artwork">Artwork</string>
+    <string name="common_clear">Clear</string>
     <string name="common_dashboard">Dashboard</string>
     <string name="common_fullscreen">Fullscreen</string>
     <string name="common_home">Home</string>

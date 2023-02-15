@@ -1,6 +1,7 @@
 package com.deathhit.feature.home
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
@@ -10,7 +11,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.deathhit.feature.home.databinding.ActivityHomeBinding
 import com.deathhit.feature.video_list.fragment.video_list.VideoListFragment
 import com.deathhit.feature.video_list.model.VideoVO
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
 import dagger.hilt.android.AndroidEntryPoint
@@ -43,18 +46,43 @@ class HomeActivity : AppCompatActivity() {
                 else -> throw java.lang.RuntimeException("Unexpected item id of ${it.itemId}!")
             }
         )
+
         true
     }
 
+    private val playerListener = object : Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            super.onIsPlayingChanged(isPlaying)
+            if (!isPlaying)
+                player.let {
+                    viewModel.savePlayItemPosition(
+                        if (it.playbackState == Player.STATE_ENDED)
+                            C.TIME_UNSET
+                        else
+                            it.currentPosition
+                    )
+                }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        player = ExoPlayer.Builder(this).build()
+        player = ExoPlayer.Builder(this).build().apply { addListener(playerListener) }
 
         supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
             when (fragment) {
                 is VideoListFragment -> {
                     fragment.callback = object : VideoListFragment.Callback {
                         override fun onClickItem(item: VideoVO) {
-                            viewModel.playVideo(item)
+                            //todo implement
+                            Toast.makeText(this@HomeActivity, item.title, Toast.LENGTH_LONG).show()
+                        }
+
+                        override fun onPrepareItem(item: VideoVO?) {
+                            viewModel.preparePlayItem(item)
+                        }
+
+                        override fun onStopPlayer() {
+                            viewModel.stopPlayer()
                         }
                     }
 
@@ -68,6 +96,23 @@ class HomeActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.stateFlow.map { it.actions }.distinctUntilChanged().collect {actions ->
+                        actions.forEach { action ->
+                            when(action) {
+                                is HomeActivityViewModel.State.Action.PrepareMedia -> player.run {
+                                    setMediaItem(
+                                        MediaItem.fromUri(action.item.sourceUrl),
+                                        action.position
+                                    )
+                                    prepare()
+                                }
+                                HomeActivityViewModel.State.Action.StopPlayer -> player.stop()
+                            }
+                        }
+                    }
+                }
+
                 launch {
                     viewModel.stateFlow.map { it.tab }.distinctUntilChanged().collect { tab ->
                         when (tab) {
@@ -109,7 +154,6 @@ class HomeActivity : AppCompatActivity() {
             bottomNavigationView.setOnItemSelectedListener(onNavigationSelectedListener)
         }
 
-
         player.play()
     }
 
@@ -124,7 +168,10 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        player.release()
+        with(player) {
+            removeListener(playerListener)
+            release()
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

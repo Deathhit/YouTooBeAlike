@@ -12,7 +12,6 @@
     </style>
 
     <style name="Widget.VideoListExample.PlayerView.Compact" parent="Widget.VideoListExample.PlayerView">
-        <item name="android:minHeight">48dp</item>
         <item name="auto_show">false</item>
         <item name="controller_layout_id">@layout/block_player_control_compact</item>
         <item name="show_timeout">0</item>

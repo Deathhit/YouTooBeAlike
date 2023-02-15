@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:motion="http://schemas.android.com/apk/res-auto">
 
     <!--Due to historical reasons the start state of the first transition in the file is the initial state.-->
@@ -41,20 +42,19 @@
                 motion:motionTarget="@id/container_playbackInfo"
                 motion:percentWidth="0" />
 
-            <KeyAttribute
-                android:alpha="0"
-                motion:framePosition="75"
-                motion:motionTarget="@id/recyclerView" />
-
-            <KeyAttribute
-                android:alpha="0.10"
+            <KeyPosition
+                motion:curveFit="linear"
                 motion:framePosition="90"
-                motion:motionTarget="@id/button_clear" />
+                motion:motionTarget="@id/button_clear"
+                motion:percentWidth="0"
+                motion:percentX="0" />
 
-            <KeyAttribute
-                android:alpha="0.10"
+            <KeyPosition
+                motion:curveFit="linear"
                 motion:framePosition="90"
-                motion:motionTarget="@id/playerControlView_compact" />
+                motion:motionTarget="@id/playerControlView_compact"
+                motion:percentWidth="0"
+                motion:percentX="0" />
         </KeyFrameSet>
     </Transition>
 
@@ -69,16 +69,17 @@
             android:id="@id/container_playerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
+            motion:layout_constraintBottom_toBottomOf="parent"
             motion:layout_constraintEnd_toEndOf="parent"
-            motion:layout_constraintStart_toStartOf="parent" />
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/container_playerView"/>
 
         <Constraint
             android:id="@id/playerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
-            motion:layout_constraintDimensionRatio="H,1:2.5"
+            motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="@id/container_playerView"
             motion:layout_constraintTop_toTopOf="@id/container_playerView" />
 
@@ -86,30 +87,34 @@
             android:id="@id/container_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            motion:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
+            motion:layout_constraintBottom_toBottomOf="@id/bottomNavigationView"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
             motion:layout_constraintTop_toBottomOf="@id/container_playerView" />
 
         <Constraint
-            android:id="@id/recyclerView"
+            android:id="@id/recyclerView_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:alpha="0"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
-            motion:layout_constraintEnd_toEndOf="@id/container_playerView"
-            motion:layout_constraintStart_toStartOf="@id/container_playerView"
+            motion:layout_constraintBottom_toBottomOf="parent"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
             motion:layout_constraintTop_toBottomOf="@id/container_playerView" />
 
-        <Constraint android:id="@id/playerControlView_compact">
-            <PropertySet motion:alpha="0" />
-        </Constraint>
+        <Constraint android:id="@id/playerControlView_compact"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintHorizontal_bias="1"
+            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintEnd_toStartOf="@id/button_clear"
+            motion:layout_constraintTop_toTopOf="@id/container_playerView"/>
 
-        <Constraint android:id="@id/button_clear">
-            <PropertySet motion:alpha="0" />
-        </Constraint>
+        <Constraint android:id="@id/button_clear"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintEnd_toEndOf="@id/container_playerView"
+            motion:layout_constraintTop_toTopOf="@id/container_playerView"/>
 
         <Constraint
             android:id="@id/bottomNavigationView"
@@ -149,7 +154,7 @@
             motion:layout_constraintTop_toBottomOf="@id/container_playerView" />
 
         <Constraint
-            android:id="@id/recyclerView"
+            android:id="@id/recyclerView_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toBottomOf="parent"
@@ -157,12 +162,23 @@
             motion:layout_constraintStart_toStartOf="parent"
             motion:layout_constraintTop_toBottomOf="@id/container_playerView" />
 
-        <Constraint android:id="@id/playerControlView_compact">
-            <PropertySet motion:alpha="0" />
+        <Constraint android:id="@id/playerControlView_compact"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintHorizontal_bias="1"
+            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintEnd_toStartOf="@id/button_clear"
+            motion:layout_constraintTop_toTopOf="@id/container_playerView">
+
         </Constraint>
 
-        <Constraint android:id="@id/button_clear">
-            <PropertySet motion:alpha="0" />
+        <Constraint android:id="@id/button_clear"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintEnd_toEndOf="@id/container_playerView"
+            motion:layout_constraintTop_toTopOf="@id/container_playerView">
+
         </Constraint>
 
         <Constraint
@@ -181,6 +197,7 @@
             android:layout_height="54dp"
             motion:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
             motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintHorizontal_bias="1"
             motion:layout_constraintStart_toStartOf="parent" />
 
         <Constraint
@@ -196,30 +213,35 @@
             android:id="@id/container_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
             motion:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
             motion:layout_constraintTop_toBottomOf="@id/container_playerView" />
 
         <Constraint
-            android:id="@id/recyclerView"
+            android:id="@id/recyclerView_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:alpha="0"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
-            motion:layout_constraintEnd_toEndOf="@id/container_playerView"
-            motion:layout_constraintStart_toStartOf="@id/container_playerView"
+            motion:layout_constraintBottom_toBottomOf="parent"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
             motion:layout_constraintTop_toBottomOf="@id/container_playerView" />
 
-        <Constraint android:id="@id/playerControlView_compact">
-            <PropertySet motion:alpha="1" />
-        </Constraint>
+        <Constraint android:id="@id/playerControlView_compact"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintHorizontal_bias="1"
+            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintEnd_toStartOf="@id/button_clear"
+            motion:layout_constraintStart_toEndOf="@id/playerView"
+            motion:layout_constraintTop_toTopOf="@id/container_playerView"/>
 
-        <Constraint android:id="@id/button_clear">
-            <PropertySet motion:alpha="1" />
-        </Constraint>
+        <Constraint android:id="@id/button_clear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintEnd_toEndOf="@id/container_playerView"
+            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
 
         <Constraint
             android:id="@id/bottomNavigationView"

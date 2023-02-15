@@ -15,8 +15,6 @@ import com.deathhit.core.ui.adapter.load_state.LoadStateAdapter
 import com.deathhit.feature.video_list.adapter.video.VideoAdapter
 import com.deathhit.feature.video_list.databinding.FragmentVideoListBinding
 import com.deathhit.feature.video_list.model.VideoVO
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -32,6 +30,8 @@ class VideoListFragment : Fragment() {
 
     interface Callback {
         fun onClickItem(item: VideoVO)
+        fun onPrepareItem(item: VideoVO?)
+        fun onStopPlayer()
     }
 
     var callback: Callback? = null
@@ -69,19 +69,6 @@ class VideoListFragment : Fragment() {
     }
 
     private val playerListener = object : Player.Listener {
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            super.onIsPlayingChanged(isPlaying)
-            if (!isPlaying)
-                player?.let {
-                    viewModel.saveMediaPosition(
-                        if (it.playbackState == Player.STATE_ENDED)
-                            C.TIME_UNSET
-                        else
-                            it.currentPosition
-                    )
-                }
-        }
-
         override fun onRenderedFirstFrame() {
             super.onRenderedFirstFrame()
             viewModel.notifyFirstFrameRendered()
@@ -131,17 +118,10 @@ class VideoListFragment : Fragment() {
                                     is VideoListViewModel.State.Action.ClickItem -> callback?.onClickItem(
                                         action.item
                                     )
-                                    is VideoListViewModel.State.Action.PrepareMedia -> player?.apply {
-                                        setMediaItem(
-                                            MediaItem.fromUri(action.item.sourceUrl),
-                                            action.position
-                                        )
-                                        prepare()
-
-                                        if (playbackState == Player.STATE_ENDED)
-                                            seekToDefaultPosition()
-                                    }
-                                    VideoListViewModel.State.Action.StopMedia -> player?.stop()
+                                    is VideoListViewModel.State.Action.PrepareItem -> callback?.onPrepareItem(
+                                        action.item
+                                    )
+                                    VideoListViewModel.State.Action.StopPlayer -> callback?.onStopPlayer()
                                 }
 
                                 viewModel.onAction(action)
