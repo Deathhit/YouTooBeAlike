@@ -11,19 +11,20 @@
         <item name="scrubber_enabled_size">12dp</item>
     </style>
 
-    <style name="Widget.VideoListExample.PlayerView.Compact" parent="Widget.VideoListExample.PlayerView">
-        <item name="android:minHeight">48dp</item> <!--For 4:3 video-->
-        <item name="auto_show">false</item>
-        <item name="controller_layout_id">@layout/block_player_control_compact</item>
-        <item name="show_timeout">0</item>
-    </style>
-
     <style name="Widget.VideoListExample.PlayerView.List" parent="Widget.VideoListExample.PlayerView">
         <item name="auto_show">false</item>
         <item name="controller_layout_id">@layout/block_player_control_list</item>
         <item name="hide_on_touch">false</item>
         <item name="resize_mode">zoom</item>
         <item name="surface_type">texture_view</item>
+        <item name="show_timeout">0</item>
+    </style>
+
+    <style name="Widget.VideoListExample.PlayerView.PlayPause" parent="Widget.VideoListExample.PlayerView">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="auto_show">false</item>
+        <item name="controller_layout_id">@layout/block_player_control_play_pause</item>
         <item name="show_timeout">0</item>
     </style>
 
