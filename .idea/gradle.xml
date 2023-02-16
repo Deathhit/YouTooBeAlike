@@ -20,8 +20,8 @@
             <option value="$PROJECT_DIR$/data/media_item" />
             <option value="$PROJECT_DIR$/data/media_progress" />
             <option value="$PROJECT_DIR$/feature" />
-            <option value="$PROJECT_DIR$/feature/home" />
-            <option value="$PROJECT_DIR$/feature/video_list" />
+            <option value="$PROJECT_DIR$/feature/media_item_list" />
+            <option value="$PROJECT_DIR$/feature/navigation" />
           </set>
         </option>
       </GradleProjectSettings>
