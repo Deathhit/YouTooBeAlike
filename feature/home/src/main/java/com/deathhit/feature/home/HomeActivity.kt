@@ -1,6 +1,7 @@
 package com.deathhit.feature.home
 
 import android.os.Bundle
+import android.view.View.OnClickListener
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -36,6 +37,14 @@ class HomeActivity : AppCompatActivity() {
 
     private val videoListFragment
         get() = supportFragmentManager.findFragmentByTag(TAG_VIDEO_LIST) as VideoListFragment?
+
+    private val onClearListener = OnClickListener {
+        //todo test
+        with(binding.motionLayout) {
+            setTransition(R.id.hide)
+            transitionToEnd()
+        }
+    }
 
     private val onNavigationSelectedListener = OnItemSelectedListener {
         viewModel.setTab(
@@ -73,7 +82,21 @@ class HomeActivity : AppCompatActivity() {
                 is VideoListFragment -> {
                     fragment.callback = object : VideoListFragment.Callback {
                         override fun onClickItem(item: VideoVO) {
-                            //todo implement
+                            //todo use viewmodel action
+                            with(binding.motionLayout) {
+                                when(currentState) {
+                                    R.id.end -> {
+                                        setTransition(R.id.dragVertically)
+                                        transitionToStart()
+                                    }
+                                    R.id.gone -> {
+                                        setTransition(R.id.pop)
+                                        transitionToEnd { setTransition(R.id.dragVertically) }
+                                    }
+                                    else -> {}
+                                }
+                            }
+
                             Toast.makeText(this@HomeActivity, item.title, Toast.LENGTH_LONG).show()
                         }
 
@@ -152,6 +175,7 @@ class HomeActivity : AppCompatActivity() {
         super.onResume()
         with(binding) {
             bottomNavigationView.setOnItemSelectedListener(onNavigationSelectedListener)
+            buttonClear.setOnClickListener(onClearListener)
         }
 
         player.play()
@@ -161,6 +185,7 @@ class HomeActivity : AppCompatActivity() {
         super.onPause()
         with(binding) {
             bottomNavigationView.setOnItemSelectedListener(null)
+            buttonClear.setOnClickListener(null)
         }
 
         player.pause()
