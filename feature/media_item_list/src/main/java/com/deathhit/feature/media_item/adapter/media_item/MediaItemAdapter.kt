@@ -6,20 +6,20 @@ import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.bumptech.glide.Glide
-import com.deathhit.feature.media_item.model.ItemVO
+import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.ItemMediaItemBinding
 import com.google.android.exoplayer2.Player
 
-abstract class MediaItemAdapter : PagingDataAdapter<ItemVO, MediaItemViewHolder>(COMPARATOR) {
+abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHolder>(COMPARATOR) {
     companion object {
         private const val TAG = "MediaItemAdapter"
         private const val PAYLOAD_PLAY_POSITION = "$TAG.PAYLOAD_PLAY_POSITION"
 
-        private val COMPARATOR = object : DiffUtil.ItemCallback<ItemVO>() {
-            override fun areItemsTheSame(oldItem: ItemVO, newItem: ItemVO): Boolean =
+        private val COMPARATOR = object : DiffUtil.ItemCallback<MediaItemVO>() {
+            override fun areItemsTheSame(oldItem: MediaItemVO, newItem: MediaItemVO): Boolean =
                 oldItem == newItem
 
-            override fun areContentsTheSame(oldItem: ItemVO, newItem: ItemVO): Boolean =
+            override fun areContentsTheSame(oldItem: MediaItemVO, newItem: MediaItemVO): Boolean =
                 oldItem == newItem
         }
     }
@@ -104,7 +104,7 @@ abstract class MediaItemAdapter : PagingDataAdapter<ItemVO, MediaItemViewHolder>
         notifyIsFirstFrameRendered(false)
     }
 
-    private fun bindPlayPosition(holder: MediaItemViewHolder, item: ItemVO, position: Int) {
+    private fun bindPlayPosition(holder: MediaItemViewHolder, item: MediaItemVO, position: Int) {
         val isAtPlayPosition = isAtPlayPosition(position)
         val isFirstFrameRendered = isAtPlayPosition && isFirstFrameRendered
         val player = if (isAtPlayPosition) player else null
@@ -131,6 +131,6 @@ abstract class MediaItemAdapter : PagingDataAdapter<ItemVO, MediaItemViewHolder>
 
     private fun isAtPlayPosition(position: Int) = position == playPosition
 
-    abstract fun onBindPlayPosition(item: ItemVO)
-    abstract fun onClickItem(item: ItemVO)
+    abstract fun onBindPlayPosition(item: MediaItemVO)
+    abstract fun onClickItem(item: MediaItemVO)
 }

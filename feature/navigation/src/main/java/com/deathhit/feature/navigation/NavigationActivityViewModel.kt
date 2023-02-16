@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deathhit.data.media_progress.MediaProgressDO
 import com.deathhit.data.media_progress.repository.MediaProgressRepository
-import com.deathhit.feature.media_item.model.ItemVO
+import com.deathhit.feature.media_item.model.MediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -30,11 +30,11 @@ class NavigationActivityViewModel @Inject constructor(
 
     data class State(
         val actions: List<Action>,
-        val playItem: ItemVO?,
+        val playItem: MediaItemVO?,
         val tab: Tab
     ) {
         sealed interface Action {
-            data class PrepareMedia(val item: ItemVO, val position: Long) : Action
+            data class PrepareMedia(val item: MediaItemVO, val position: Long) : Action
             object StopPlayer : Action
         }
 
@@ -60,7 +60,7 @@ class NavigationActivityViewModel @Inject constructor(
 
     private var prepareItemJob: Job? = null
 
-    fun preparePlayItem(playItem: ItemVO?) {
+    fun preparePlayItem(playItem: MediaItemVO?) {
         if (playItem == this.playItem)
             return
 

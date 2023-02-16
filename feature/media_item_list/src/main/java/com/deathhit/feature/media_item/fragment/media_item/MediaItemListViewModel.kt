@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.deathhit.data.media_item.repository.MediaItemRepository
-import com.deathhit.feature.media_item.model.ItemVO
-import com.deathhit.feature.media_item.model.toItemVO
+import com.deathhit.feature.media_item.model.MediaItemVO
+import com.deathhit.feature.media_item.model.toMediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,12 +19,12 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
     data class State(
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
-        val playItem: ItemVO?,
+        val playItem: MediaItemVO?,
         val playPosition: Int?
     ) {
         sealed interface Action {
-            data class ClickItem(val item: ItemVO) : Action
-            data class PrepareItem(val item: ItemVO?) : Action
+            data class ClickItem(val item: MediaItemVO) : Action
+            data class PrepareItem(val item: MediaItemVO?) : Action
             object StopPlayer : Action
         }
     }
@@ -42,13 +42,13 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
 
     val videoPagingDataFlow =
         mediaItemRepository.getThumbnailPagingDataFlow()
-            .map { pagingData -> pagingData.map { it.toItemVO() } }
+            .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
             .cachedIn(viewModelScope)
 
     private val playItem get() = stateFlow.value.playItem
     private val playPosition get() = stateFlow.value.playPosition
 
-    fun clickItem(item: ItemVO) {
+    fun clickItem(item: MediaItemVO) {
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.ClickItem(item))
         }
@@ -66,7 +66,7 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
         }
     }
 
-    fun preparePlayItem(playItem: ItemVO?) {
+    fun preparePlayItem(playItem: MediaItemVO?) {
         if (playItem == this.playItem)
             return
 

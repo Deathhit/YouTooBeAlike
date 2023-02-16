@@ -10,7 +10,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
-import com.deathhit.feature.media_item.model.ItemVO
+import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
@@ -81,7 +81,7 @@ class NavigationActivity : AppCompatActivity() {
             when (fragment) {
                 is MediaItemListFragment -> {
                     fragment.callback = object : MediaItemListFragment.Callback {
-                        override fun onClickItem(item: ItemVO) {
+                        override fun onClickItem(item: MediaItemVO) {
                             //todo use viewmodel action
                             with(binding.motionLayout) {
                                 when(currentState) {
@@ -100,7 +100,7 @@ class NavigationActivity : AppCompatActivity() {
                             Toast.makeText(this@NavigationActivity, item.title, Toast.LENGTH_LONG).show()
                         }
 
-                        override fun onPrepareItem(item: ItemVO?) {
+                        override fun onPrepareItem(item: MediaItemVO?) {
                             viewModel.preparePlayItem(item)
                         }
 

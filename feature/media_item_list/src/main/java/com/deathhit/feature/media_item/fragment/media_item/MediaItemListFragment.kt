@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.deathhit.core.ui.adapter.load_state.LoadStateAdapter
 import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
-import com.deathhit.feature.media_item.model.ItemVO
+import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.FragmentMediaItemListBinding
 import com.google.android.exoplayer2.Player
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,8 +29,8 @@ class MediaItemListFragment : Fragment() {
     }
 
     interface Callback {
-        fun onClickItem(item: ItemVO)
-        fun onPrepareItem(item: ItemVO?)
+        fun onClickItem(item: MediaItemVO)
+        fun onPrepareItem(item: MediaItemVO?)
         fun onStopPlayer()
     }
 
@@ -92,11 +92,11 @@ class MediaItemListFragment : Fragment() {
             _linearLayoutManger = (layoutManager!! as LinearLayoutManager)
 
             _Media_itemAdapter = object : MediaItemAdapter() {
-                override fun onBindPlayPosition(item: ItemVO) {
+                override fun onBindPlayPosition(item: MediaItemVO) {
                     viewModel.preparePlayItem(item)
                 }
 
-                override fun onClickItem(item: ItemVO) {
+                override fun onClickItem(item: MediaItemVO) {
                     viewModel.clickItem(item)
                 }
             }.apply { setPlayer(player) }.also {

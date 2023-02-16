@@ -5,11 +5,11 @@ import com.deathhit.data.media_item.MediaItemDO
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class ItemVO(
+data class MediaItemVO(
     val sourceUrl: String,
     val subtitle: String,
     val thumbUrl: String,
     val title: String
 ) : Parcelable
 
-fun MediaItemDO.toItemVO() = ItemVO(sourceUrl, subtitle, thumbUrl, title)
+fun MediaItemDO.toMediaItemVO() = MediaItemVO(sourceUrl, subtitle, thumbUrl, title)
