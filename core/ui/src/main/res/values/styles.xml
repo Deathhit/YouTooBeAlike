@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Widget.VideoListExample.PlayerView" parent="">
-        <item name="android:minHeight">240dp</item> <!--For 4:3 video-->
+
         <item name="bar_height">3dp</item>
         <item name="buffered_color">@color/grey_200</item>
         <item name="played_color">@color/purple_200</item>
@@ -12,6 +12,7 @@
     </style>
 
     <style name="Widget.VideoListExample.PlayerView.List" parent="Widget.VideoListExample.PlayerView">
+        <item name="android:minHeight">@dimen/min_height_player_view_list</item>
         <item name="auto_show">false</item>
         <item name="controller_layout_id">@layout/block_player_control_list</item>
         <item name="hide_on_touch">false</item>
@@ -30,6 +31,7 @@
 
     <style name="Widget.VideoListExample.PlayerView.Portrait" parent="Widget.VideoListExample.PlayerView">
         <item name="android:background">@color/black</item>
+        <item name="android:minHeight">@dimen/min_height_player_view_portrait</item>
         <item name="controller_layout_id">@layout/block_player_control_portrait</item>
     </style>
 </resources>

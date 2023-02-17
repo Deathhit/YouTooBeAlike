@@ -20,7 +20,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/container_playerView"
         android:layout_width="match_parent"
-        android:layout_height="240dp"
+        android:layout_height="@dimen/min_height_player_view_list"
         android:background="?android:attr/windowBackground"
         app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toEndOf="parent"

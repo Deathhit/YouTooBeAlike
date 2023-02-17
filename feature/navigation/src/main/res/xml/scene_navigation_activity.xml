@@ -105,7 +105,7 @@
         <Constraint
             android:id="@id/container_playerView"
             android:layout_width="0dp"
-            android:layout_height="54dp"
+            android:layout_height="@dimen/min_height_player_view_portrait"
             motion:layout_constraintBottom_toBottomOf="@id/bottomNavigationView"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
@@ -157,7 +157,6 @@
             android:id="@id/bottomNavigationView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="?android:attr/windowBackground"
             motion:layout_constraintBottom_toBottomOf="parent"
             motion:layout_constraintLeft_toLeftOf="parent"
             motion:layout_constraintRight_toRightOf="parent" />
@@ -167,7 +166,7 @@
         <Constraint
             android:id="@id/container_playerView"
             android:layout_width="0dp"
-            android:layout_height="54dp"
+            android:layout_height="@dimen/min_height_player_view_portrait"
             motion:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintHorizontal_bias="1"
@@ -219,7 +218,6 @@
             android:id="@id/bottomNavigationView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="?android:attr/windowBackground"
             motion:layout_constraintBottom_toBottomOf="parent"
             motion:layout_constraintLeft_toLeftOf="parent"
             motion:layout_constraintRight_toRightOf="parent" />
@@ -229,7 +227,7 @@
         <Constraint
             android:id="@id/container_playerView"
             android:layout_width="0dp"
-            android:layout_height="240dp"
+            android:layout_height="@dimen/min_height_player_view_list"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
             motion:layout_constraintTop_toTopOf="parent" />
