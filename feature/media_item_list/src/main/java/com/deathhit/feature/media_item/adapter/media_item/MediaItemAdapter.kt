@@ -26,7 +26,7 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
 
     private var isFirstFrameRendered = false
     private var player: Player? = null
-    private var playPosition: Int? = null
+    private var playPosition: Int? = null   //This is an absoluteAdapterPosition.
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MediaItemViewHolder =
         MediaItemViewHolder(
@@ -56,7 +56,7 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
                 text = item.title
             }
 
-            bindPlayPosition(holder, item, position)
+            bindPlayPosition(holder, item)
         }
     }
 
@@ -71,7 +71,7 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
             holder.item = getItem(position)?.also { item ->
                 payloads.forEach { payload ->
                     when (payload) {
-                        PAYLOAD_PLAY_POSITION -> bindPlayPosition(holder, item, position)
+                        PAYLOAD_PLAY_POSITION -> bindPlayPosition(holder, item)
                     }
                 }
             }
@@ -104,8 +104,8 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
         notifyIsFirstFrameRendered(false)
     }
 
-    private fun bindPlayPosition(holder: MediaItemViewHolder, item: MediaItemVO, position: Int) {
-        val isAtPlayPosition = isAtPlayPosition(position)
+    private fun bindPlayPosition(holder: MediaItemViewHolder, item: MediaItemVO) {
+        val isAtPlayPosition = holder.absoluteAdapterPosition == playPosition
         val isFirstFrameRendered = isAtPlayPosition && isFirstFrameRendered
         val player = if (isAtPlayPosition) player else null
 
@@ -125,11 +125,9 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
                 hideController()
         }
 
-        if (isAtPlayPosition(position))
+        if (isAtPlayPosition)
             onBindPlayPosition(item)
     }
-
-    private fun isAtPlayPosition(position: Int) = position == playPosition
 
     abstract fun onBindPlayPosition(item: MediaItemVO)
     abstract fun onClickItem(item: MediaItemVO)
