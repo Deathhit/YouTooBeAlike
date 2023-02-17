@@ -13,7 +13,7 @@ internal class MediaItemRepositoryImp(
     private val mediaItemRemoteMediator: MediaItemRemoteMediator,
 ) : MediaItemRepository {
     companion object {
-        private const val PAGE_SIZE = 5
+        private const val PAGE_SIZE = 5 //PAGE_SIZE should be much larger. This is for demo purpose.
     }
 
     override fun getMediaItemPagingDataFlow(): Flow<PagingData<MediaItemDO>> = Pager(
