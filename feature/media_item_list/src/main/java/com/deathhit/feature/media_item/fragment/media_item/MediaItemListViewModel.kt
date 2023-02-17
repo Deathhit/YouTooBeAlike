@@ -21,6 +21,7 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
         val isFirstPageLoaded: Boolean,
+        val playItem: MediaItemVO?,
         val playPosition: Int?
     ) {
         sealed interface Action {
@@ -36,6 +37,7 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
                 actions = emptyList(),
                 isFirstFrameRendered = false,
                 isFirstPageLoaded = false,
+                playItem = null,
                 playPosition = null
             )
         )
@@ -47,6 +49,7 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
             .cachedIn(viewModelScope)
 
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
+    private val playItem get() = stateFlow.value.playItem
     private val playPosition get() = stateFlow.value.playPosition
 
     fun notifyFirstFrameRendered() {
@@ -68,9 +71,14 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
     }
 
     fun prepareItem(item: MediaItemVO?) {
+        if (item == playItem)
+            return
+
         _stateFlow.update { state ->
             state.copy(
-                actions = state.actions + State.Action.PrepareItem(item)
+                actions = state.actions + State.Action.PrepareItem(item),
+                isFirstFrameRendered = false,
+                playItem = item
             )
         }
     }
@@ -92,12 +100,7 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
             state.copy(playPosition = playPosition)
         }
 
-        if (playPosition == null) {
-            _stateFlow.update { state ->
-                state.copy(isFirstFrameRendered = false)
-            }
-
+        if (playPosition == null)
             prepareItem(null)
-        }
     }
 }
