@@ -5,5 +5,5 @@ import com.deathhit.data.media_item.MediaItemDO
 import kotlinx.coroutines.flow.Flow
 
 interface MediaItemRepository {
-    fun getThumbnailPagingDataFlow(): Flow<PagingData<MediaItemDO>>
+    fun getMediaItemPagingDataFlow(): Flow<PagingData<MediaItemDO>>
 }

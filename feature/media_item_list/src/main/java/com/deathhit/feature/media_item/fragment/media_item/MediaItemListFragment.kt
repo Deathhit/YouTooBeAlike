@@ -40,7 +40,7 @@ class MediaItemListFragment : Fragment() {
         set(value) {
             field?.removeListener(playerListener)
             field = value?.apply { addListener(playerListener) }
-            _Media_itemAdapter?.setPlayer(player)
+            _mediaItemAdapter?.setPlayer(player)
         }
 
     private val binding get() = _binding!!
@@ -58,8 +58,8 @@ class MediaItemListFragment : Fragment() {
                 it
         }
 
-    private val videoAdapter get() = _Media_itemAdapter!!
-    private var _Media_itemAdapter: MediaItemAdapter? = null
+    private val mediaItemAdapter get() = _mediaItemAdapter!!
+    private var _mediaItemAdapter: MediaItemAdapter? = null
 
     private val onScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -91,7 +91,7 @@ class MediaItemListFragment : Fragment() {
 
             _linearLayoutManger = (layoutManager!! as LinearLayoutManager)
 
-            _Media_itemAdapter = object : MediaItemAdapter() {
+            _mediaItemAdapter = object : MediaItemAdapter() {
                 override fun onBindPlayPosition(item: MediaItemVO) {
                     viewModel.preparePlayItem(item)
                 }
@@ -100,11 +100,17 @@ class MediaItemListFragment : Fragment() {
                     viewModel.clickItem(item)
                 }
             }.apply { setPlayer(player) }.also {
-                adapter = it.withLoadStateFooter(object : LoadStateAdapter() {
-                    override fun onRetryLoading() {
-                        videoAdapter.retry()
-                    }
-                })
+                adapter =
+                    it.apply {
+                        addOnPagesUpdatedListener {
+                            if (itemCount > 0)
+                                viewModel.scrollToTopOnFirstPageLoaded()
+                        }
+                    }.withLoadStateFooter(object : LoadStateAdapter() {
+                        override fun onRetryLoading() {
+                            mediaItemAdapter.retry()
+                        }
+                    })
             }
         }
 
@@ -121,6 +127,9 @@ class MediaItemListFragment : Fragment() {
                                     is MediaItemListViewModel.State.Action.PrepareItem -> callback?.onPrepareItem(
                                         action.item
                                     )
+                                    MediaItemListViewModel.State.Action.ScrollToTop -> binding.recyclerView.scrollToPosition(
+                                        0
+                                    )
                                     MediaItemListViewModel.State.Action.StopPlayer -> callback?.onStopPlayer()
                                 }
 
@@ -136,7 +145,7 @@ class MediaItemListFragment : Fragment() {
                             // so we use an extra launch{} to make sure it only runs in the scope.
                             binding.recyclerView.post {
                                 launch {
-                                    videoAdapter.notifyIsFirstFrameRendered(it)
+                                    mediaItemAdapter.notifyIsFirstFrameRendered(it)
                                 }
                             }
                         }
@@ -149,7 +158,7 @@ class MediaItemListFragment : Fragment() {
                             // so we use an extra launch{} to make sure it only runs in the scope.
                             binding.recyclerView.post {
                                 launch {
-                                    videoAdapter.notifyPlayPositionChanged(it)
+                                    mediaItemAdapter.notifyPlayPositionChanged(it)
                                 }
                             }
                         }
@@ -158,8 +167,8 @@ class MediaItemListFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.videoPagingDataFlow.collectLatest {
-                videoAdapter.submitData(lifecycle, it)
+            viewModel.mediaItemPagingDataFlow.collectLatest {
+                mediaItemAdapter.submitData(lifecycle, it)
             }
         }
     }
@@ -182,7 +191,7 @@ class MediaItemListFragment : Fragment() {
 
         _linearLayoutManger = null
 
-        _Media_itemAdapter = null
+        _mediaItemAdapter = null
 
         viewModel.setPlayPosition(null)
     }

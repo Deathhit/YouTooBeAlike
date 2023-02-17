@@ -16,7 +16,7 @@ internal class MediaItemRepositoryImp(
         private const val PAGE_SIZE = 5
     }
 
-    override fun getThumbnailPagingDataFlow(): Flow<PagingData<MediaItemDO>> = Pager(
+    override fun getMediaItemPagingDataFlow(): Flow<PagingData<MediaItemDO>> = Pager(
         PagingConfig(PAGE_SIZE),
         null,
         mediaItemRemoteMediator

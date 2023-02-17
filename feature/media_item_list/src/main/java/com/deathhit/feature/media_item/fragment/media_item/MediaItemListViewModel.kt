@@ -15,16 +15,19 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
-class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemRepository) : ViewModel() {
+class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemRepository) :
+    ViewModel() {
     data class State(
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
+        val isFirstPageLoaded: Boolean,
         val playItem: MediaItemVO?,
         val playPosition: Int?
     ) {
         sealed interface Action {
             data class ClickItem(val item: MediaItemVO) : Action
             data class PrepareItem(val item: MediaItemVO?) : Action
+            object ScrollToTop : Action
             object StopPlayer : Action
         }
     }
@@ -34,17 +37,19 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
             State(
                 actions = emptyList(),
                 isFirstFrameRendered = false,
+                isFirstPageLoaded = false,
                 playItem = null,
                 playPosition = null
             )
         )
     val stateFlow = _stateFlow.asStateFlow()
 
-    val videoPagingDataFlow =
-        mediaItemRepository.getThumbnailPagingDataFlow()
+    val mediaItemPagingDataFlow =
+        mediaItemRepository.getMediaItemPagingDataFlow()
             .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
             .cachedIn(viewModelScope)
 
+    private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
     private val playItem get() = stateFlow.value.playItem
     private val playPosition get() = stateFlow.value.playPosition
 
@@ -75,6 +80,15 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
                 actions = state.actions + State.Action.PrepareItem(playItem),
                 playItem = playItem
             )
+        }
+    }
+
+    fun scrollToTopOnFirstPageLoaded() {
+        if (isFirstPageLoaded)
+            return
+
+        _stateFlow.update { state ->
+            state.copy(actions = state.actions + State.Action.ScrollToTop, isFirstPageLoaded = true)
         }
     }
 
