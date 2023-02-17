@@ -92,7 +92,7 @@ class MediaItemListFragment : Fragment() {
 
             _mediaItemAdapter = object : MediaItemAdapter() {
                 override fun onBindPlayPosition(item: MediaItemVO) {
-                    viewModel.preparePlayItem(item)
+                    viewModel.prepareItem(item)
                 }
 
                 override fun onClickItem(item: MediaItemVO) {
