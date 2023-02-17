@@ -60,12 +60,16 @@ class NavigationActivityViewModel @Inject constructor(
 
     private var prepareItemJob: Job? = null
 
+    fun openPlayItem(playItem: MediaItemVO?) {
+        //todo implement
+    }
+
     fun preparePlayItem(playItem: MediaItemVO?) {
         if (playItem == this.playItem)
             return
 
         _stateFlow.update { state ->
-            state.copy(playItem = playItem)
+            state.copy(actions = state.actions + State.Action.StopPlayer, playItem = playItem)
         }
 
         prepareItemJob?.cancel()
@@ -107,12 +111,6 @@ class NavigationActivityViewModel @Inject constructor(
     fun setTab(tab: State.Tab) {
         _stateFlow.update { state ->
             state.copy(tab = tab)
-        }
-    }
-
-    fun stopPlayer() {
-        _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.StopPlayer)
         }
     }
 }

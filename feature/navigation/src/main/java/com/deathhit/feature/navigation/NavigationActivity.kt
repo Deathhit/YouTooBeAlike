@@ -81,7 +81,7 @@ class NavigationActivity : AppCompatActivity() {
             when (fragment) {
                 is MediaItemListFragment -> {
                     fragment.callback = object : MediaItemListFragment.Callback {
-                        override fun onClickItem(item: MediaItemVO) {
+                        override fun onOpenItem(item: MediaItemVO) {
                             //todo use viewmodel action
                             with(binding.motionLayout) {
                                 when(currentState) {
@@ -93,7 +93,6 @@ class NavigationActivity : AppCompatActivity() {
                                         setTransition(R.id.pop)
                                         transitionToEnd { setTransition(R.id.dragVertically) }
                                     }
-                                    else -> {}
                                 }
                             }
 
@@ -102,10 +101,6 @@ class NavigationActivity : AppCompatActivity() {
 
                         override fun onPrepareItem(item: MediaItemVO?) {
                             viewModel.preparePlayItem(item)
-                        }
-
-                        override fun onStopPlayer() {
-                            viewModel.stopPlayer()
                         }
                     }
 

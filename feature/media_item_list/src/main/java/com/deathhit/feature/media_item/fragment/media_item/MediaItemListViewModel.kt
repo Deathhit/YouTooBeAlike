@@ -25,10 +25,9 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
         val playPosition: Int?
     ) {
         sealed interface Action {
-            data class ClickItem(val item: MediaItemVO) : Action
+            data class OpenItem(val item: MediaItemVO) : Action
             data class PrepareItem(val item: MediaItemVO?) : Action
             object ScrollToTop : Action
-            object StopPlayer : Action
         }
     }
 
@@ -53,12 +52,6 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
     private val playItem get() = stateFlow.value.playItem
     private val playPosition get() = stateFlow.value.playPosition
 
-    fun clickItem(item: MediaItemVO) {
-        _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.ClickItem(item))
-        }
-    }
-
     fun notifyFirstFrameRendered() {
         _stateFlow.update { state ->
             state.copy(isFirstFrameRendered = true)
@@ -71,6 +64,12 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
         }
     }
 
+    fun openItem(item: MediaItemVO) {
+        _stateFlow.update { state ->
+            state.copy(actions = state.actions + State.Action.OpenItem(item))
+        }
+    }
+
     fun preparePlayItem(playItem: MediaItemVO?) {
         if (playItem == this.playItem)
             return
@@ -78,6 +77,7 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.PrepareItem(playItem),
+                isFirstFrameRendered = false,
                 playItem = playItem
             )
         }
@@ -97,13 +97,10 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
             return
 
         _stateFlow.update { state ->
-            state.copy(
-                actions = state.actions + State.Action.StopPlayer,
-                isFirstFrameRendered = false,
-                playPosition = playPosition
-            )
+            state.copy(playPosition = playPosition)
         }
 
-        preparePlayItem(null)
+        if (playPosition == null)
+            preparePlayItem(null)
     }
 }

@@ -29,9 +29,8 @@ class MediaItemListFragment : Fragment() {
     }
 
     interface Callback {
-        fun onClickItem(item: MediaItemVO)
+        fun onOpenItem(item: MediaItemVO)
         fun onPrepareItem(item: MediaItemVO?)
-        fun onStopPlayer()
     }
 
     var callback: Callback? = null
@@ -97,7 +96,7 @@ class MediaItemListFragment : Fragment() {
                 }
 
                 override fun onClickItem(item: MediaItemVO) {
-                    viewModel.clickItem(item)
+                    viewModel.openItem(item)
                 }
             }.apply { setPlayer(player) }.also {
                 adapter =
@@ -121,7 +120,7 @@ class MediaItemListFragment : Fragment() {
                         .collect { actions ->
                             actions.forEach { action ->
                                 when (action) {
-                                    is MediaItemListViewModel.State.Action.ClickItem -> callback?.onClickItem(
+                                    is MediaItemListViewModel.State.Action.OpenItem -> callback?.onOpenItem(
                                         action.item
                                     )
                                     is MediaItemListViewModel.State.Action.PrepareItem -> callback?.onPrepareItem(
@@ -130,7 +129,6 @@ class MediaItemListFragment : Fragment() {
                                     MediaItemListViewModel.State.Action.ScrollToTop -> binding.recyclerView.scrollToPosition(
                                         0
                                     )
-                                    MediaItemListViewModel.State.Action.StopPlayer -> callback?.onStopPlayer()
                                 }
 
                                 viewModel.onAction(action)
@@ -185,8 +183,6 @@ class MediaItemListFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        player = null
-
         _binding = null
 
         _linearLayoutManger = null

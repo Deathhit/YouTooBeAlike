@@ -41,6 +41,8 @@
         android:id="@+id/container_trackInfo"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_constraintBottom_toBottomOf="@id/container_playerView"
         app:layout_constraintEnd_toStartOf="@id/playerControlView_playPause"
         app:layout_constraintStart_toEndOf="@id/playerView"
