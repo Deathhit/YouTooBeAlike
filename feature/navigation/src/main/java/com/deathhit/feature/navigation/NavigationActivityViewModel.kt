@@ -30,6 +30,7 @@ class NavigationActivityViewModel @Inject constructor(
 
     data class State(
         val actions: List<Action>,
+        val isPlayingInList: Boolean,
         val playItem: MediaItemVO?,
         val tab: Tab
     ) {
@@ -43,12 +44,15 @@ class NavigationActivityViewModel @Inject constructor(
             HOME,
             NOTIFICATIONS
         }
+
+        val playingTab = if (isPlayingInList) tab else null
     }
 
     private val _stateFlow =
         MutableStateFlow(
             State(
                 actions = emptyList(),
+                isPlayingInList = true,
                 playItem = null,
                 tab = savedStateHandle[KEY_TAB] ?: State.Tab.HOME
             )
@@ -60,21 +64,43 @@ class NavigationActivityViewModel @Inject constructor(
 
     private var prepareItemJob: Job? = null
 
-    fun openPlayItem(playItem: MediaItemVO?) {
-        //todo implement
+    fun clearItem() {
+        //todo is this right?
+        //prepareItem(null)
+
+        _stateFlow.update { state ->
+            state.copy(isPlayingInList = true)
+        }
+
+        prepareItem(null)
     }
 
-    fun preparePlayItem(playItem: MediaItemVO?) {
-        if (playItem == this.playItem)
+    fun onAction(action: State.Action) {
+        _stateFlow.update { state ->
+            state.copy(actions = state.actions - action)
+        }
+    }
+
+    fun openItem(item: MediaItemVO?) {
+        //todo test
+        _stateFlow.update { state ->
+            state.copy(isPlayingInList = false)
+        }
+
+        prepareItem(item)
+    }
+
+    fun prepareItem(item: MediaItemVO?) {
+        if (item == this.playItem)
             return
 
         _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.StopPlayer, playItem = playItem)
+            state.copy(actions = state.actions + State.Action.StopPlayer, playItem = item)
         }
 
         prepareItemJob?.cancel()
         prepareItemJob = viewModelScope.launch {
-            if (playItem == null)
+            if (item == null)
                 return@launch
 
             delay(MEDIA_SWITCHING_DELAY)
@@ -82,8 +108,8 @@ class NavigationActivityViewModel @Inject constructor(
             _stateFlow.update { state ->
                 state.copy(
                     actions = state.actions + State.Action.PrepareMedia(
-                        playItem,
-                        mediaProgressRepository.getMediaProgressBySourceUrl(playItem.sourceUrl)?.position
+                        item,
+                        mediaProgressRepository.getMediaProgressBySourceUrl(item.sourceUrl)?.position
                             ?: 0L
                     )
                 )

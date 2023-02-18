@@ -32,6 +32,7 @@ class NavigationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityNavigationBinding
 
     private val viewModel: NavigationActivityViewModel by viewModels()
+    private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingInList
 
     private lateinit var player: Player
 
@@ -44,6 +45,8 @@ class NavigationActivity : AppCompatActivity() {
             setTransition(R.id.hide)
             transitionToEnd()
         }
+
+        viewModel.clearItem()
     }
 
     private val onNavigationSelectedListener = OnItemSelectedListener {
@@ -84,7 +87,7 @@ class NavigationActivity : AppCompatActivity() {
                         override fun onOpenItem(item: MediaItemVO) {
                             //todo use viewmodel action
                             with(binding.motionLayout) {
-                                when(currentState) {
+                                when (currentState) {
                                     R.id.end -> {
                                         setTransition(R.id.dragVertically)
                                         transitionToStart()
@@ -96,11 +99,14 @@ class NavigationActivity : AppCompatActivity() {
                                 }
                             }
 
-                            Toast.makeText(this@NavigationActivity, item.title, Toast.LENGTH_LONG).show()
+                            Toast.makeText(this@NavigationActivity, item.title, Toast.LENGTH_LONG)
+                                .show()
+
+                            viewModel.openItem(item)
                         }
 
                         override fun onPrepareItem(item: MediaItemVO?) {
-                            viewModel.preparePlayItem(item)
+                            viewModel.prepareItem(item)
                         }
                     }
 
@@ -115,20 +121,34 @@ class NavigationActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.stateFlow.map { it.actions }.distinctUntilChanged().collect {actions ->
-                        actions.forEach { action ->
-                            when(action) {
-                                is NavigationActivityViewModel.State.Action.PrepareMedia -> player.run {
-                                    setMediaItem(
-                                        MediaItem.fromUri(action.item.sourceUrl),
-                                        action.position
-                                    )
-                                    prepare()
+                    viewModel.stateFlow.map { it.actions }.distinctUntilChanged()
+                        .collect { actions ->
+                            actions.forEach { action ->
+                                when (action) {
+                                    is NavigationActivityViewModel.State.Action.PrepareMedia -> player.run {
+                                        setMediaItem(
+                                            MediaItem.fromUri(action.item.sourceUrl),
+                                            action.position
+                                        )
+                                        prepare()
+                                    }
+                                    NavigationActivityViewModel.State.Action.StopPlayer -> player.stop()
                                 }
-                                NavigationActivityViewModel.State.Action.StopPlayer -> player.stop()
+
+                                viewModel.onAction(action)
                             }
                         }
-                    }
+                }
+
+                launch {
+                    viewModel.stateFlow.map { it.playingTab }.distinctUntilChanged()
+                        .collect { playingTab ->
+                            when (playingTab) {
+                                NavigationActivityViewModel.State.Tab.HOME ->
+                                    mediaItemListFragment?.setIsPlayingInList(true)
+                                else -> mediaItemListFragment?.setIsPlayingInList(false)
+                            }
+                        }
                 }
 
                 launch {
@@ -145,7 +165,7 @@ class NavigationActivity : AppCompatActivity() {
                                 supportFragmentManager.commit {
                                     mediaItemListFragment?.let { show(it) } ?: add(
                                         binding.containerNavigationTabPage.id,
-                                        MediaItemListFragment.create(),
+                                        MediaItemListFragment.create(isPlayingInList),
                                         TAG_VIDEO_LIST
                                     )
                                 }

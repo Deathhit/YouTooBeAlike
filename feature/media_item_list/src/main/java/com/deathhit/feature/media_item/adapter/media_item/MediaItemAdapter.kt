@@ -25,6 +25,7 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
     }
 
     private var isFirstFrameRendered = false
+    private var isPlayingInList = true
     private var player: Player? = null
     private var playPosition: Int? = null   //This is an absoluteAdapterPosition.
 
@@ -90,6 +91,12 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
         notifyPlayPositionChanged(playPosition)
     }
 
+    fun notifyIsPlayingInList(isPlayingInList: Boolean) {
+        this.isPlayingInList = isPlayingInList
+
+        notifyPlayPositionChanged(playPosition)
+    }
+
     fun notifyPlayPositionChanged(playPosition: Int?) {
         val oldPlayPos = this.playPosition
         this.playPosition = playPosition
@@ -105,9 +112,8 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
     }
 
     private fun bindPlayPosition(holder: MediaItemViewHolder, item: MediaItemVO) {
-        val isAtPlayPosition = holder.absoluteAdapterPosition == playPosition
+        val isAtPlayPosition = holder.absoluteAdapterPosition == playPosition && isPlayingInList
         val isFirstFrameRendered = isAtPlayPosition && isFirstFrameRendered
-        val player = if (isAtPlayPosition) player else null
 
         with(holder.binding.imageViewThumbnail) {
             visibility = if (isFirstFrameRendered)
@@ -117,7 +123,7 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
         }
 
         with(holder.binding.styledPlayerView) {
-            this.player = player
+            player = if (isAtPlayPosition) this@MediaItemAdapter.player else null
 
             if (isFirstFrameRendered)
                 showController()

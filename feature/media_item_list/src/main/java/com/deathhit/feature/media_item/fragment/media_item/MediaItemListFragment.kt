@@ -25,7 +25,9 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MediaItemListFragment : Fragment() {
     companion object {
-        fun create() = MediaItemListFragment()
+        fun create(isPlayingInList: Boolean) = MediaItemListFragment().apply {
+            arguments = MediaItemListViewModel.createArgs(isPlayingInList)
+        }
     }
 
     interface Callback {
@@ -140,7 +142,7 @@ class MediaItemListFragment : Fragment() {
                     viewModel.stateFlow.map { it.isFirstFrameRendered }.distinctUntilChanged()
                         .collect {
                             //The Runnable has the potential to outlive the viewLifecycleScope,
-                            // so we use an extra launch{} to make sure it only runs in the scope.
+                            // so we use an extra launch{} to make sure it only runs within the scope.
                             binding.recyclerView.post {
                                 launch {
                                     mediaItemAdapter.notifyIsFirstFrameRendered(it)
@@ -150,10 +152,22 @@ class MediaItemListFragment : Fragment() {
                 }
 
                 launch {
+                    viewModel.stateFlow.map { it.isPlayingInList }.distinctUntilChanged().collect {
+                        //The Runnable has the potential to outlive the viewLifecycleScope,
+                        // so we use an extra launch{} to make sure it only runs within the scope.
+                        binding.recyclerView.post {
+                            launch {
+                                mediaItemAdapter.notifyIsPlayingInList(it)
+                            }
+                        }
+                    }
+                }
+
+                launch {
                     viewModel.stateFlow.map { it.playPosition }.distinctUntilChanged()
                         .collect {
                             //The Runnable has the potential to outlive the viewLifecycleScope,
-                            // so we use an extra launch{} to make sure it only runs in the scope.
+                            // so we use an extra launch{} to make sure it only runs within the scope.
                             binding.recyclerView.post {
                                 launch {
                                     mediaItemAdapter.notifyPlayPositionChanged(it)
@@ -195,5 +209,14 @@ class MediaItemListFragment : Fragment() {
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         viewModel.setPlayPosition(if (hidden) null else playPosition)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        viewModel.saveState()
+        super.onSaveInstanceState(outState)
+    }
+
+    fun setIsPlayingInList(isPlayingInList: Boolean) {
+        viewModel.setIsPlayingInList(isPlayingInList)
     }
 }

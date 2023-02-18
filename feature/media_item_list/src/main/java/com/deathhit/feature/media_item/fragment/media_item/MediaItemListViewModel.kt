@@ -1,5 +1,7 @@
 package com.deathhit.feature.media_item.fragment.media_item
 
+import android.os.Bundle
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
@@ -15,12 +17,24 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
-class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemRepository) :
-    ViewModel() {
+class MediaItemListViewModel @Inject constructor(
+    mediaItemRepository: MediaItemRepository,
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
+    companion object {
+        private const val TAG = "MediaItemListViewModel"
+        private const val KEY_IS_PLAYING_IN_LIST = "$TAG.KEY_IS_PLAYING_IN_LIST"
+
+        fun createArgs(isPlayingInList: Boolean) = Bundle().apply {
+            putBoolean(KEY_IS_PLAYING_IN_LIST, isPlayingInList)
+        }
+    }
+
     data class State(
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
         val isFirstPageLoaded: Boolean,
+        val isPlayingInList: Boolean,
         val playItem: MediaItemVO?,
         val playPosition: Int?
     ) {
@@ -37,6 +51,7 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
                 actions = emptyList(),
                 isFirstFrameRendered = false,
                 isFirstPageLoaded = false,
+                isPlayingInList = savedStateHandle[KEY_IS_PLAYING_IN_LIST] ?: true,
                 playItem = null,
                 playPosition = null
             )
@@ -49,6 +64,7 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
             .cachedIn(viewModelScope)
 
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
+    private val isPlayingInList get() = stateFlow.value.isPlayingInList
     private val playItem get() = stateFlow.value.playItem
     private val playPosition get() = stateFlow.value.playPosition
 
@@ -83,6 +99,10 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
         }
     }
 
+    fun saveState() {
+        savedStateHandle[KEY_IS_PLAYING_IN_LIST] = isPlayingInList
+    }
+
     fun scrollToTopOnFirstPageLoaded() {
         if (isFirstPageLoaded)
             return
@@ -90,6 +110,18 @@ class MediaItemListViewModel @Inject constructor(mediaItemRepository: MediaItemR
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.ScrollToTop, isFirstPageLoaded = true)
         }
+    }
+
+    fun setIsPlayingInList(isPlayingInList: Boolean) {
+        if (isPlayingInList == this.isPlayingInList)
+            return
+
+        _stateFlow.update { state ->
+            state.copy(isPlayingInList = isPlayingInList)
+        }
+
+        if (!isPlayingInList)
+            prepareItem(null)
     }
 
     fun setPlayPosition(playPosition: Int?) {
