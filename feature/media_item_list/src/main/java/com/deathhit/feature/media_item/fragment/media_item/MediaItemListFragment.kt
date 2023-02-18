@@ -72,7 +72,13 @@ class MediaItemListFragment : Fragment() {
     private val playerListener = object : Player.Listener {
         override fun onRenderedFirstFrame() {
             super.onRenderedFirstFrame()
-            viewModel.notifyFirstFrameRendered()
+            viewModel.setIsFirstFrameRendered(true)
+        }
+
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            super.onPlaybackStateChanged(playbackState)
+            if (playbackState == Player.STATE_IDLE)
+                viewModel.setIsFirstFrameRendered(false)
         }
     }
 

@@ -141,14 +141,9 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.playingTab }.distinctUntilChanged()
-                        .collect { playingTab ->
-                            when (playingTab) {
-                                NavigationActivityViewModel.State.Tab.HOME ->
-                                    mediaItemListFragment?.setIsPlayingInList(true)
-                                else -> mediaItemListFragment?.setIsPlayingInList(false)
-                            }
-                        }
+                    viewModel.stateFlow.map { it.isPlayingInList }.distinctUntilChanged().collect {
+                        mediaItemListFragment?.setIsPlayingInList(it)
+                    }
                 }
 
                 launch {
@@ -212,6 +207,8 @@ class NavigationActivity : AppCompatActivity() {
             removeListener(playerListener)
             release()
         }
+
+        //todo need to figure out how to keep playing opened item after onDestroy().
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

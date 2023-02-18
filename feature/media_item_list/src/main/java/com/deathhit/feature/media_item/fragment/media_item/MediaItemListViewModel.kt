@@ -63,13 +63,6 @@ class MediaItemListViewModel @Inject constructor(
 
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
     private val isPlayingInList get() = stateFlow.value.isPlayingInList
-    private val playPosition get() = stateFlow.value.playPosition
-
-    fun notifyFirstFrameRendered() {
-        _stateFlow.update { state ->
-            state.copy(isFirstFrameRendered = true)
-        }
-    }
 
     fun onAction(action: State.Action) {
         _stateFlow.update { state ->
@@ -102,24 +95,21 @@ class MediaItemListViewModel @Inject constructor(
         }
     }
 
-    fun setIsPlayingInList(isPlayingInList: Boolean) {
-        if (isPlayingInList == this.isPlayingInList)
-            return
+    fun setIsFirstFrameRendered(isFirstFrameRendered: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isFirstFrameRendered = isFirstFrameRendered)
+        }
+    }
 
+    fun setIsPlayingInList(isPlayingInList: Boolean) {
         _stateFlow.update { state ->
             state.copy(isPlayingInList = isPlayingInList)
         }
-
-        if (!isPlayingInList)
-            prepareItem(null)
     }
 
     fun setPlayPosition(playPosition: Int?) {
-        if (playPosition == this.playPosition)
-            return
-
         _stateFlow.update { state ->
-            state.copy(isFirstFrameRendered = false, playPosition = playPosition)
+            state.copy(playPosition = playPosition)
         }
 
         if (playPosition == null)

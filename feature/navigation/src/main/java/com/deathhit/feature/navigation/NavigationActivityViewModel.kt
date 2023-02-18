@@ -31,6 +31,7 @@ class NavigationActivityViewModel @Inject constructor(
     data class State(
         val actions: List<Action>,
         val isPlayingInList: Boolean,
+        val pendingPlayItem: MediaItemVO?,
         val playItem: MediaItemVO?,
         val tab: Tab
     ) {
@@ -44,8 +45,6 @@ class NavigationActivityViewModel @Inject constructor(
             HOME,
             NOTIFICATIONS
         }
-
-        val playingTab = if (isPlayingInList) tab else null
     }
 
     private val _stateFlow =
@@ -53,21 +52,21 @@ class NavigationActivityViewModel @Inject constructor(
             State(
                 actions = emptyList(),
                 isPlayingInList = true,
+                pendingPlayItem = null,
                 playItem = null,
                 tab = savedStateHandle[KEY_TAB] ?: State.Tab.HOME
             )
         )
     val stateFlow = _stateFlow.asStateFlow()
 
+    private val pendingPlayItem get() = stateFlow.value.pendingPlayItem
     private val playItem get() = stateFlow.value.playItem
     private val tab get() = stateFlow.value.tab
 
     private var prepareItemJob: Job? = null
 
     fun clearItem() {
-        //todo is this right?
-        //prepareItem(null)
-
+        //todo implement
         _stateFlow.update { state ->
             state.copy(isPlayingInList = true)
         }
@@ -82,7 +81,8 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun openItem(item: MediaItemVO?) {
-        //todo test
+        //todo implement
+
         _stateFlow.update { state ->
             state.copy(isPlayingInList = false)
         }
@@ -91,27 +91,26 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun prepareItem(item: MediaItemVO?) {
-        if (item == this.playItem)
+        if (item == pendingPlayItem)
             return
 
+        //Stop the player before updating the playItem to save the previous progress.
         _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.StopPlayer, playItem = item)
+            state.copy(actions = state.actions + State.Action.StopPlayer, pendingPlayItem = item)
         }
 
         prepareItemJob?.cancel()
         prepareItemJob = viewModelScope.launch {
-            if (item == null)
-                return@launch
-
             delay(MEDIA_SWITCHING_DELAY)
 
             _stateFlow.update { state ->
                 state.copy(
-                    actions = state.actions + State.Action.PrepareMedia(
+                    actions = if (item == null) state.actions else state.actions + State.Action.PrepareMedia(
                         item,
                         mediaProgressRepository.getMediaProgressBySourceUrl(item.sourceUrl)?.position
                             ?: 0L
-                    )
+                    ),
+                    playItem = item
                 )
             }
         }
