@@ -1,6 +1,7 @@
 package com.deathhit.feature.navigation
 
 import android.os.Bundle
+import android.support.v4.media.session.MediaSessionCompat
 import android.view.View.OnClickListener
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -33,21 +34,30 @@ class NavigationActivity : AppCompatActivity() {
     private val viewModel: NavigationActivityViewModel by viewModels()
     private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingInList
 
+    private var mediaSession: MediaSessionCompat? = null
+    private val transportControls get() = mediaSession?.controller?.transportControls
     private var player: Player? = null
 
     private val mediaItemListFragment
         get() = supportFragmentManager.findFragmentByTag(TAG_VIDEO_LIST) as MediaItemListFragment?
 
-    private val mediaPlayerServiceConnection: MediaPlayerService.ServiceConnection = object : MediaPlayerService.ServiceConnection() {
-        override fun onServiceConnected(binder: MediaPlayerService.ServiceBinder) {
-            player = binder.service.player.apply {
-                addListener(playerListener)
-                play()
-            }
+    private val mediaPlayerServiceConnection: MediaPlayerService.ServiceConnection =
+        object : MediaPlayerService.ServiceConnection() {
+            override fun onServiceConnected(binder: MediaPlayerService.ServiceBinder) {
+                with(binder.service) {
+                    this@NavigationActivity.mediaSession = mediaSession
 
-            mediaItemListFragment?.player = player
+                    this@NavigationActivity.player = player.apply {
+                        addListener(playerListener)
+                    }
+                }
+
+                mediaSession!!.isActive = true
+                transportControls!!.play()
+
+                mediaItemListFragment?.player = player
+            }
         }
-    }
 
     private val onClearListener = OnClickListener {
         //todo use viewmodel action
@@ -137,14 +147,15 @@ class NavigationActivity : AppCompatActivity() {
                         .collect { actions ->
                             actions.forEach { action ->
                                 when (action) {
-                                    is NavigationActivityViewModel.State.Action.PrepareMedia -> player?.run {
-                                        setMediaItem(
+                                    is NavigationActivityViewModel.State.Action.PrepareMedia -> {
+                                        player?.setMediaItem(
                                             MediaItem.fromUri(action.item.sourceUrl),
                                             action.position
                                         )
-                                        prepare()
+
+                                        transportControls?.play()
                                     }
-                                    NavigationActivityViewModel.State.Action.StopPlayer -> player?.stop()
+                                    NavigationActivityViewModel.State.Action.StopPlayer -> transportControls?.stop()
                                 }
 
                                 viewModel.onAction(action)
@@ -200,7 +211,8 @@ class NavigationActivity : AppCompatActivity() {
             buttonClear.setOnClickListener(onClearListener)
         }
 
-        player?.play()
+        mediaSession?.isActive = true
+        transportControls?.play()
     }
 
     override fun onPause() {
@@ -210,7 +222,8 @@ class NavigationActivity : AppCompatActivity() {
             buttonClear.setOnClickListener(null)
         }
 
-        player?.pause()
+        mediaSession?.isActive = false
+        transportControls?.pause()
     }
 
     override fun onDestroy() {
