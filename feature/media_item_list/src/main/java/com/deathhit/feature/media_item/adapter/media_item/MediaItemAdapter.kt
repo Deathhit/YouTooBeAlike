@@ -5,12 +5,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestManager
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.ItemMediaItemBinding
 import com.google.android.exoplayer2.Player
 
-abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHolder>(COMPARATOR) {
+abstract class MediaItemAdapter(private val glideRequestManager: RequestManager) :
+    PagingDataAdapter<MediaItemVO, MediaItemViewHolder>(COMPARATOR) {
     companion object {
         private const val TAG = "MediaItemAdapter"
         private const val PAYLOAD_PLAY_POSITION = "$TAG.PAYLOAD_PLAY_POSITION"
@@ -45,7 +46,8 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
     override fun onBindViewHolder(holder: MediaItemViewHolder, position: Int) {
         holder.item = getItem(position)?.also { item ->
             with(holder.binding.imageViewThumbnail) {
-                Glide.with(this).load(item.thumbUrl).placeholder(com.deathhit.core.ui.R.color.black)
+                glideRequestManager.load(item.thumbUrl)
+                    .placeholder(com.deathhit.core.ui.R.color.black)
                     .into(this)
             }
 
@@ -80,8 +82,10 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
 
     override fun onViewRecycled(holder: MediaItemViewHolder) {
         super.onViewRecycled(holder)
-        with(holder.binding.imageViewThumbnail) {
-            Glide.with(this).clear(this)
+        with(holder.binding) {
+            glideRequestManager.clear(imageViewThumbnail)
+
+            styledPlayerView.player = null  //Releases the internal listeners from the player.
         }
     }
 
@@ -98,10 +102,10 @@ abstract class MediaItemAdapter : PagingDataAdapter<MediaItemVO, MediaItemViewHo
     }
 
     fun notifyPlayPositionChanged(playPosition: Int?) {
-        val oldPlayPos = this.playPosition
+        val oldPlayPosition = this.playPosition
         this.playPosition = playPosition
 
-        oldPlayPos?.let { notifyItemChanged(it, PAYLOAD_PLAY_POSITION) }
+        oldPlayPosition?.let { notifyItemChanged(it, PAYLOAD_PLAY_POSITION) }
         this.playPosition?.let { notifyItemChanged(it, PAYLOAD_PLAY_POSITION) }
     }
 

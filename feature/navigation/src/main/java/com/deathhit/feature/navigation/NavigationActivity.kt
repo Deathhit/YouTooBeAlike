@@ -13,7 +13,6 @@ import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
 import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
@@ -34,10 +33,21 @@ class NavigationActivity : AppCompatActivity() {
     private val viewModel: NavigationActivityViewModel by viewModels()
     private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingInList
 
-    private lateinit var player: Player
+    private var player: Player? = null
 
     private val mediaItemListFragment
         get() = supportFragmentManager.findFragmentByTag(TAG_VIDEO_LIST) as MediaItemListFragment?
+
+    private val mediaPlayerServiceConnection: MediaPlayerService.ServiceConnection = object : MediaPlayerService.ServiceConnection() {
+        override fun onServiceConnected(binder: MediaPlayerService.ServiceBinder) {
+            player = binder.service.player.apply {
+                addListener(playerListener)
+                play()
+            }
+
+            mediaItemListFragment?.player = player
+        }
+    }
 
     private val onClearListener = OnClickListener {
         //todo use viewmodel action
@@ -66,7 +76,7 @@ class NavigationActivity : AppCompatActivity() {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
             if (!isPlaying)
-                player.let {
+                player?.let {
                     viewModel.savePlayItemPosition(
                         if (it.playbackState == Player.STATE_ENDED)
                             C.TIME_UNSET
@@ -78,8 +88,6 @@ class NavigationActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        player = ExoPlayer.Builder(this).build().apply { addListener(playerListener) }
-
         supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
             when (fragment) {
                 is MediaItemListFragment -> {
@@ -118,6 +126,10 @@ class NavigationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityNavigationBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
+        MediaPlayerService.bindService(this, mediaPlayerServiceConnection)
+
+        savedInstanceState ?: MediaPlayerService.startService(this)
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -125,14 +137,14 @@ class NavigationActivity : AppCompatActivity() {
                         .collect { actions ->
                             actions.forEach { action ->
                                 when (action) {
-                                    is NavigationActivityViewModel.State.Action.PrepareMedia -> player.run {
+                                    is NavigationActivityViewModel.State.Action.PrepareMedia -> player?.run {
                                         setMediaItem(
                                             MediaItem.fromUri(action.item.sourceUrl),
                                             action.position
                                         )
                                         prepare()
                                     }
-                                    NavigationActivityViewModel.State.Action.StopPlayer -> player.stop()
+                                    NavigationActivityViewModel.State.Action.StopPlayer -> player?.stop()
                                 }
 
                                 viewModel.onAction(action)
@@ -188,7 +200,7 @@ class NavigationActivity : AppCompatActivity() {
             buttonClear.setOnClickListener(onClearListener)
         }
 
-        player.play()
+        player?.play()
     }
 
     override fun onPause() {
@@ -198,17 +210,16 @@ class NavigationActivity : AppCompatActivity() {
             buttonClear.setOnClickListener(null)
         }
 
-        player.pause()
+        player?.pause()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        with(player) {
-            removeListener(playerListener)
-            release()
-        }
+        player?.removeListener(playerListener)
 
-        //todo need to figure out how to keep playing opened item after onDestroy().
+        MediaPlayerService.unbindService(this, mediaPlayerServiceConnection)
+        if (isFinishing)
+            MediaPlayerService.stopService(this)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

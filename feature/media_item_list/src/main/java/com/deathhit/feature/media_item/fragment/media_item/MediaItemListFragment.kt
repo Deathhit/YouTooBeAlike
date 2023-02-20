@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.deathhit.core.ui.adapter.load_state.LoadStateAdapter
 import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
 import com.deathhit.feature.media_item.model.MediaItemVO
@@ -98,7 +99,7 @@ class MediaItemListFragment : Fragment() {
 
             _linearLayoutManger = (layoutManager!! as LinearLayoutManager)
 
-            _mediaItemAdapter = object : MediaItemAdapter() {
+            _mediaItemAdapter = object : MediaItemAdapter(Glide.with(view)) {
                 override fun onBindPlayPosition(item: MediaItemVO) {
                     viewModel.prepareItem(item)
                 }
@@ -106,7 +107,7 @@ class MediaItemListFragment : Fragment() {
                 override fun onClickItem(item: MediaItemVO) {
                     viewModel.openItem(item)
                 }
-            }.apply { setPlayer(player) }.also {
+            }.apply { setPlayer(player?.apply { addListener(playerListener) }) }.also {
                 adapter =
                     it.apply {
                         addOnPagesUpdatedListener {
@@ -203,6 +204,11 @@ class MediaItemListFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        player?.removeListener(playerListener)
+
+        //Triggers RecyclerView.Adapter.onViewRecycled() to clear resources.
+        binding.recyclerView.adapter = null
+
         _binding = null
 
         _linearLayoutManger = null
