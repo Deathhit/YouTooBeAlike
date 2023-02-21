@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4787182a473004676fdf0e5f73694de1",
+    "identityHash": "a60fe35d9802bbf8e5e73eb4617d05a1",
     "entities": [
       {
         "tableName": "MediaItemEntity",
@@ -50,12 +50,18 @@
       },
       {
         "tableName": "MediaProgressEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sourceUrl` TEXT NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`sourceUrl`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sourceUrl` TEXT NOT NULL, `isEnded` INTEGER NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`sourceUrl`))",
         "fields": [
           {
             "fieldPath": "sourceUrl",
             "columnName": "sourceUrl",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isEnded",
+            "columnName": "isEnded",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -104,7 +110,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4787182a473004676fdf0e5f73694de1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a60fe35d9802bbf8e5e73eb4617d05a1')"
     ]
   }
 }

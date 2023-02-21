@@ -13,6 +13,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
@@ -84,15 +85,10 @@ class NavigationActivity : AppCompatActivity() {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
             if (!isPlaying)
-                player!!.let {
+                player!!.run {
                     viewModel.savePlayItemPosition(
-                        /* todo add a flag to indicate the end of playback instead
-                        if (it.playbackState == Player.STATE_ENDED)
-                            C.TIME_UNSET
-                        else
-
-                         */
-                        it.currentPosition
+                        playbackState == Player.STATE_ENDED,
+                        currentPosition
                     )
                 }
         }
@@ -152,7 +148,7 @@ class NavigationActivity : AppCompatActivity() {
                                     is NavigationActivityViewModel.State.Action.PrepareMedia -> player?.run {
                                         setMediaItem(
                                             MediaItem.fromUri(action.item.sourceUrl),
-                                            action.position
+                                            if (action.isEnded) C.TIME_UNSET else action.position
                                         )
                                         prepare()
                                     }

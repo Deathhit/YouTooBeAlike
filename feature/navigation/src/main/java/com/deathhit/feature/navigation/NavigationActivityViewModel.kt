@@ -36,7 +36,12 @@ class NavigationActivityViewModel @Inject constructor(
         val tab: Tab
     ) {
         sealed interface Action {
-            data class PrepareMedia(val item: MediaItemVO, val position: Long) : Action
+            data class PrepareMedia(
+                val isEnded: Boolean,
+                val item: MediaItemVO,
+                val position: Long
+            ) : Action
+
             object StopPlayer : Action
         }
 
@@ -103,24 +108,30 @@ class NavigationActivityViewModel @Inject constructor(
         prepareItemJob = viewModelScope.launch {
             delay(MEDIA_SWITCHING_DELAY)
 
-            _stateFlow.update { state ->
-                state.copy(
-                    actions = if (item == null) state.actions else state.actions + State.Action.PrepareMedia(
-                        item,
-                        mediaProgressRepository.getMediaProgressBySourceUrl(item.sourceUrl)?.position
-                            ?: 0L
-                    ),
-                    playItem = item
-                )
+            if (item == null)
+                _stateFlow.update { state ->
+                    state.copy(playItem = null)
+                }
+            else {
+                val progress = mediaProgressRepository.getMediaProgressBySourceUrl(item.sourceUrl)
+
+                _stateFlow.update { state ->
+                    state.copy(
+                        actions = state.actions + State.Action.PrepareMedia(
+                            progress?.isEnded ?: false, item, progress?.position ?: 0L
+                        )
+                    )
+                }
             }
         }
     }
 
-    fun savePlayItemPosition(mediaPosition: Long) {
+    fun savePlayItemPosition(isEnded: Boolean, mediaPosition: Long) {
         playItem?.let {
             viewModelScope.launch(NonCancellable) {
                 mediaProgressRepository.setMediaProgress(
                     MediaProgressDO(
+                        isEnded,
                         mediaPosition,
                         it.sourceUrl
                     )
