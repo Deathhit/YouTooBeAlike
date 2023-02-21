@@ -84,7 +84,7 @@ class NavigationActivity : AppCompatActivity() {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
             if (!isPlaying)
-                player?.let {
+                player!!.let {
                     viewModel.savePlayItemPosition(
                         /* todo add a flag to indicate the end of playback instead
                         if (it.playbackState == Player.STATE_ENDED)
