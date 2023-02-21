@@ -87,9 +87,8 @@ class NavigationActivityViewModel @Inject constructor(
 
     fun openItem(item: MediaItemVO?) {
         //todo test
-
         _stateFlow.update { state ->
-            state.copy(isPlayingInList = false)
+            state.copy(isPlayingInList = false, /*pendingPlayItem = null*/)
         }
 
         prepareItem(item)
@@ -99,7 +98,8 @@ class NavigationActivityViewModel @Inject constructor(
         if (item == pendingPlayItem)
             return
 
-        //Stop the player immediately to show thumbnails.
+        //Stop the player before a new item is ready.
+        //Only set pendingPlayItem first to allow time to save media progress.
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.StopPlayer, pendingPlayItem = item)
         }
@@ -108,20 +108,20 @@ class NavigationActivityViewModel @Inject constructor(
         prepareItemJob = viewModelScope.launch {
             delay(MEDIA_SWITCHING_DELAY)
 
-            if (item == null)
+            if (item != null)
                 _stateFlow.update { state ->
-                    state.copy(playItem = null)
-                }
-            else {
-                val progress = mediaProgressRepository.getMediaProgressBySourceUrl(item.sourceUrl)
+                    val progress =
+                        mediaProgressRepository.getMediaProgressBySourceUrl(item.sourceUrl)
 
-                _stateFlow.update { state ->
                     state.copy(
                         actions = state.actions + State.Action.PrepareMedia(
                             progress?.isEnded ?: false, item, progress?.position ?: 0L
                         )
                     )
                 }
+
+            _stateFlow.update { state ->
+                state.copy(playItem = item)
             }
         }
     }
