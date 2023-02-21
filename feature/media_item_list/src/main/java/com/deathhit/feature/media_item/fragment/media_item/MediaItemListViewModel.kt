@@ -112,7 +112,7 @@ class MediaItemListViewModel @Inject constructor(
             state.copy(playPosition = playPosition)
         }
 
-        if (playPosition == null)
+        if (isPlayingInList && playPosition == null)
             prepareItem(null)
     }
 }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:motion="http://schemas.android.com/apk/res-auto">
 
     <!--Due to historical reasons the start state of the first transition in the file is the initial state.-->
@@ -49,7 +50,7 @@
         android:id="@+id/dragVertically"
         motion:constraintSetEnd="@+id/end"
         motion:constraintSetStart="@+id/start"
-        motion:duration="1000"
+        motion:duration="250"
         motion:motionInterpolator="linear"
         motion:transitionFlags="onInterceptTouchReturnSwipe">
         <OnSwipe
@@ -120,6 +121,10 @@
             motion:layout_constraintStart_toStartOf="@id/container_playerView"
             motion:layout_constraintTop_toTopOf="@id/container_playerView" />
 
+        <Constraint android:id="@id/imageView_thumbnail">
+            <PropertySet app:visibilityMode="ignore" />
+        </Constraint>
+
         <Constraint
             android:id="@id/container_trackInfo"
             android:layout_width="0dp"
@@ -181,6 +186,10 @@
             motion:layout_constraintStart_toStartOf="@id/container_playerView"
             motion:layout_constraintTop_toTopOf="@id/container_playerView" />
 
+        <Constraint android:id="@id/imageView_thumbnail">
+            <PropertySet app:visibilityMode="ignore" />
+        </Constraint>
+
         <Constraint
             android:id="@id/container_trackInfo"
             android:layout_width="0dp"
@@ -240,6 +249,10 @@
             motion:layout_constraintEnd_toEndOf="@id/container_playerView"
             motion:layout_constraintStart_toStartOf="@id/container_playerView"
             motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+
+        <Constraint android:id="@id/imageView_thumbnail">
+            <PropertySet app:visibilityMode="ignore" />
+        </Constraint>
 
         <Constraint
             android:id="@id/container_trackInfo"

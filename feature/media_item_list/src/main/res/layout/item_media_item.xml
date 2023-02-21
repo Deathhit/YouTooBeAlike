@@ -24,13 +24,13 @@
             android:id="@+id/imageView_thumbnail"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:contentDescription="@string/app_name"
             android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="@+id/styledPlayerView"
             app:layout_constraintEnd_toEndOf="@+id/styledPlayerView"
             app:layout_constraintStart_toStartOf="@+id/styledPlayerView"
             app:layout_constraintTop_toTopOf="@+id/styledPlayerView"
-            tools:srcCompat="@tools:sample/backgrounds/scenic" />
+            tools:ignore="ContentDescription"
+            tools:srcCompat="@tools:sample/backgrounds/scenic"/>
 
         <TextView
             android:id="@+id/textView_title"

@@ -30,6 +30,7 @@ class NavigationActivityViewModel @Inject constructor(
 
     data class State(
         val actions: List<Action>,
+        val isFirstFrameRendered: Boolean,
         val isPlayingInList: Boolean,
         val pendingPlayItem: MediaItemVO?,
         val playItem: MediaItemVO?,
@@ -56,6 +57,7 @@ class NavigationActivityViewModel @Inject constructor(
         MutableStateFlow(
             State(
                 actions = emptyList(),
+                isFirstFrameRendered = false,
                 isPlayingInList = true,
                 pendingPlayItem = null,
                 playItem = null,
@@ -142,6 +144,12 @@ class NavigationActivityViewModel @Inject constructor(
 
     fun saveState() {
         savedStateHandle[KEY_TAB] = tab
+    }
+
+    fun setIsFirstFrameRendered(isFirstFrameRendered: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isFirstFrameRendered = isFirstFrameRendered)
+        }
     }
 
     fun setTab(tab: State.Tab) {

@@ -7,16 +7,20 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.core.view.isVisible
 import androidx.fragment.app.commit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestManager
 import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.StyledPlayerView.FullscreenButtonClickListener
 import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -36,11 +40,17 @@ class NavigationActivity : AppCompatActivity() {
     private val viewModel: NavigationActivityViewModel by viewModels()
     private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingInList
 
+    private lateinit var glideRequestManager: RequestManager
+
     private var mediaSession: MediaSessionCompat? = null
     private var player: Player? = null
 
     private val homeFragment
         get() = supportFragmentManager.findFragmentByTag(TAG_HOME) as MediaItemListFragment?
+
+    private val fullscreenButtonClickListener = FullscreenButtonClickListener {
+        //todo implement
+    }
 
     private val mediaPlayerServiceConnection: MediaPlayerService.ServiceConnection =
         object : MediaPlayerService.ServiceConnection() {
@@ -62,7 +72,7 @@ class NavigationActivity : AppCompatActivity() {
 
     private val motionTransitionListener = object : MotionLayout.TransitionListener {
         override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
-
+            binding.playerView.useController = false
         }
 
         override fun onTransitionChange(
@@ -75,7 +85,7 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-            //todo implement
+            binding.playerView.useController = currentId == R.id.start
         }
 
         override fun onTransitionTrigger(
@@ -122,6 +132,17 @@ class NavigationActivity : AppCompatActivity() {
                     )
                 }
         }
+
+        override fun onRenderedFirstFrame() {
+            super.onRenderedFirstFrame()
+            viewModel.setIsFirstFrameRendered(true)
+        }
+
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            super.onPlaybackStateChanged(playbackState)
+            if (playbackState == Player.STATE_IDLE)
+                viewModel.setIsFirstFrameRendered(false)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -163,6 +184,8 @@ class NavigationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityNavigationBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
+        glideRequestManager = Glide.with(this)
+
         MediaPlayerService.bindService(this, mediaPlayerServiceConnection)
 
         savedInstanceState
@@ -191,8 +214,35 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
+                    viewModel.stateFlow.map { it.isFirstFrameRendered }.distinctUntilChanged()
+                        .collect {
+                            binding.imageViewThumbnail.isVisible = !it
+                        }
+                }
+
+                launch {
                     viewModel.stateFlow.map { it.isPlayingInList }.distinctUntilChanged().collect {
+                        val player = if (it) null else this@NavigationActivity.player
+
+                        with(binding.playerControlViewPlayPause) {
+                            this.player = player
+                        }
+
+                        with(binding.playerView) {
+                            this.player = player
+                        }
+
                         homeFragment?.setIsPlayingInList(it)
+                    }
+                }
+
+                launch {
+                    viewModel.stateFlow.map { it.pendingPlayItem }.distinctUntilChanged().collect {
+                        it?.let {
+                            glideRequestManager.load(it.sourceUrl)
+                                .placeholder(com.deathhit.core.ui.R.color.black)
+                                .into(binding.imageViewThumbnail)
+                        }
                     }
                 }
 
@@ -237,6 +287,7 @@ class NavigationActivity : AppCompatActivity() {
             bottomNavigationView.setOnItemSelectedListener(onNavigationSelectedListener)
             buttonClear.setOnClickListener(onClearListener)
             motionLayout.addTransitionListener(motionTransitionListener)
+            playerView.setFullscreenButtonClickListener(fullscreenButtonClickListener)
         }
 
         mediaSession?.isActive = true
@@ -249,6 +300,7 @@ class NavigationActivity : AppCompatActivity() {
             bottomNavigationView.setOnItemSelectedListener(null)
             buttonClear.setOnClickListener(null)
             motionLayout.removeTransitionListener(motionTransitionListener)
+            playerView.setFullscreenButtonClickListener(null)
         }
 
         mediaSession?.isActive = false
