@@ -71,7 +71,7 @@ class NavigationActivityViewModel @Inject constructor(
     private var prepareItemJob: Job? = null
 
     fun clearItem() {
-        //todo implement
+        //todo test
         _stateFlow.update { state ->
             state.copy(isPlayingInList = true)
         }
@@ -86,7 +86,7 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun openItem(item: MediaItemVO?) {
-        //todo implement
+        //todo test
 
         _stateFlow.update { state ->
             state.copy(isPlayingInList = false)

@@ -6,6 +6,7 @@ import android.view.View.OnClickListener
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.fragment.app.commit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -25,8 +26,9 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class NavigationActivity : AppCompatActivity() {
     companion object {
-        private const val TAG = "HomeActivity"
-        private const val TAG_VIDEO_LIST = "$TAG.TAG_VIDEO_LIST"
+        private const val TAG = "NavigationActivity"
+        private const val KEY_MOTION_TRANSITION_STATE = "$TAG.KEY_MOTION_TRANSITION_STATE"
+        private const val TAG_HOME = "$TAG.TAG_HOME"
     }
 
     private lateinit var binding: ActivityNavigationBinding
@@ -37,8 +39,8 @@ class NavigationActivity : AppCompatActivity() {
     private var mediaSession: MediaSessionCompat? = null
     private var player: Player? = null
 
-    private val mediaItemListFragment
-        get() = supportFragmentManager.findFragmentByTag(TAG_VIDEO_LIST) as MediaItemListFragment?
+    private val homeFragment
+        get() = supportFragmentManager.findFragmentByTag(TAG_HOME) as MediaItemListFragment?
 
     private val mediaPlayerServiceConnection: MediaPlayerService.ServiceConnection =
         object : MediaPlayerService.ServiceConnection() {
@@ -54,9 +56,37 @@ class NavigationActivity : AppCompatActivity() {
                 mediaSession!!.isActive = true
                 player!!.play()
 
-                mediaItemListFragment?.player = player
+                homeFragment?.player = player
             }
         }
+
+    private val motionTransitionListener = object : MotionLayout.TransitionListener {
+        override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
+
+        }
+
+        override fun onTransitionChange(
+            motionLayout: MotionLayout?,
+            startId: Int,
+            endId: Int,
+            progress: Float
+        ) {
+
+        }
+
+        override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
+            //todo implement
+        }
+
+        override fun onTransitionTrigger(
+            motionLayout: MotionLayout?,
+            triggerId: Int,
+            positive: Boolean,
+            progress: Float
+        ) {
+
+        }
+    }
 
     private val onClearListener = OnClickListener {
         //todo use viewmodel action
@@ -162,7 +192,7 @@ class NavigationActivity : AppCompatActivity() {
 
                 launch {
                     viewModel.stateFlow.map { it.isPlayingInList }.distinctUntilChanged().collect {
-                        mediaItemListFragment?.setIsPlayingInList(it)
+                        homeFragment?.setIsPlayingInList(it)
                     }
                 }
 
@@ -171,17 +201,17 @@ class NavigationActivity : AppCompatActivity() {
                         when (tab) {
                             NavigationActivityViewModel.State.Tab.DASHBOARD -> {
                                 supportFragmentManager.commit {
-                                    mediaItemListFragment?.let { hide(it) }
+                                    homeFragment?.let { hide(it) }
                                 }
 
                                 binding.bottomNavigationView.selectedItemId = R.id.dashboard
                             }
                             NavigationActivityViewModel.State.Tab.HOME -> {
                                 supportFragmentManager.commit {
-                                    mediaItemListFragment?.let { show(it) } ?: add(
+                                    homeFragment?.let { show(it) } ?: add(
                                         binding.containerNavigationTabPage.id,
                                         MediaItemListFragment.create(isPlayingInList),
-                                        TAG_VIDEO_LIST
+                                        TAG_HOME
                                     )
                                 }
 
@@ -189,7 +219,7 @@ class NavigationActivity : AppCompatActivity() {
                             }
                             NavigationActivityViewModel.State.Tab.NOTIFICATIONS -> {
                                 supportFragmentManager.commit {
-                                    mediaItemListFragment?.let { hide(it) }
+                                    homeFragment?.let { hide(it) }
                                 }
 
                                 binding.bottomNavigationView.selectedItemId = R.id.notifications
@@ -206,6 +236,7 @@ class NavigationActivity : AppCompatActivity() {
         with(binding) {
             bottomNavigationView.setOnItemSelectedListener(onNavigationSelectedListener)
             buttonClear.setOnClickListener(onClearListener)
+            motionLayout.addTransitionListener(motionTransitionListener)
         }
 
         mediaSession?.isActive = true
@@ -217,6 +248,7 @@ class NavigationActivity : AppCompatActivity() {
         with(binding) {
             bottomNavigationView.setOnItemSelectedListener(null)
             buttonClear.setOnClickListener(null)
+            motionLayout.removeTransitionListener(motionTransitionListener)
         }
 
         mediaSession?.isActive = false
@@ -232,7 +264,18 @@ class NavigationActivity : AppCompatActivity() {
             MediaPlayerService.stopService(this)
     }
 
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        with(binding.motionLayout) {
+            transitionState = savedInstanceState.getBundle(KEY_MOTION_TRANSITION_STATE)
+        }
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
+        with(binding.motionLayout) {
+            outState.putBundle(KEY_MOTION_TRANSITION_STATE, transitionState)
+        }
+
         viewModel.saveState()
         super.onSaveInstanceState(outState)
     }
