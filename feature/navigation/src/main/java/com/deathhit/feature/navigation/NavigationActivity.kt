@@ -13,7 +13,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
-import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
@@ -35,7 +34,6 @@ class NavigationActivity : AppCompatActivity() {
     private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingInList
 
     private var mediaSession: MediaSessionCompat? = null
-    private val transportControls get() = mediaSession?.controller?.transportControls
     private var player: Player? = null
 
     private val mediaItemListFragment
@@ -53,7 +51,7 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 mediaSession!!.isActive = true
-                transportControls!!.play()
+                player!!.play()
 
                 mediaItemListFragment?.player = player
             }
@@ -88,10 +86,13 @@ class NavigationActivity : AppCompatActivity() {
             if (!isPlaying)
                 player?.let {
                     viewModel.savePlayItemPosition(
+                        /* todo add a flag to indicate the end of playback instead
                         if (it.playbackState == Player.STATE_ENDED)
                             C.TIME_UNSET
                         else
-                            it.currentPosition
+
+                         */
+                        it.currentPosition
                     )
                 }
         }
@@ -138,7 +139,8 @@ class NavigationActivity : AppCompatActivity() {
 
         MediaPlayerService.bindService(this, mediaPlayerServiceConnection)
 
-        savedInstanceState ?: MediaPlayerService.startService(this)
+        savedInstanceState
+            ?: MediaPlayerService.startService(this) //Starts service to survive configuration changes.
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -147,15 +149,14 @@ class NavigationActivity : AppCompatActivity() {
                         .collect { actions ->
                             actions.forEach { action ->
                                 when (action) {
-                                    is NavigationActivityViewModel.State.Action.PrepareMedia -> {
-                                        player?.setMediaItem(
+                                    is NavigationActivityViewModel.State.Action.PrepareMedia -> player?.run {
+                                        setMediaItem(
                                             MediaItem.fromUri(action.item.sourceUrl),
                                             action.position
                                         )
-
-                                        transportControls?.play()
+                                        prepare()
                                     }
-                                    NavigationActivityViewModel.State.Action.StopPlayer -> transportControls?.stop()
+                                    NavigationActivityViewModel.State.Action.StopPlayer -> player?.stop()
                                 }
 
                                 viewModel.onAction(action)
@@ -212,7 +213,7 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         mediaSession?.isActive = true
-        transportControls?.play()
+        player?.play()
     }
 
     override fun onPause() {
@@ -223,7 +224,7 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         mediaSession?.isActive = false
-        transportControls?.pause()
+        player?.pause()
     }
 
     override fun onDestroy() {

@@ -22,7 +22,7 @@ class NavigationActivityViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     companion object {
-        private const val TAG = "HomeActivityViewModel"
+        private const val TAG = "NavigationActivityViewModel"
         private const val KEY_TAB = "$TAG.KEY_TAB"
 
         private const val MEDIA_SWITCHING_DELAY = 500L
@@ -94,7 +94,7 @@ class NavigationActivityViewModel @Inject constructor(
         if (item == pendingPlayItem)
             return
 
-        //Stop the player before updating the playItem to save the previous progress.
+        //Stop the player immediately to show thumbnails.
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.StopPlayer, pendingPlayItem = item)
         }
