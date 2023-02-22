@@ -1,5 +1,6 @@
 package com.deathhit.feature.navigation
 
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
 import android.view.View.OnClickListener
@@ -14,6 +15,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.request.transition.Transition
 import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
@@ -44,6 +48,7 @@ class NavigationActivity : AppCompatActivity() {
 
     private var mediaSession: MediaSessionCompat? = null
     private var player: Player? = null
+    private var thumbnailGlideTarget: Target<Drawable>? = null
 
     private val homeFragment
         get() = supportFragmentManager.findFragmentByTag(TAG_HOME) as MediaItemListFragment?
@@ -222,25 +227,44 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.isPlayingByTabPage }.distinctUntilChanged().collect {
-                        val player = if (it) null else this@NavigationActivity.player
+                    viewModel.stateFlow.map { it.isPlayingByTabPage }.distinctUntilChanged()
+                        .collect {
+                            val player = if (it) null else this@NavigationActivity.player
 
-                        with(binding.playerControlViewPlayPause) {
-                            this.player = player
-                        }
+                            with(binding.playerControlViewPlayPause) {
+                                this.player = player
+                            }
 
-                        with(binding.playerView) {
-                            this.player = player
+                            with(binding.playerView) {
+                                this.player = player
+                            }
                         }
-                    }
                 }
 
                 launch {
                     viewModel.stateFlow.map { it.pendingPlayItem }.distinctUntilChanged().collect {
                         it?.let {
-                            glideRequestManager.load(it.thumbUrl)
+                            //Since the size of the image view is dynamic, we need to load the image with a fixed size.
+                            glideRequestManager.clear(thumbnailGlideTarget)
+                            thumbnailGlideTarget = glideRequestManager
+                                .load(it.thumbUrl)
                                 .placeholder(com.deathhit.core.ui.R.color.black)
-                                .into(binding.imageViewThumbnail)
+                                .override(
+                                    Target.SIZE_ORIGINAL,
+                                    resources.getDimensionPixelSize(com.deathhit.core.ui.R.dimen.min_height_player_view_list)
+                                )
+                                .into(object : CustomTarget<Drawable>() {
+                                    override fun onResourceReady(
+                                        resource: Drawable,
+                                        transition: Transition<in Drawable>?
+                                    ) {
+                                        binding.imageViewThumbnail.setImageDrawable(resource)
+                                    }
+
+                                    override fun onLoadCleared(placeholder: Drawable?) {
+                                        binding.imageViewThumbnail.setImageDrawable(placeholder)
+                                    }
+                                })
                         }
                     }
                 }
