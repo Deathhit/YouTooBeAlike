@@ -23,10 +23,10 @@ class MediaItemListViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private const val TAG = "MediaItemListViewModel"
-        private const val KEY_IS_PLAYING_IN_LIST = "$TAG.KEY_IS_PLAYING_IN_LIST"
+        private const val KEY_IS_PLAYING = "$TAG.KEY_IS_PLAYING"
 
-        fun createArgs(isPlayingInList: Boolean) = Bundle().apply {
-            putBoolean(KEY_IS_PLAYING_IN_LIST, isPlayingInList)
+        fun createArgs(isPlaying: Boolean) = Bundle().apply {
+            putBoolean(KEY_IS_PLAYING, isPlaying)
         }
     }
 
@@ -34,7 +34,7 @@ class MediaItemListViewModel @Inject constructor(
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
         val isFirstPageLoaded: Boolean,
-        val isPlayingInList: Boolean,
+        val isPlaying: Boolean,
         val playPosition: Int?
     ) {
         sealed interface Action {
@@ -50,7 +50,7 @@ class MediaItemListViewModel @Inject constructor(
                 actions = emptyList(),
                 isFirstFrameRendered = false,
                 isFirstPageLoaded = false,
-                isPlayingInList = savedStateHandle[KEY_IS_PLAYING_IN_LIST] ?: true,
+                isPlaying = savedStateHandle[KEY_IS_PLAYING] ?: true,
                 playPosition = null
             )
         )
@@ -62,7 +62,7 @@ class MediaItemListViewModel @Inject constructor(
             .cachedIn(viewModelScope)
 
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
-    private val isPlayingInList get() = stateFlow.value.isPlayingInList
+    private val isPlaying get() = stateFlow.value.isPlaying
 
     fun onAction(action: State.Action) {
         _stateFlow.update { state ->
@@ -77,13 +77,16 @@ class MediaItemListViewModel @Inject constructor(
     }
 
     fun prepareItem(item: MediaItemVO?) {
+        if (!isPlaying)
+            return
+
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.PrepareItem(item))
         }
     }
 
     fun saveState() {
-        savedStateHandle[KEY_IS_PLAYING_IN_LIST] = isPlayingInList
+        savedStateHandle[KEY_IS_PLAYING] = isPlaying
     }
 
     fun scrollToTopOnFirstPageLoaded() {
@@ -101,9 +104,9 @@ class MediaItemListViewModel @Inject constructor(
         }
     }
 
-    fun setIsPlayingInList(isPlayingInList: Boolean) {
+    fun setIsPlaying(isPlaying: Boolean) {
         _stateFlow.update { state ->
-            state.copy(isPlayingInList = isPlayingInList)
+            state.copy(isPlaying = isPlaying)
         }
     }
 
@@ -112,7 +115,7 @@ class MediaItemListViewModel @Inject constructor(
             state.copy(playPosition = playPosition)
         }
 
-        if (isPlayingInList && playPosition == null)
+        if (playPosition == null)
             prepareItem(null)
     }
 }

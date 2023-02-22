@@ -26,6 +26,13 @@
             <KeyPosition
                 motion:curveFit="linear"
                 motion:framePosition="0"
+                motion:motionTarget="@id/imageView_thumbnail"
+                motion:percentWidth="1"
+                motion:percentX="1" />
+
+            <KeyPosition
+                motion:curveFit="linear"
+                motion:framePosition="0"
                 motion:motionTarget="@id/container_trackInfo"
                 motion:percentWidth="1"
                 motion:percentX="1" />
@@ -70,6 +77,13 @@
                 motion:curveFit="linear"
                 motion:framePosition="90"
                 motion:motionTarget="@id/playerView"
+                motion:percentWidth="0"
+                motion:percentX="0" />
+
+            <KeyPosition
+                motion:curveFit="linear"
+                motion:framePosition="90"
+                motion:motionTarget="@id/imageView_thumbnail"
                 motion:percentWidth="0"
                 motion:percentX="0" />
 

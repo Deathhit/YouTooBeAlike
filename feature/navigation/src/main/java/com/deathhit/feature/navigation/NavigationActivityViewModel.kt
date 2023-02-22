@@ -23,6 +23,7 @@ class NavigationActivityViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private const val TAG = "NavigationActivityViewModel"
+        private const val KEY_IS_PLAYING_BY_TAB_PAGE = "$TAG.KEY_IS_PLAYING_BY_TAB_PAGE"
         private const val KEY_TAB = "$TAG.KEY_TAB"
 
         private const val MEDIA_SWITCHING_DELAY = 500L
@@ -31,19 +32,21 @@ class NavigationActivityViewModel @Inject constructor(
     data class State(
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
-        val isPlayingInList: Boolean,
+        val isPlayingByTabPage: Boolean,
         val pendingPlayItem: MediaItemVO?,
         val playItem: MediaItemVO?,
         val tab: Tab
     ) {
         sealed interface Action {
+            object PauseMedia : Action
+            object PlayMedia : Action
             data class PrepareMedia(
                 val isEnded: Boolean,
                 val item: MediaItemVO,
                 val position: Long
             ) : Action
 
-            object StopPlayer : Action
+            object StopMedia : Action
         }
 
         enum class Tab {
@@ -51,6 +54,8 @@ class NavigationActivityViewModel @Inject constructor(
             HOME,
             NOTIFICATIONS
         }
+
+        val playingTab = if (isPlayingByTabPage) tab else null
     }
 
     private val _stateFlow =
@@ -58,7 +63,7 @@ class NavigationActivityViewModel @Inject constructor(
             State(
                 actions = emptyList(),
                 isFirstFrameRendered = false,
-                isPlayingInList = true,
+                isPlayingByTabPage = savedStateHandle[KEY_IS_PLAYING_BY_TAB_PAGE] ?: true,
                 pendingPlayItem = null,
                 playItem = null,
                 tab = savedStateHandle[KEY_TAB] ?: State.Tab.HOME
@@ -66,6 +71,7 @@ class NavigationActivityViewModel @Inject constructor(
         )
     val stateFlow = _stateFlow.asStateFlow()
 
+    private val isPlayingByTabPage get() = stateFlow.value.isPlayingByTabPage
     private val pendingPlayItem get() = stateFlow.value.pendingPlayItem
     private val playItem get() = stateFlow.value.playItem
     private val tab get() = stateFlow.value.tab
@@ -75,7 +81,7 @@ class NavigationActivityViewModel @Inject constructor(
     fun clearItem() {
         //todo test
         _stateFlow.update { state ->
-            state.copy(isPlayingInList = true)
+            state.copy(isPlayingByTabPage = true)
         }
 
         prepareItem(null)
@@ -90,10 +96,16 @@ class NavigationActivityViewModel @Inject constructor(
     fun openItem(item: MediaItemVO?) {
         //todo test
         _stateFlow.update { state ->
-            state.copy(isPlayingInList = false, /*pendingPlayItem = null*/)
+            state.copy(isPlayingByTabPage = false)
         }
 
         prepareItem(item)
+    }
+
+    fun pauseMedia() {
+        _stateFlow.update { state ->
+            state.copy(actions = state.actions + State.Action.PauseMedia)
+        }
     }
 
     fun prepareItem(item: MediaItemVO?) {
@@ -103,7 +115,7 @@ class NavigationActivityViewModel @Inject constructor(
         //Stop the player before a new item is ready.
         //Only set pendingPlayItem first to allow time to save media progress.
         _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.StopPlayer, pendingPlayItem = item)
+            state.copy(actions = state.actions + State.Action.StopMedia, pendingPlayItem = item)
         }
 
         prepareItemJob?.cancel()
@@ -116,7 +128,7 @@ class NavigationActivityViewModel @Inject constructor(
                         mediaProgressRepository.getMediaProgressBySourceUrl(item.sourceUrl)
 
                     state.copy(
-                        actions = state.actions + State.Action.PrepareMedia(
+                        actions = state.actions + State.Action.PlayMedia + State.Action.PrepareMedia(
                             progress?.isEnded ?: false, item, progress?.position ?: 0L
                         )
                     )
@@ -143,6 +155,7 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun saveState() {
+        savedStateHandle[KEY_IS_PLAYING_BY_TAB_PAGE] = isPlayingByTabPage
         savedStateHandle[KEY_TAB] = tab
     }
 
@@ -153,8 +166,14 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun setTab(tab: State.Tab) {
+        if (tab == this.tab)
+            return
+
         _stateFlow.update { state ->
             state.copy(tab = tab)
         }
+
+        if (isPlayingByTabPage)
+            prepareItem(null)
     }
 }

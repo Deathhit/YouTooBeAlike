@@ -159,7 +159,7 @@ class MediaItemListFragment : Fragment() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.isPlayingInList }.distinctUntilChanged().collect {
+                    viewModel.stateFlow.map { it.isPlaying }.distinctUntilChanged().collect {
                         //The Runnable has the potential to outlive the viewLifecycleScope,
                         // so we use an extra launch{} to make sure it only runs within the scope.
                         binding.recyclerView.post {
@@ -195,11 +195,15 @@ class MediaItemListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         binding.recyclerView.addOnScrollListener(onScrollListener)
+
+        viewModel.setPlayPosition(playPosition)
     }
 
     override fun onPause() {
         super.onPause()
         binding.recyclerView.removeOnScrollListener(onScrollListener)
+
+        viewModel.setPlayPosition(null)
     }
 
     override fun onDestroyView() {
@@ -214,8 +218,6 @@ class MediaItemListFragment : Fragment() {
         _linearLayoutManger = null
 
         _mediaItemAdapter = null
-
-        viewModel.setPlayPosition(null)
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -228,7 +230,7 @@ class MediaItemListFragment : Fragment() {
         super.onSaveInstanceState(outState)
     }
 
-    fun setIsPlayingInList(isPlayingInList: Boolean) {
-        viewModel.setIsPlayingInList(isPlayingInList)
+    fun setIsPlaying(isPlaying: Boolean) {
+        viewModel.setIsPlaying(isPlaying)
     }
 }

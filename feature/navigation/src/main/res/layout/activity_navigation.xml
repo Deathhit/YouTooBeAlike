@@ -27,7 +27,8 @@
         app:layout_constraintBottom_toBottomOf="@id/container_playerView"
         app:layout_constraintEnd_toEndOf="@id/container_playerView"
         app:layout_constraintStart_toStartOf="@id/container_playerView"
-        app:layout_constraintTop_toTopOf="@id/container_playerView"/>
+        app:layout_constraintTop_toTopOf="@id/container_playerView"
+        tools:ignore="SpeakableTextPresentCheck" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/container_playerView"
@@ -64,7 +65,6 @@
         android:id="@+id/container_trackInfo"
         android:layout_width="0dp"
         android:layout_height="0dp"
-
         app:layout_constraintBottom_toBottomOf="@id/container_playerView"
         app:layout_constraintEnd_toStartOf="@id/playerControlView_playPause"
         app:layout_constraintStart_toEndOf="@id/playerView"

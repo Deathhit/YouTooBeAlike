@@ -7,7 +7,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
-import androidx.core.view.isVisible
+import androidx.core.view.isInvisible
 import androidx.fragment.app.commit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -38,7 +38,7 @@ class NavigationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityNavigationBinding
 
     private val viewModel: NavigationActivityViewModel by viewModels()
-    private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingInList
+    private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingByTabPage
 
     private lateinit var glideRequestManager: RequestManager
 
@@ -62,9 +62,6 @@ class NavigationActivity : AppCompatActivity() {
                         addListener(playerListener)
                     }
                 }
-
-                mediaSession!!.isActive = true
-                player!!.play()
 
                 homeFragment?.player = player
             }
@@ -124,6 +121,8 @@ class NavigationActivity : AppCompatActivity() {
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
+            mediaSession!!.isActive = isPlaying
+
             if (!isPlaying)
                 player!!.run {
                     viewModel.savePlayItemPosition(
@@ -198,6 +197,8 @@ class NavigationActivity : AppCompatActivity() {
                         .collect { actions ->
                             actions.forEach { action ->
                                 when (action) {
+                                    NavigationActivityViewModel.State.Action.PauseMedia -> player?.pause()
+                                    NavigationActivityViewModel.State.Action.PlayMedia -> player?.play()
                                     is NavigationActivityViewModel.State.Action.PrepareMedia -> player?.run {
                                         setMediaItem(
                                             MediaItem.fromUri(action.item.sourceUrl),
@@ -205,7 +206,7 @@ class NavigationActivity : AppCompatActivity() {
                                         )
                                         prepare()
                                     }
-                                    NavigationActivityViewModel.State.Action.StopPlayer -> player?.stop()
+                                    NavigationActivityViewModel.State.Action.StopMedia -> player?.stop()
                                 }
 
                                 viewModel.onAction(action)
@@ -216,12 +217,12 @@ class NavigationActivity : AppCompatActivity() {
                 launch {
                     viewModel.stateFlow.map { it.isFirstFrameRendered }.distinctUntilChanged()
                         .collect {
-                            binding.imageViewThumbnail.isVisible = !it
+                            binding.imageViewThumbnail.isInvisible = it
                         }
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.isPlayingInList }.distinctUntilChanged().collect {
+                    viewModel.stateFlow.map { it.isPlayingByTabPage }.distinctUntilChanged().collect {
                         val player = if (it) null else this@NavigationActivity.player
 
                         with(binding.playerControlViewPlayPause) {
@@ -231,18 +232,22 @@ class NavigationActivity : AppCompatActivity() {
                         with(binding.playerView) {
                             this.player = player
                         }
-
-                        homeFragment?.setIsPlayingInList(it)
                     }
                 }
 
                 launch {
                     viewModel.stateFlow.map { it.pendingPlayItem }.distinctUntilChanged().collect {
                         it?.let {
-                            glideRequestManager.load(it.sourceUrl)
+                            glideRequestManager.load(it.thumbUrl)
                                 .placeholder(com.deathhit.core.ui.R.color.black)
                                 .into(binding.imageViewThumbnail)
                         }
+                    }
+                }
+
+                launch {
+                    viewModel.stateFlow.map { it.playingTab }.distinctUntilChanged().collect {
+                        homeFragment?.setIsPlaying(it == NavigationActivityViewModel.State.Tab.HOME)
                     }
                 }
 
@@ -289,9 +294,6 @@ class NavigationActivity : AppCompatActivity() {
             motionLayout.addTransitionListener(motionTransitionListener)
             playerView.setFullscreenButtonClickListener(fullscreenButtonClickListener)
         }
-
-        mediaSession?.isActive = true
-        player?.play()
     }
 
     override fun onPause() {
@@ -303,8 +305,7 @@ class NavigationActivity : AppCompatActivity() {
             playerView.setFullscreenButtonClickListener(null)
         }
 
-        mediaSession?.isActive = false
-        player?.pause()
+        viewModel.pauseMedia()
     }
 
     override fun onDestroy() {
