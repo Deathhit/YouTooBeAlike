@@ -4,6 +4,7 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
 import android.view.View.OnClickListener
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
@@ -75,7 +76,7 @@ class NavigationActivity : AppCompatActivity() {
 
     private val motionTransitionListener = object : MotionLayout.TransitionListener {
         override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
-            binding.playerView.useController = false
+            viewModel.setIsPlayerViewExpanded(false)
         }
 
         override fun onTransitionChange(
@@ -88,7 +89,7 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-            binding.playerView.useController = currentId == R.id.start
+            viewModel.setIsPlayerViewExpanded(currentId == R.id.start)
         }
 
         override fun onTransitionTrigger(
@@ -98,6 +99,12 @@ class NavigationActivity : AppCompatActivity() {
             progress: Float
         ) {
 
+        }
+    }
+
+    private val onCollapsePlayerViewCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            viewModel.collapsePlayerView()
         }
     }
 
@@ -164,6 +171,8 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(onCollapsePlayerViewCallback)
+
         binding = ActivityNavigationBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
         glideRequestManager = Glide.with(this)
@@ -232,6 +241,14 @@ class NavigationActivity : AppCompatActivity() {
                         .collect {
                             binding.imageViewThumbnail.isInvisible = it
                         }
+                }
+
+                launch {
+                    viewModel.stateFlow.map { it.isPlayerViewExpanded }.distinctUntilChanged().collect {
+                        binding.playerView.useController = it
+
+                        onCollapsePlayerViewCallback.isEnabled = it
+                    }
                 }
 
                 launch {

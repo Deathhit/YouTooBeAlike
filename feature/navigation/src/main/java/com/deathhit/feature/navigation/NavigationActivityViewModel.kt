@@ -23,6 +23,7 @@ class NavigationActivityViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private const val TAG = "NavigationActivityViewModel"
+        private const val KEY_IS_PLAYER_VIEW_EXPANDED = "$TAG.KEY_IS_PLAYER_VIEW_EXPANDED"
         private const val KEY_IS_PLAYING_BY_TAB_PAGE = "$TAG.KEY_IS_PLAYING_BY_TAB_PAGE"
         private const val KEY_TAB = "$TAG.KEY_TAB"
 
@@ -33,6 +34,7 @@ class NavigationActivityViewModel @Inject constructor(
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
         val isPlayerConnected: Boolean,
+        val isPlayerViewExpanded: Boolean,
         val isPlayingByTabPage: Boolean,
         val pendingPlayItem: MediaItemVO?,
         val playItem: MediaItemVO?,
@@ -69,6 +71,7 @@ class NavigationActivityViewModel @Inject constructor(
                 actions = emptyList(),
                 isFirstFrameRendered = false,
                 isPlayerConnected = false,
+                isPlayerViewExpanded = savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] ?: false,
                 isPlayingByTabPage = savedStateHandle[KEY_IS_PLAYING_BY_TAB_PAGE] ?: true,
                 pendingPlayItem = null,
                 playItem = null,
@@ -77,6 +80,7 @@ class NavigationActivityViewModel @Inject constructor(
         )
     val stateFlow = _stateFlow.asStateFlow()
 
+    private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded
     private val isPlayingByTabPage get() = stateFlow.value.isPlayingByTabPage
     private val pendingPlayItem get() = stateFlow.value.pendingPlayItem
     private val playItem get() = stateFlow.value.playItem
@@ -173,6 +177,7 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun saveState() {
+        savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] = isPlayerViewExpanded
         savedStateHandle[KEY_IS_PLAYING_BY_TAB_PAGE] = isPlayingByTabPage
         savedStateHandle[KEY_TAB] = tab
     }
@@ -186,6 +191,12 @@ class NavigationActivityViewModel @Inject constructor(
     fun setIsPlayerConnected(isPlayerConnected: Boolean) {
         _stateFlow.update { state ->
             state.copy(isPlayerConnected = isPlayerConnected)
+        }
+    }
+
+    fun setIsPlayerViewExpanded(isPlayerViewExpanded: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isPlayerViewExpanded = isPlayerViewExpanded)
         }
     }
 
