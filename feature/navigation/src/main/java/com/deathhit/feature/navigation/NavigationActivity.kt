@@ -4,7 +4,6 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
 import android.view.View.OnClickListener
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
@@ -101,12 +100,6 @@ class NavigationActivity : AppCompatActivity() {
     }
 
     private val onClearListener = OnClickListener {
-        //todo use viewmodel action
-        with(binding.motionLayout) {
-            setTransition(R.id.hide)
-            transitionToEnd()
-        }
-
         viewModel.clearItem()
     }
 
@@ -155,20 +148,6 @@ class NavigationActivity : AppCompatActivity() {
                 is MediaItemListFragment -> {
                     fragment.callback = object : MediaItemListFragment.Callback {
                         override fun onOpenItem(item: MediaItemVO) {
-                            //todo use viewmodel action
-                            with(binding.motionLayout) {
-                                when (currentState) {
-                                    R.id.end -> {
-                                        setTransition(R.id.dragVertically)
-                                        transitionToStart()
-                                    }
-                                    R.id.gone -> {
-                                        setTransition(R.id.pop)
-                                        transitionToEnd { setTransition(R.id.dragVertically) }
-                                    }
-                                }
-                            }
-
                             viewModel.openItem(item)
                         }
 
@@ -199,6 +178,34 @@ class NavigationActivity : AppCompatActivity() {
                         .collect { actions ->
                             actions.forEach { action ->
                                 when (action) {
+                                    NavigationActivityViewModel.State.Action.CollapsePlayerView -> with(binding.motionLayout) {
+                                        when(currentState) {
+                                            R.id.start -> {
+                                                setTransition(R.id.dragVertically)
+                                                transitionToEnd()
+                                            }
+                                        }
+                                    }
+                                    NavigationActivityViewModel.State.Action.ExpandPlayerView -> with(
+                                        binding.motionLayout
+                                    ) {
+                                        when (currentState) {
+                                            R.id.end -> {
+                                                setTransition(R.id.dragVertically)
+                                                transitionToStart()
+                                            }
+                                            R.id.gone -> {
+                                                setTransition(R.id.pop)
+                                                transitionToEnd { setTransition(R.id.dragVertically) }
+                                            }
+                                        }
+                                    }
+                                    NavigationActivityViewModel.State.Action.HidePlayerView -> with(
+                                        binding.motionLayout
+                                    ) {
+                                        setTransition(R.id.hide)
+                                        transitionToEnd()
+                                    }
                                     NavigationActivityViewModel.State.Action.PauseMedia -> player?.pause()
                                     NavigationActivityViewModel.State.Action.PlayMedia -> player?.play()
                                     is NavigationActivityViewModel.State.Action.PrepareMedia -> player?.run {
@@ -226,6 +233,7 @@ class NavigationActivity : AppCompatActivity() {
                 launch {
                     viewModel.stateFlow.map { it.isPlayingByTabPage }.distinctUntilChanged()
                         .collect {
+                            //todo deal with MediaPlayerService binding
                             val player = if (it) null else this@NavigationActivity.player
 
                             with(binding.playerControlViewPlayPause) {
@@ -339,6 +347,10 @@ class NavigationActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        //Releases the internal listeners from the player.
+        binding.playerControlViewPlayPause.player = null
+        binding.playerView.player = null
+
         player?.removeListener(playerListener)
 
         MediaPlayerService.unbindService(this, mediaPlayerServiceConnection)

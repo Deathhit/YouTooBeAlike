@@ -38,6 +38,9 @@ class NavigationActivityViewModel @Inject constructor(
         val tab: Tab
     ) {
         sealed interface Action {
+            object CollapsePlayerView : Action
+            object ExpandPlayerView : Action
+            object HidePlayerView : Action
             object PauseMedia : Action
             object PlayMedia : Action
             data class PrepareMedia(
@@ -79,12 +82,22 @@ class NavigationActivityViewModel @Inject constructor(
     private var prepareItemJob: Job? = null
 
     fun clearItem() {
-        //todo test
         _stateFlow.update { state ->
-            state.copy(isPlayingByTabPage = true)
+            state.copy(
+                actions = state.actions + State.Action.HidePlayerView,
+                isPlayingByTabPage = true
+            )
         }
 
         prepareItem(null)
+    }
+
+    fun collapsePlayerView() {
+        _stateFlow.update { state ->
+            state.copy(
+                actions = state.actions + State.Action.CollapsePlayerView
+            )
+        }
     }
 
     fun onAction(action: State.Action) {
@@ -94,9 +107,11 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun openItem(item: MediaItemVO?) {
-        //todo test
         _stateFlow.update { state ->
-            state.copy(isPlayingByTabPage = false)
+            state.copy(
+                actions = state.actions + State.Action.ExpandPlayerView,
+                isPlayingByTabPage = false
+            )
         }
 
         prepareItem(item)
