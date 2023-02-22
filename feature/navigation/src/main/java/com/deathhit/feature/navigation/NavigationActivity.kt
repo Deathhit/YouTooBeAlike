@@ -345,7 +345,8 @@ class NavigationActivity : AppCompatActivity() {
             playerView.setFullscreenButtonClickListener(null)
         }
 
-        viewModel.pauseMedia()
+        if (!isChangingConfigurations)
+            viewModel.pauseMedia()
     }
 
     override fun onDestroy() {
