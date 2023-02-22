@@ -26,7 +26,7 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
     }
 
     private var isFirstFrameRendered = false
-    private var isPlayingInList = true
+    private var isPlayingByAdapter = true
     private var player: Player? = null
     private var playPosition: Int? = null   //This is an absoluteAdapterPosition.
 
@@ -95,8 +95,8 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
         notifyPlayPositionChanged(playPosition)
     }
 
-    fun notifyIsPlayingInList(isPlayingInList: Boolean) {
-        this.isPlayingInList = isPlayingInList
+    fun notifyIsPlayingByAdapter(isPlayingByAdapter: Boolean) {
+        this.isPlayingByAdapter = isPlayingByAdapter
 
         notifyPlayPositionChanged(playPosition)
     }
@@ -116,7 +116,7 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
     }
 
     private fun bindPlayPosition(holder: MediaItemViewHolder, item: MediaItemVO) {
-        val isAtPlayPosition = holder.absoluteAdapterPosition == playPosition && isPlayingInList
+        val isAtPlayPosition = holder.absoluteAdapterPosition == playPosition && isPlayingByAdapter
         val isFirstFrameRendered = isAtPlayPosition && isFirstFrameRendered
 
         with(holder.binding.imageViewThumbnail) {
@@ -127,6 +127,7 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
         }
 
         with(holder.binding.styledPlayerView) {
+            //Set the player to the player view first to render the first frame.
             player = if (isAtPlayPosition) this@MediaItemAdapter.player else null
 
             if (isFirstFrameRendered)

@@ -164,7 +164,7 @@ class MediaItemListFragment : Fragment() {
                         // so we use an extra launch{} to make sure it only runs within the scope.
                         binding.recyclerView.post {
                             launch {
-                                mediaItemAdapter.notifyIsPlayingInList(it)
+                                mediaItemAdapter.notifyIsPlayingByAdapter(it)
                             }
                         }
                     }
