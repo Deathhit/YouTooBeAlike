@@ -9,32 +9,19 @@
 
         <FrameLayout
             android:id="@+id/frameLayout_playPause"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageButton
-                android:id="@id/exo_pause"
-                style="@style/ExoMediaButton.Pause"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@string/common_pause"
-                android:src="@drawable/ic_player_pause"
-                app:tint="@color/black"
-                tools:ignore="DuplicateClickableBoundsCheck,ImageContrastCheck" />
-
-            <ImageButton
-                android:id="@id/exo_play"
-                style="@style/ExoMediaButton.Play"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@string/common_play"
-                android:src="@drawable/ic_player_play"
-                app:tint="@color/black"
-                tools:ignore="DuplicateClickableBoundsCheck,ImageContrastCheck" />
+                android:id="@id/exo_play_pause"
+                style="@style/ExoStyledControls.Button.Center.PlayPause"
+                android:padding="8dp"
+                app:tint="@color/purple_200"
+                tools:ignore="ContentDescription,ImageContrastCheck" />
 
         </FrameLayout>
 
