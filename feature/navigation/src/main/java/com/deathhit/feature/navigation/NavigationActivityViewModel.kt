@@ -32,6 +32,7 @@ class NavigationActivityViewModel @Inject constructor(
     data class State(
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
+        val isPlayerConnected: Boolean,
         val isPlayingByTabPage: Boolean,
         val pendingPlayItem: MediaItemVO?,
         val playItem: MediaItemVO?,
@@ -58,6 +59,7 @@ class NavigationActivityViewModel @Inject constructor(
             NOTIFICATIONS
         }
 
+        val isPlayingByPlayerView = isPlayerConnected && !isPlayingByTabPage
         val playingTab = if (isPlayingByTabPage) tab else null
     }
 
@@ -66,6 +68,7 @@ class NavigationActivityViewModel @Inject constructor(
             State(
                 actions = emptyList(),
                 isFirstFrameRendered = false,
+                isPlayerConnected = false,
                 isPlayingByTabPage = savedStateHandle[KEY_IS_PLAYING_BY_TAB_PAGE] ?: true,
                 pendingPlayItem = null,
                 playItem = null,
@@ -177,6 +180,12 @@ class NavigationActivityViewModel @Inject constructor(
     fun setIsFirstFrameRendered(isFirstFrameRendered: Boolean) {
         _stateFlow.update { state ->
             state.copy(isFirstFrameRendered = isFirstFrameRendered)
+        }
+    }
+
+    fun setIsPlayerConnected(isPlayerConnected: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isPlayerConnected = isPlayerConnected)
         }
     }
 

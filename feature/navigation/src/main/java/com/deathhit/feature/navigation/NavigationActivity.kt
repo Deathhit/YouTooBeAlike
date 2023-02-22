@@ -68,6 +68,8 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 homeFragment?.player = player
+
+                viewModel.setIsPlayerConnected(true)
             }
         }
 
@@ -178,8 +180,10 @@ class NavigationActivity : AppCompatActivity() {
                         .collect { actions ->
                             actions.forEach { action ->
                                 when (action) {
-                                    NavigationActivityViewModel.State.Action.CollapsePlayerView -> with(binding.motionLayout) {
-                                        when(currentState) {
+                                    NavigationActivityViewModel.State.Action.CollapsePlayerView -> with(
+                                        binding.motionLayout
+                                    ) {
+                                        when (currentState) {
                                             R.id.start -> {
                                                 setTransition(R.id.dragVertically)
                                                 transitionToEnd()
@@ -231,10 +235,9 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.isPlayingByTabPage }.distinctUntilChanged()
+                    viewModel.stateFlow.map { it.isPlayingByPlayerView }.distinctUntilChanged()
                         .collect {
-                            //todo deal with MediaPlayerService binding
-                            val player = if (it) null else this@NavigationActivity.player
+                            val player = if (it) this@NavigationActivity.player else null
 
                             with(binding.playerControlViewPlayPause) {
                                 this.player = player
@@ -356,6 +359,8 @@ class NavigationActivity : AppCompatActivity() {
         MediaPlayerService.unbindService(this, mediaPlayerServiceConnection)
         if (isFinishing)
             MediaPlayerService.stopService(this)
+
+        viewModel.setIsPlayerConnected(false)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
