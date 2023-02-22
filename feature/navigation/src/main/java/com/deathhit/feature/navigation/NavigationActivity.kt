@@ -169,9 +169,6 @@ class NavigationActivity : AppCompatActivity() {
                                 }
                             }
 
-                            Toast.makeText(this@NavigationActivity, item.title, Toast.LENGTH_LONG)
-                                .show()
-
                             viewModel.openItem(item)
                         }
 
@@ -265,6 +262,14 @@ class NavigationActivity : AppCompatActivity() {
                                         binding.imageViewThumbnail.setImageDrawable(placeholder)
                                     }
                                 })
+                        }
+
+                        with(binding.textViewPlaybackSubtitle) {
+                            text = it?.subtitle
+                        }
+
+                        with(binding.textViewPlaybackTitle) {
+                            text = it?.title
                         }
                     }
                 }

@@ -33,7 +33,7 @@
             <KeyPosition
                 motion:curveFit="linear"
                 motion:framePosition="0"
-                motion:motionTarget="@id/container_trackInfo"
+                motion:motionTarget="@id/container_playbackInfo"
                 motion:percentWidth="1"
                 motion:percentX="1" />
 
@@ -90,7 +90,7 @@
             <KeyPosition
                 motion:curveFit="linear"
                 motion:framePosition="90"
-                motion:motionTarget="@id/container_trackInfo"
+                motion:motionTarget="@id/container_playbackInfo"
                 motion:percentWidth="0"
                 motion:percentX="0" />
 
@@ -140,7 +140,7 @@
         </Constraint>
 
         <Constraint
-            android:id="@id/container_trackInfo"
+            android:id="@id/container_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
@@ -205,7 +205,7 @@
         </Constraint>
 
         <Constraint
-            android:id="@id/container_trackInfo"
+            android:id="@id/container_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
@@ -269,7 +269,7 @@
         </Constraint>
 
         <Constraint
-            android:id="@id/container_trackInfo"
+            android:id="@id/container_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toBottomOf="@id/container_playerView"

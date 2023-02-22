@@ -62,13 +62,45 @@
         tools:srcCompat="@tools:sample/backgrounds/scenic"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/container_trackInfo"
+        android:id="@+id/container_playbackInfo"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="@id/container_playerView"
         app:layout_constraintEnd_toStartOf="@id/playerControlView_playPause"
         app:layout_constraintStart_toEndOf="@id/playerView"
-        app:layout_constraintTop_toTopOf="@id/container_playerView" />
+        app:layout_constraintTop_toTopOf="@id/container_playerView" >
+
+        <TextView
+            android:id="@+id/textView_playbackTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Media Title" />
+
+        <TextView
+            android:id="@+id/textView_playbackSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/textView_playbackTitle"
+            app:layout_constraintStart_toStartOf="@+id/textView_playbackTitle"
+            app:layout_constraintTop_toBottomOf="@+id/textView_playbackTitle"
+            tools:ignore="TextContrastCheck"
+            tools:text="Media Author" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.exoplayer2.ui.StyledPlayerControlView
         android:id="@+id/playerControlView_playPause"
