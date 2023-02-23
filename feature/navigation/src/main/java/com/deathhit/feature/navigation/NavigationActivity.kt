@@ -89,7 +89,7 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-            viewModel.setIsPlayerViewExpanded(currentId == R.id.start)
+            viewModel.setIsPlayerViewExpanded(currentId == R.id.playerView_expanded)
         }
 
         override fun onTransitionTrigger(
@@ -193,8 +193,8 @@ class NavigationActivity : AppCompatActivity() {
                                         binding.motionLayout
                                     ) {
                                         when (currentState) {
-                                            R.id.start -> {
-                                                setTransition(R.id.dragVertically)
+                                            R.id.playerView_expanded -> {
+                                                setTransition(R.id.dragUp)
                                                 transitionToEnd()
                                             }
                                         }
@@ -203,13 +203,13 @@ class NavigationActivity : AppCompatActivity() {
                                         binding.motionLayout
                                     ) {
                                         when (currentState) {
-                                            R.id.end -> {
-                                                setTransition(R.id.dragVertically)
+                                            R.id.playerView_collapsed -> {
+                                                setTransition(R.id.dragUp)
                                                 transitionToStart()
                                             }
-                                            R.id.gone -> {
+                                            R.id.playerView_hidden -> {
                                                 setTransition(R.id.pop)
-                                                transitionToEnd { setTransition(R.id.dragVertically) }
+                                                transitionToEnd { setTransition(R.id.dragUp) }
                                             }
                                         }
                                     }
