@@ -11,6 +11,9 @@ import javax.inject.Singleton
 
 @Singleton
 internal class MediaItemLocalDataSource @Inject constructor(private val appDatabase: AppDatabase) {
+    suspend fun clearAll(mediaItemSourceType: MediaItemSourceType) =
+        appDatabase.mediaItemDao().clearAll(mediaItemSourceType.columnValue)
+
     fun getMediaItemPagingSource(mediaItemSourceType: MediaItemSourceType): PagingSource<Int, MediaItemEntity> =
         appDatabase.mediaItemDao().getPagingSource(mediaItemSourceType.columnValue)
 

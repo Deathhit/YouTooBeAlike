@@ -12,7 +12,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.deathhit.core.ui.adapter.load_state.LoadStateAdapter
+import com.deathhit.core.ui.AppLoadStateAdapter
 import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
 import com.deathhit.feature.media_item.model.MediaItemSourceType
 import com.deathhit.feature.media_item.model.MediaItemVO
@@ -116,7 +116,7 @@ class MediaItemListFragment : Fragment() {
                             if (itemCount > 0)
                                 viewModel.scrollToTopOnFirstPageLoaded()
                         }
-                    }.withLoadStateFooter(object : LoadStateAdapter() {
+                    }.withLoadStateFooter(object : AppLoadStateAdapter() {
                         override fun onRetryLoading() {
                             mediaItemAdapter.retry()
                         }

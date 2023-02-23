@@ -19,6 +19,7 @@ import com.bumptech.glide.RequestManager
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
+import com.deathhit.core.ui.AppLoadStateAdapter
 import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
 import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemSourceType
@@ -52,9 +53,9 @@ class NavigationActivity : AppCompatActivity() {
 
     private lateinit var glideRequestManager: RequestManager
 
-    private lateinit var mediaItemAdapter: MediaItemAdapter
-
     private lateinit var playbackInfoAdapter: PlaybackInfoAdapter
+
+    private lateinit var recommendedItemAdapter: MediaItemAdapter
 
     private var mediaSession: MediaSessionCompat? = null
     private var player: Player? = null
@@ -197,25 +198,6 @@ class NavigationActivity : AppCompatActivity() {
         savedInstanceState
             ?: MediaPlayerService.startService(this) //Starts service to survive configuration changes.
 
-        /* todo fix the error of media item adapter not showing data with recycler view playback.
-        with(binding.recyclerViewPlayback) {
-            adapter = object : MediaItemAdapter(glideRequestManager) {
-                override fun onBindPlayPosition(item: MediaItemVO) {}
-
-                override fun onClickItem(item: MediaItemVO) {
-                    viewModel.openItem(item)
-                }
-            }.also { mediaItemAdapter = it }.withLoadStateFooter(object : LoadStateAdapter() {
-                override fun onRetryLoading() {
-                    mediaItemAdapter.retry()
-                }
-            }).apply { addAdapter(0, PlaybackInfoAdapter().also { playbackInfoAdapter = it }) }
-
-            setHasFixedSize(true)
-        }
-
-         */
-
         with(binding.recyclerViewPlayback) {
             adapter = ConcatAdapter(PlaybackInfoAdapter().also { playbackInfoAdapter = it },
                 object : MediaItemAdapter(glideRequestManager) {
@@ -224,9 +206,14 @@ class NavigationActivity : AppCompatActivity() {
                     override fun onClickItem(item: MediaItemVO) {
                         viewModel.openItem(item)
                     }
-                }.also { mediaItemAdapter = it })
+                }.also { recommendedItemAdapter = it }.withLoadStateFooter(object : AppLoadStateAdapter() {
+                    override fun onRetryLoading() {
+                        recommendedItemAdapter.retry()
+                    }
+                })
+            )
 
-           setHasFixedSize(true)
+            setHasFixedSize(true)
         }
 
         lifecycleScope.launch {
@@ -418,8 +405,8 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            viewModel.mediaItemPagingDataFlow.collectLatest {
-                mediaItemAdapter.submitData(lifecycle, it)
+            viewModel.recommendedItemPagingDataFlow.collectLatest {
+                recommendedItemAdapter.submitData(lifecycle, it)
             }
         }
     }

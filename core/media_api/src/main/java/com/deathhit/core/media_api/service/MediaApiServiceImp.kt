@@ -123,11 +123,12 @@ internal class MediaApiServiceImp : MediaApiService {
         val offset = (page ?: MediaApiService.DEFAULT_PAGE) * pageSize
         val limit = offset + pageSize
 
-        return mediaList.filter { (exclusiveId == null || it.id != exclusiveId)
-                && (subtitle == null || it.subtitle == subtitle) }
-            .subList(
-                if (offset > mediaList.lastIndex) mediaList.lastIndex + 1 else offset,
-                if (limit > mediaList.size) mediaList.size else limit
-            )
+        return with(mediaList.filter { (exclusiveId == null || it.id != exclusiveId)
+                && (subtitle == null || it.subtitle == subtitle) }) {
+            if (offset > lastIndex)
+                emptyList()
+            else
+                subList(offset, if(limit > size) size else limit)
+        }
     }
 }

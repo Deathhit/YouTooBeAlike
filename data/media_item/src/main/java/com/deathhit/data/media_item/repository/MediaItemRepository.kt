@@ -6,6 +6,8 @@ import com.deathhit.data.media_item.MediaItemSourceType
 import kotlinx.coroutines.flow.Flow
 
 interface MediaItemRepository {
+    suspend fun clearAll(mediaItemSourceType: MediaItemSourceType)
+
     fun getMediaItemPagingDataFlow(
         exclusiveId: String? = null,
         mediaItemSourceType: MediaItemSourceType,

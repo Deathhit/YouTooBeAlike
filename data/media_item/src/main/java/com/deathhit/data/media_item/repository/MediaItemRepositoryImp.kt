@@ -18,6 +18,9 @@ internal class MediaItemRepositoryImp(
         private const val PAGE_SIZE = 5 //PAGE_SIZE should be much larger. This is for demo purpose.
     }
 
+    override suspend fun clearAll(mediaItemSourceType: MediaItemSourceType) =
+        mediaItemLocalDataSource.clearAll(mediaItemSourceType)
+
     override fun getMediaItemPagingDataFlow(
         exclusiveId: String?,
         mediaItemSourceType: MediaItemSourceType,

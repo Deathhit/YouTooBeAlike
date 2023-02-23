@@ -82,16 +82,23 @@ class NavigationActivityViewModel @Inject constructor(
         )
     val stateFlow = _stateFlow.asStateFlow()
 
-    val mediaItemPagingDataFlow = stateFlow.distinctUntilChanged { old, new ->
+    val recommendedItemPagingDataFlow = stateFlow.distinctUntilChanged { old, new ->
         old.isPlayingByPlayerView == new.isPlayingByPlayerView && old.pendingPlayItem == new.pendingPlayItem
     }.flatMapLatest { state ->
-        state.pendingPlayItem?.let { item ->
-            mediaItemRepository.getMediaItemPagingDataFlow(
-                item.id,
-                MediaItemSourceType.RECOMMENDED,
-                item.subtitle
-            ).map { pagingData -> pagingData.map { it.toMediaItemVO() } }
-        } ?: emptyFlow()
+        val mediaItemSourceType = MediaItemSourceType.RECOMMENDED
+
+        mediaItemRepository.clearAll(mediaItemSourceType)   //Clear data when query changes.
+
+        with(state) {
+            if (isPlayingByPlayerView && pendingPlayItem != null)
+                mediaItemRepository.getMediaItemPagingDataFlow(
+                    pendingPlayItem.id,
+                    mediaItemSourceType,
+                    pendingPlayItem.subtitle
+                ).map { pagingData -> pagingData.map { it.toMediaItemVO() } }
+            else
+                emptyFlow()
+        }
     }.cachedIn(viewModelScope)
 
     private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded

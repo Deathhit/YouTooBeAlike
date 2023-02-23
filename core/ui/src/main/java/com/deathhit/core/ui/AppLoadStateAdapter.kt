@@ -1,15 +1,15 @@
-package com.deathhit.core.ui.adapter.load_state
+package com.deathhit.core.ui
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.paging.LoadState
-import com.deathhit.core.ui.databinding.ItemLoadStateBinding
+import com.deathhit.core.ui.databinding.ItemAppLoadStateBinding
 
-abstract class LoadStateAdapter : androidx.paging.LoadStateAdapter<LoadStateViewHolder>() {
-    override fun onCreateViewHolder(parent: ViewGroup, loadState: LoadState): LoadStateViewHolder =
-        LoadStateViewHolder(
-            ItemLoadStateBinding.inflate(
+abstract class AppLoadStateAdapter : androidx.paging.LoadStateAdapter<AppLoadStateViewHolder>() {
+    override fun onCreateViewHolder(parent: ViewGroup, loadState: LoadState): AppLoadStateViewHolder =
+        AppLoadStateViewHolder(
+            ItemAppLoadStateBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
                 false
@@ -20,7 +20,7 @@ abstract class LoadStateAdapter : androidx.paging.LoadStateAdapter<LoadStateView
             }
         }
 
-    override fun onBindViewHolder(holder: LoadStateViewHolder, loadState: LoadState) {
+    override fun onBindViewHolder(holder: AppLoadStateViewHolder, loadState: LoadState) {
         with(holder.binding.buttonRetry) {
             visibility = toVisibility(loadState !is LoadState.Loading)
         }
