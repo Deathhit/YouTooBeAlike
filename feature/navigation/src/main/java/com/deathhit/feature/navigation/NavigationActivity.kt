@@ -13,6 +13,7 @@ import androidx.fragment.app.commit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.ConcatAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.request.target.CustomTarget
@@ -45,6 +46,8 @@ class NavigationActivity : AppCompatActivity() {
     private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingByTabPage
 
     private lateinit var glideRequestManager: RequestManager
+
+    private lateinit var playbackInfoAdapter: PlaybackInfoAdapter
 
     private var mediaSession: MediaSessionCompat? = null
     private var player: Player? = null
@@ -175,6 +178,12 @@ class NavigationActivity : AppCompatActivity() {
 
         binding = ActivityNavigationBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
+        with(binding.recyclerViewPlayback) {
+            adapter = ConcatAdapter(PlaybackInfoAdapter().also { playbackInfoAdapter = it })
+
+            setHasFixedSize(true)
+        }
+
         glideRequestManager = Glide.with(this)
 
         MediaPlayerService.bindService(this, mediaPlayerServiceConnection)
@@ -299,6 +308,8 @@ class NavigationActivity : AppCompatActivity() {
                         with(binding.textViewPlaybackTitle) {
                             text = it?.title
                         }
+
+                        playbackInfoAdapter.submitList(it?.let { listOf(it) } ?: emptyList())
                     }
                 }
 
