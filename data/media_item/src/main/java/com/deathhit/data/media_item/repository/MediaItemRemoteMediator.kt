@@ -5,6 +5,7 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import com.deathhit.core.database.model.MediaItemEntity
+import com.deathhit.data.media_item.MediaItemSourceType
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
 import com.deathhit.data.media_item.toEntity
@@ -14,6 +15,7 @@ internal class MediaItemRemoteMediator(
     private val exclusiveId: String?,
     private val mediaItemLocalDataSource: MediaItemLocalDataSource,
     private val mediaItemRemoteDataSource: MediaItemRemoteDataSource,
+    private val mediaItemSourceType: MediaItemSourceType,
     private val subtitle: String?
 ) : RemoteMediator<Int, MediaItemEntity>() {
     override suspend fun load(
@@ -39,7 +41,7 @@ internal class MediaItemRemoteMediator(
                     // If you receive null for APPEND, that means you have
                     // reached the end of pagination and there are no more
                     // items to load.
-                    mediaItemLocalDataSource.getNextMediaItemPageKey()
+                    mediaItemLocalDataSource.getNextMediaItemPageKey(mediaItemSourceType)
                         ?: return MediatorResult.Success(
                             true
                         )
@@ -49,7 +51,7 @@ internal class MediaItemRemoteMediator(
             // be wrapped in a withContext(Dispatcher.IO) { ... } block
             // since Retrofit's Coroutine CallAdapter dispatches on a
             // worker thread.
-            val imageList = mediaItemRemoteDataSource.getMediaList(
+            val itemList = mediaItemRemoteDataSource.getMediaList(
                 exclusiveId,
                 loadKey,
                 state.config.pageSize,
@@ -57,12 +59,13 @@ internal class MediaItemRemoteMediator(
             )
 
             mediaItemLocalDataSource.insertMediaItemPage(
-                imageList.map { it.toEntity() },
+                itemList.map { it.toEntity(mediaItemSourceType.columnValue) },
+                mediaItemSourceType,
                 loadType == LoadType.REFRESH,
                 loadKey
             )
 
-            MediatorResult.Success(imageList.isEmpty())
+            MediatorResult.Success(itemList.isEmpty())
         } catch (e: Throwable) {
             MediatorResult.Error(e)
         }

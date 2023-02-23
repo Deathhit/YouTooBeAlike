@@ -2,6 +2,7 @@ package com.deathhit.data.media_item.repository
 
 import androidx.paging.*
 import com.deathhit.data.media_item.MediaItemDO
+import com.deathhit.data.media_item.MediaItemSourceType
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
 import com.deathhit.data.media_item.toDO
@@ -19,6 +20,7 @@ internal class MediaItemRepositoryImp(
 
     override fun getMediaItemPagingDataFlow(
         exclusiveId: String?,
+        mediaItemSourceType: MediaItemSourceType,
         subtitle: String?
     ): Flow<PagingData<MediaItemDO>> = Pager(
         PagingConfig(PAGE_SIZE),
@@ -27,9 +29,10 @@ internal class MediaItemRepositoryImp(
             exclusiveId,
             mediaItemLocalDataSource,
             mediaItemRemoteDataSource,
+            mediaItemSourceType,
             subtitle
         )
     ) {
-        mediaItemLocalDataSource.getMediaItemPagingSource(exclusiveId, subtitle)
+        mediaItemLocalDataSource.getMediaItemPagingSource(mediaItemSourceType)
     }.flow.map { pagingData -> pagingData.map { it.toDO() } }
 }

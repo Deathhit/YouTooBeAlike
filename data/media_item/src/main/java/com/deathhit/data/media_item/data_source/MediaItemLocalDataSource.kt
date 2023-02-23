@@ -5,42 +5,37 @@ import androidx.room.withTransaction
 import com.deathhit.core.database.AppDatabase
 import com.deathhit.core.database.model.MediaItemEntity
 import com.deathhit.core.database.model.RemoteKeyEntity
+import com.deathhit.data.media_item.MediaItemSourceType
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 internal class MediaItemLocalDataSource @Inject constructor(private val appDatabase: AppDatabase) {
-    companion object {
-        private const val REMOTE_KEY_LABEL = "73c61cde3d515e24bad2f3239c30099f"
-    }
+    fun getMediaItemPagingSource(mediaItemSourceType: MediaItemSourceType): PagingSource<Int, MediaItemEntity> =
+        appDatabase.mediaItemDao().getPagingSource(mediaItemSourceType.columnValue)
 
-    suspend fun getNextMediaItemPageKey() = with(appDatabase) {
-        withTransaction {
-            remoteKeyDao().getByLabel(REMOTE_KEY_LABEL)?.nextKey
+    suspend fun getNextMediaItemPageKey(mediaItemSourceType: MediaItemSourceType) =
+        with(appDatabase) {
+            withTransaction {
+                remoteKeyDao().getByLabel(mediaItemSourceType.remoteKeyLabel)?.nextKey
+            }
         }
-    }
-
-    fun getMediaItemPagingSource(
-        exclusiveId: String?,
-        subtitle: String?
-    ): PagingSource<Int, MediaItemEntity> =
-        appDatabase.mediaItemDao().getPagingSource(exclusiveId, subtitle)
 
     suspend fun insertMediaItemPage(
         mediaItemList: List<MediaItemEntity>,
+        mediaItemSourceType: MediaItemSourceType,
         isRefreshing: Boolean,
         pageIndex: Int,
     ) = with(appDatabase) {
         withTransaction {
             if (isRefreshing) {
-                mediaItemDao().clearAll()
-                mediaProgressDao().clearAll()
-                remoteKeyDao().clearAll()
+                mediaItemDao().clearAll(mediaItemSourceType.columnValue)
+                remoteKeyDao().clearAll(mediaItemSourceType.remoteKeyLabel)
             }
 
             // Update RemoteKey for this query.
             remoteKeyDao().insertOrReplace(
-                RemoteKeyEntity(REMOTE_KEY_LABEL, pageIndex + 1)
+                RemoteKeyEntity(mediaItemSourceType.remoteKeyLabel, pageIndex + 1)
             )
 
             // Insert the new data into database, which invalidates the

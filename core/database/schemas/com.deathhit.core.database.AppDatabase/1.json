@@ -2,21 +2,27 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "84f49a2656dd2fd388c0117b3d2cb9cd",
+    "identityHash": "2887633bb386d76e350a5ab1b51c42e1",
     "entities": [
       {
         "tableName": "MediaItemEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mediaItemId` TEXT NOT NULL, `description` TEXT NOT NULL, `sourceUrl` TEXT NOT NULL, `subtitle` TEXT NOT NULL, `thumbUrl` TEXT NOT NULL, `title` TEXT NOT NULL, PRIMARY KEY(`mediaItemId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`description` TEXT NOT NULL, `mediaItemId` TEXT NOT NULL, `mediaItemSourceType` TEXT NOT NULL, `sourceUrl` TEXT NOT NULL, `subtitle` TEXT NOT NULL, `thumbUrl` TEXT NOT NULL, `title` TEXT NOT NULL, PRIMARY KEY(`mediaItemId`, `mediaItemSourceType`))",
         "fields": [
           {
-            "fieldPath": "id",
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mediaItemId",
             "columnName": "mediaItemId",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "description",
-            "columnName": "description",
+            "fieldPath": "mediaItemSourceType",
+            "columnName": "mediaItemSourceType",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -48,7 +54,8 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "mediaItemId"
+            "mediaItemId",
+            "mediaItemSourceType"
           ]
         },
         "indices": [],
@@ -56,18 +63,18 @@
       },
       {
         "tableName": "MediaProgressEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mediaItemId` TEXT NOT NULL, `isEnded` INTEGER NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`mediaItemId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`isEnded` INTEGER NOT NULL, `mediaItemId` TEXT NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`mediaItemId`))",
         "fields": [
-          {
-            "fieldPath": "mediaItemId",
-            "columnName": "mediaItemId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
           {
             "fieldPath": "isEnded",
             "columnName": "isEnded",
             "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mediaItemId",
+            "columnName": "mediaItemId",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -116,7 +123,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '84f49a2656dd2fd388c0117b3d2cb9cd')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2887633bb386d76e350a5ab1b51c42e1')"
     ]
   }
 }

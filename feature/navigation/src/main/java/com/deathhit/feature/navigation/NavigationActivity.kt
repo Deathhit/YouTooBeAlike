@@ -21,6 +21,7 @@ import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
 import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
 import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
+import com.deathhit.feature.media_item.model.MediaItemSourceType
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
 import com.google.android.exoplayer2.C
@@ -39,7 +40,9 @@ class NavigationActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "NavigationActivity"
         private const val KEY_MOTION_TRANSITION_STATE = "$TAG.KEY_MOTION_TRANSITION_STATE"
+        private const val TAG_DASHBOARD = "$TAG.TAG_DASHBOARD"
         private const val TAG_HOME = "$TAG.TAG_HOME"
+        private const val TAG_NOTIFICATIONS = "$TAG.TAG_NOTIFICATIONS"
     }
 
     private lateinit var binding: ActivityNavigationBinding
@@ -57,8 +60,12 @@ class NavigationActivity : AppCompatActivity() {
     private var player: Player? = null
     private var thumbnailGlideTarget: Target<Drawable>? = null
 
+    private val dashboardFragment
+        get() = supportFragmentManager.findFragmentByTag(TAG_DASHBOARD) as MediaItemListFragment?
     private val homeFragment
         get() = supportFragmentManager.findFragmentByTag(TAG_HOME) as MediaItemListFragment?
+    private val notificationsFragment
+        get() = supportFragmentManager.findFragmentByTag(TAG_NOTIFICATIONS) as MediaItemListFragment?
 
     private val fullscreenButtonClickListener = FullscreenButtonClickListener {
         //todo implement
@@ -75,7 +82,9 @@ class NavigationActivity : AppCompatActivity() {
                     }
                 }
 
+                dashboardFragment?.player = player
                 homeFragment?.player = player
+                notificationsFragment?.player = player
 
                 viewModel.setIsPlayerConnected(true)
             }
@@ -188,6 +197,25 @@ class NavigationActivity : AppCompatActivity() {
         savedInstanceState
             ?: MediaPlayerService.startService(this) //Starts service to survive configuration changes.
 
+        /* todo fix the error of media item adapter not showing data with recycler view playback.
+        with(binding.recyclerViewPlayback) {
+            adapter = object : MediaItemAdapter(glideRequestManager) {
+                override fun onBindPlayPosition(item: MediaItemVO) {}
+
+                override fun onClickItem(item: MediaItemVO) {
+                    viewModel.openItem(item)
+                }
+            }.also { mediaItemAdapter = it }.withLoadStateFooter(object : LoadStateAdapter() {
+                override fun onRetryLoading() {
+                    mediaItemAdapter.retry()
+                }
+            }).apply { addAdapter(0, PlaybackInfoAdapter().also { playbackInfoAdapter = it }) }
+
+            setHasFixedSize(true)
+        }
+
+         */
+
         with(binding.recyclerViewPlayback) {
             adapter = ConcatAdapter(PlaybackInfoAdapter().also { playbackInfoAdapter = it },
                 object : MediaItemAdapter(glideRequestManager) {
@@ -198,7 +226,7 @@ class NavigationActivity : AppCompatActivity() {
                     }
                 }.also { mediaItemAdapter = it })
 
-            setHasFixedSize(true)
+           setHasFixedSize(true)
         }
 
         lifecycleScope.launch {
@@ -326,7 +354,9 @@ class NavigationActivity : AppCompatActivity() {
 
                 launch {
                     viewModel.stateFlow.map { it.playingTab }.distinctUntilChanged().collect {
+                        dashboardFragment?.setIsPlaying(it == NavigationActivityViewModel.State.Tab.DASHBOARD)
                         homeFragment?.setIsPlaying(it == NavigationActivityViewModel.State.Tab.HOME)
+                        notificationsFragment?.setIsPlaying(it == NavigationActivityViewModel.State.Tab.NOTIFICATIONS)
                     }
                 }
 
@@ -335,25 +365,48 @@ class NavigationActivity : AppCompatActivity() {
                         when (tab) {
                             NavigationActivityViewModel.State.Tab.DASHBOARD -> {
                                 supportFragmentManager.commit {
+                                    dashboardFragment?.let { show(it) } ?: add(
+                                        binding.containerNavigationTabPage.id,
+                                        MediaItemListFragment.create(
+                                            isPlayingInList,
+                                            MediaItemSourceType.DASHBOARD
+                                        ),
+                                        TAG_DASHBOARD
+                                    )
                                     homeFragment?.let { hide(it) }
+                                    notificationsFragment?.let { hide(it) }
                                 }
 
                                 binding.bottomNavigationView.selectedItemId = R.id.dashboard
                             }
                             NavigationActivityViewModel.State.Tab.HOME -> {
                                 supportFragmentManager.commit {
+                                    dashboardFragment?.let { hide(it) }
                                     homeFragment?.let { show(it) } ?: add(
                                         binding.containerNavigationTabPage.id,
-                                        MediaItemListFragment.create(isPlayingInList),
+                                        MediaItemListFragment.create(
+                                            isPlayingInList,
+                                            MediaItemSourceType.HOME
+                                        ),
                                         TAG_HOME
                                     )
+                                    notificationsFragment?.let { hide(it) }
                                 }
 
                                 binding.bottomNavigationView.selectedItemId = R.id.home
                             }
                             NavigationActivityViewModel.State.Tab.NOTIFICATIONS -> {
                                 supportFragmentManager.commit {
+                                    dashboardFragment?.let { hide(it) }
                                     homeFragment?.let { hide(it) }
+                                    notificationsFragment?.let { show(it) } ?: add(
+                                        binding.containerNavigationTabPage.id,
+                                        MediaItemListFragment.create(
+                                            isPlayingInList,
+                                            MediaItemSourceType.NOTIFICATIONS
+                                        ),
+                                        TAG_NOTIFICATIONS
+                                    )
                                 }
 
                                 binding.bottomNavigationView.selectedItemId = R.id.notifications

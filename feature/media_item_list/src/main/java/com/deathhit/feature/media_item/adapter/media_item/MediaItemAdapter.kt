@@ -18,7 +18,7 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
 
         private val COMPARATOR = object : DiffUtil.ItemCallback<MediaItemVO>() {
             override fun areItemsTheSame(oldItem: MediaItemVO, newItem: MediaItemVO): Boolean =
-                oldItem.sourceUrl == newItem.sourceUrl
+                oldItem.id == newItem.id
 
             override fun areContentsTheSame(oldItem: MediaItemVO, newItem: MediaItemVO): Boolean =
                 oldItem == newItem

@@ -126,7 +126,7 @@ internal class MediaApiServiceImp : MediaApiService {
         return mediaList.filter { (exclusiveId == null || it.id != exclusiveId)
                 && (subtitle == null || it.subtitle == subtitle) }
             .subList(
-                if (offset > mediaList.lastIndex) mediaList.lastIndex else offset,
+                if (offset > mediaList.lastIndex) mediaList.lastIndex + 1 else offset,
                 if (limit > mediaList.size) mediaList.size else limit
             )
     }

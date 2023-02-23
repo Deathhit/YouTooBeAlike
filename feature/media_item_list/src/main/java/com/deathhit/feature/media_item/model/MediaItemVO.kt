@@ -14,4 +14,4 @@ data class MediaItemVO(
     val title: String
 ) : Parcelable
 
-fun MediaItemDO.toMediaItemVO() = MediaItemVO(id, description, sourceUrl, subtitle, thumbUrl, title)
+fun MediaItemDO.toMediaItemVO() = MediaItemVO(mediaItemId, description, sourceUrl, subtitle, thumbUrl, title)

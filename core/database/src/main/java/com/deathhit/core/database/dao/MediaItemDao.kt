@@ -7,13 +7,17 @@ import com.deathhit.core.database.model.MediaItemEntity
 
 @Dao
 interface MediaItemDao {
-    @Query("DELETE FROM MediaItemEntity")
-    suspend fun clearAll()
+    @Query(
+        "DELETE FROM MediaItemEntity " +
+                "WHERE ${Column.MEDIA_ITEM_SOURCE_TYPE} == :mediaItemSourceType"
+    )
+    suspend fun clearAll(mediaItemSourceType: String)
 
-    @Query("SELECT * FROM MediaItemEntity " +
-            "WHERE (:exclusiveId IS NULL OR ${Column.MEDIA_ITEM_ID} != :exclusiveId) " +
-            "AND (:subtitle IS NULL OR ${Column.SUBTITLE} == :subtitle)")
-    fun getPagingSource(exclusiveId: String?, subtitle: String?): PagingSource<Int, MediaItemEntity>
+    @Query(
+        "SELECT * FROM MediaItemEntity " +
+                "WHERE ${Column.MEDIA_ITEM_SOURCE_TYPE} == :mediaItemSourceType"
+    )
+    fun getPagingSource(mediaItemSourceType: String): PagingSource<Int, MediaItemEntity>
 
     @Upsert
     suspend fun upsert(entities: List<MediaItemEntity>)

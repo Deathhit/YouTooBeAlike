@@ -7,15 +7,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.deathhit.data.media_item.repository.MediaItemRepository
+import com.deathhit.feature.media_item.model.MediaItemSourceType
 import com.deathhit.feature.media_item.model.MediaItemVO
+import com.deathhit.feature.media_item.model.toDO
 import com.deathhit.feature.media_item.model.toMediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MediaItemListViewModel @Inject constructor(
     mediaItemRepository: MediaItemRepository,
@@ -24,10 +25,13 @@ class MediaItemListViewModel @Inject constructor(
     companion object {
         private const val TAG = "MediaItemListViewModel"
         private const val KEY_IS_PLAYING = "$TAG.KEY_IS_PLAYING"
+        private const val KEY_MEDIA_ITEM_SOURCE_TYPE = "$TAG.KEY_MEDIA_ITEM_SOURCE_TYPE"
 
-        fun createArgs(isPlaying: Boolean) = Bundle().apply {
-            putBoolean(KEY_IS_PLAYING, isPlaying)
-        }
+        fun createArgs(isPlaying: Boolean, mediaItemSourceType: MediaItemSourceType) =
+            Bundle().apply {
+                putBoolean(KEY_IS_PLAYING, isPlaying)
+                putSerializable(KEY_MEDIA_ITEM_SOURCE_TYPE, mediaItemSourceType)
+            }
     }
 
     data class State(
@@ -35,6 +39,7 @@ class MediaItemListViewModel @Inject constructor(
         val isFirstFrameRendered: Boolean,
         val isFirstPageLoaded: Boolean,
         val isPlaying: Boolean,
+        val mediaItemSourceType: MediaItemSourceType,
         val playPosition: Int?
     ) {
         sealed interface Action {
@@ -51,18 +56,23 @@ class MediaItemListViewModel @Inject constructor(
                 isFirstFrameRendered = false,
                 isFirstPageLoaded = false,
                 isPlaying = savedStateHandle[KEY_IS_PLAYING] ?: true,
+                mediaItemSourceType = savedStateHandle[KEY_MEDIA_ITEM_SOURCE_TYPE]
+                    ?: throw RuntimeException("mediaItemSourceType can not be null!"),
                 playPosition = null
             )
         )
     val stateFlow = _stateFlow.asStateFlow()
 
-    val mediaItemPagingDataFlow =
-        mediaItemRepository.getMediaItemPagingDataFlow()
+    val mediaItemPagingDataFlow = stateFlow.distinctUntilChanged { old, new ->
+        old.mediaItemSourceType == new.mediaItemSourceType
+    }.flatMapLatest {
+        mediaItemRepository.getMediaItemPagingDataFlow(mediaItemSourceType = mediaItemSourceType.toDO())
             .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
-            .cachedIn(viewModelScope)
+    }.cachedIn(viewModelScope)
 
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
     private val isPlaying get() = stateFlow.value.isPlaying
+    private val mediaItemSourceType get() = stateFlow.value.mediaItemSourceType
 
     fun onAction(action: State.Action) {
         _stateFlow.update { state ->
@@ -87,6 +97,7 @@ class MediaItemListViewModel @Inject constructor(
 
     fun saveState() {
         savedStateHandle[KEY_IS_PLAYING] = isPlaying
+        savedStateHandle[KEY_MEDIA_ITEM_SOURCE_TYPE] = mediaItemSourceType
     }
 
     fun scrollToTopOnFirstPageLoaded() {

@@ -3,10 +3,11 @@ package com.deathhit.data.media_item
 import com.deathhit.core.database.model.MediaItemEntity
 import com.deathhit.core.media_api.model.Media
 
-internal fun Media.toEntity() =
+internal fun Media.toEntity(mediaItemSource: String) =
     MediaItemEntity(
-        id = id,
         description = description,
+        mediaItemId = id,
+        mediaItemSourceType = mediaItemSource,
         sourceUrl = sourceUrl,
         subtitle = subtitle,
         thumbUrl = thumbUrl,
@@ -15,8 +16,8 @@ internal fun Media.toEntity() =
 
 internal fun MediaItemEntity.toDO() =
     MediaItemDO(
-        id = id,
         description = description,
+        mediaItemId = mediaItemId,
         sourceUrl = sourceUrl,
         subtitle = subtitle,
         thumbUrl = thumbUrl,

@@ -2,13 +2,13 @@ package com.deathhit.core.database.model
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import com.deathhit.core.database.Column
 
-@Entity
+@Entity(primaryKeys = [Column.MEDIA_ITEM_ID, Column.MEDIA_ITEM_SOURCE_TYPE])
 data class MediaItemEntity(
-    @PrimaryKey @ColumnInfo(name = Column.MEDIA_ITEM_ID) val id: String,
     @ColumnInfo(name = Column.DESCRIPTION) val description: String,
+    @ColumnInfo(name = Column.MEDIA_ITEM_ID) val mediaItemId: String,
+    @ColumnInfo(name = Column.MEDIA_ITEM_SOURCE_TYPE) val mediaItemSourceType: String,
     @ColumnInfo(name = Column.SOURCE_URL) val sourceUrl: String,
     @ColumnInfo(name = Column.SUBTITLE) val subtitle: String,
     @ColumnInfo(name = Column.THUMB_URL) val thumbUrl: String,

@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.deathhit.core.ui.adapter.load_state.LoadStateAdapter
 import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
+import com.deathhit.feature.media_item.model.MediaItemSourceType
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.FragmentMediaItemListBinding
 import com.google.android.exoplayer2.Player
@@ -26,9 +27,10 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MediaItemListFragment : Fragment() {
     companion object {
-        fun create(isPlayingInList: Boolean) = MediaItemListFragment().apply {
-            arguments = MediaItemListViewModel.createArgs(isPlayingInList)
-        }
+        fun create(isPlayingInList: Boolean, mediaItemSourceType: MediaItemSourceType) =
+            MediaItemListFragment().apply {
+                arguments = MediaItemListViewModel.createArgs(isPlayingInList, mediaItemSourceType)
+            }
     }
 
     interface Callback {

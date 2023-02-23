@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import androidx.paging.map
+import com.deathhit.data.media_item.MediaItemSourceType
 import com.deathhit.data.media_item.repository.MediaItemRepository
 import com.deathhit.data.media_progress.MediaProgressDO
 import com.deathhit.data.media_progress.repository.MediaProgressRepository
@@ -85,8 +86,11 @@ class NavigationActivityViewModel @Inject constructor(
         old.isPlayingByPlayerView == new.isPlayingByPlayerView && old.pendingPlayItem == new.pendingPlayItem
     }.flatMapLatest { state ->
         state.pendingPlayItem?.let { item ->
-            mediaItemRepository.getMediaItemPagingDataFlow(item.id, item.subtitle)
-                .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
+            mediaItemRepository.getMediaItemPagingDataFlow(
+                item.id,
+                MediaItemSourceType.RECOMMENDED,
+                item.subtitle
+            ).map { pagingData -> pagingData.map { it.toMediaItemVO() } }
         } ?: emptyFlow()
     }.cachedIn(viewModelScope)
 
