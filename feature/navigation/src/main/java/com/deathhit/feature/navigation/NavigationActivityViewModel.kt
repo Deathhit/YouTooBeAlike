@@ -3,21 +3,27 @@ package com.deathhit.feature.navigation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
+import androidx.paging.map
+import com.deathhit.data.media_item.repository.MediaItemRepository
 import com.deathhit.data.media_progress.MediaProgressDO
 import com.deathhit.data.media_progress.repository.MediaProgressRepository
 import com.deathhit.feature.media_item.model.MediaItemVO
+import com.deathhit.feature.media_item.model.toMediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NavigationActivityViewModel @Inject constructor(
+    mediaItemRepository: MediaItemRepository,
     private val mediaProgressRepository: MediaProgressRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -79,6 +85,11 @@ class NavigationActivityViewModel @Inject constructor(
             )
         )
     val stateFlow = _stateFlow.asStateFlow()
+
+    val mediaItemPagingDataFlow =
+        mediaItemRepository.getMediaItemPagingDataFlow()
+            .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
+            .cachedIn(viewModelScope)
 
     private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded
     private val isPlayingByTabPage get() = stateFlow.value.isPlayingByTabPage

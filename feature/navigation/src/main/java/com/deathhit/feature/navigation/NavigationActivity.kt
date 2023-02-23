@@ -19,6 +19,7 @@ import com.bumptech.glide.RequestManager
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
+import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
 import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
@@ -28,6 +29,7 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.StyledPlayerView.FullscreenButtonClickListener
 import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -46,6 +48,8 @@ class NavigationActivity : AppCompatActivity() {
     private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingByTabPage
 
     private lateinit var glideRequestManager: RequestManager
+
+    private lateinit var mediaItemAdapter: MediaItemAdapter
 
     private lateinit var playbackInfoAdapter: PlaybackInfoAdapter
 
@@ -178,18 +182,24 @@ class NavigationActivity : AppCompatActivity() {
 
         binding = ActivityNavigationBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
-        with(binding.recyclerViewPlayback) {
-            adapter = ConcatAdapter(PlaybackInfoAdapter().also { playbackInfoAdapter = it })
-
-            setHasFixedSize(true)
-        }
-
         glideRequestManager = Glide.with(this)
 
         MediaPlayerService.bindService(this, mediaPlayerServiceConnection)
-
         savedInstanceState
             ?: MediaPlayerService.startService(this) //Starts service to survive configuration changes.
+
+        with(binding.recyclerViewPlayback) {
+            adapter = ConcatAdapter(PlaybackInfoAdapter().also { playbackInfoAdapter = it },
+                object : MediaItemAdapter(glideRequestManager) {
+                    override fun onBindPlayPosition(item: MediaItemVO) {}
+
+                    override fun onClickItem(item: MediaItemVO) {
+                        viewModel.openItem(item)
+                    }
+                }.also { mediaItemAdapter = it })
+
+            setHasFixedSize(true)
+        }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -253,11 +263,12 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.isPlayerViewExpanded }.distinctUntilChanged().collect {
-                        binding.playerView.useController = it
+                    viewModel.stateFlow.map { it.isPlayerViewExpanded }.distinctUntilChanged()
+                        .collect {
+                            binding.playerView.useController = it
 
-                        onCollapsePlayerViewCallback.isEnabled = it
-                    }
+                            onCollapsePlayerViewCallback.isEnabled = it
+                        }
                 }
 
                 launch {
@@ -352,6 +363,12 @@ class NavigationActivity : AppCompatActivity() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            viewModel.mediaItemPagingDataFlow.collectLatest {
+                mediaItemAdapter.submitData(lifecycle, it)
+            }
+        }
     }
 
     override fun onResume() {
@@ -382,6 +399,8 @@ class NavigationActivity : AppCompatActivity() {
         //Releases the internal listeners from the player.
         binding.playerControlViewPlayPause.player = null
         binding.playerView.player = null
+
+        binding.recyclerViewPlayback.adapter = null
 
         player?.removeListener(playerListener)
 
