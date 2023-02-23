@@ -5,6 +5,7 @@ import com.deathhit.core.media_api.model.Media
 
 internal fun Media.toEntity() =
     MediaItemEntity(
+        id = id,
         description = description,
         sourceUrl = sourceUrl,
         subtitle = subtitle,
@@ -14,6 +15,7 @@ internal fun Media.toEntity() =
 
 internal fun MediaItemEntity.toDO() =
     MediaItemDO(
+        id = id,
         description = description,
         sourceUrl = sourceUrl,
         subtitle = subtitle,

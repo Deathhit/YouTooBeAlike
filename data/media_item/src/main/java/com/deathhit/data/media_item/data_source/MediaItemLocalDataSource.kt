@@ -20,8 +20,11 @@ internal class MediaItemLocalDataSource @Inject constructor(private val appDatab
         }
     }
 
-    fun getMediaItemPagingSource(): PagingSource<Int, MediaItemEntity> =
-        appDatabase.mediaItemDao().getPagingSource()
+    fun getMediaItemPagingSource(
+        exclusiveId: String?,
+        subtitle: String?
+    ): PagingSource<Int, MediaItemEntity> =
+        appDatabase.mediaItemDao().getPagingSource(exclusiveId, subtitle)
 
     suspend fun insertMediaItemPage(
         mediaItemList: List<MediaItemEntity>,

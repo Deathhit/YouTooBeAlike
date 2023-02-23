@@ -2,21 +2,27 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a60fe35d9802bbf8e5e73eb4617d05a1",
+    "identityHash": "84f49a2656dd2fd388c0117b3d2cb9cd",
     "entities": [
       {
         "tableName": "MediaItemEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sourceUrl` TEXT NOT NULL, `description` TEXT NOT NULL, `subtitle` TEXT NOT NULL, `thumbUrl` TEXT NOT NULL, `title` TEXT NOT NULL, PRIMARY KEY(`sourceUrl`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mediaItemId` TEXT NOT NULL, `description` TEXT NOT NULL, `sourceUrl` TEXT NOT NULL, `subtitle` TEXT NOT NULL, `thumbUrl` TEXT NOT NULL, `title` TEXT NOT NULL, PRIMARY KEY(`mediaItemId`))",
         "fields": [
           {
-            "fieldPath": "sourceUrl",
-            "columnName": "sourceUrl",
+            "fieldPath": "id",
+            "columnName": "mediaItemId",
             "affinity": "TEXT",
             "notNull": true
           },
           {
             "fieldPath": "description",
             "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceUrl",
+            "columnName": "sourceUrl",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -42,7 +48,7 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "sourceUrl"
+            "mediaItemId"
           ]
         },
         "indices": [],
@@ -50,11 +56,11 @@
       },
       {
         "tableName": "MediaProgressEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sourceUrl` TEXT NOT NULL, `isEnded` INTEGER NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`sourceUrl`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mediaItemId` TEXT NOT NULL, `isEnded` INTEGER NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`mediaItemId`))",
         "fields": [
           {
-            "fieldPath": "sourceUrl",
-            "columnName": "sourceUrl",
+            "fieldPath": "mediaItemId",
+            "columnName": "mediaItemId",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -74,7 +80,7 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "sourceUrl"
+            "mediaItemId"
           ]
         },
         "indices": [],
@@ -110,7 +116,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a60fe35d9802bbf8e5e73eb4617d05a1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '84f49a2656dd2fd388c0117b3d2cb9cd')"
     ]
   }
 }

@@ -11,16 +11,11 @@ import com.deathhit.data.media_progress.repository.MediaProgressRepository
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item.model.toMediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class NavigationActivityViewModel @Inject constructor(
     mediaItemRepository: MediaItemRepository,
@@ -86,10 +81,14 @@ class NavigationActivityViewModel @Inject constructor(
         )
     val stateFlow = _stateFlow.asStateFlow()
 
-    val mediaItemPagingDataFlow =
-        mediaItemRepository.getMediaItemPagingDataFlow()
-            .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
-            .cachedIn(viewModelScope)
+    val mediaItemPagingDataFlow = stateFlow.distinctUntilChanged { old, new ->
+        old.isPlayingByPlayerView == new.isPlayingByPlayerView && old.pendingPlayItem == new.pendingPlayItem
+    }.flatMapLatest { state ->
+        state.pendingPlayItem?.let { item ->
+            mediaItemRepository.getMediaItemPagingDataFlow(item.id, item.subtitle)
+                .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
+        } ?: emptyFlow()
+    }.cachedIn(viewModelScope)
 
     private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded
     private val isPlayingByTabPage get() = stateFlow.value.isPlayingByTabPage
@@ -158,7 +157,7 @@ class NavigationActivityViewModel @Inject constructor(
             if (item != null)
                 _stateFlow.update { state ->
                     val progress =
-                        mediaProgressRepository.getMediaProgressBySourceUrl(item.sourceUrl)
+                        mediaProgressRepository.getMediaProgressByMediaItemId(item.id)
 
                     state.copy(
                         actions = state.actions + State.Action.PlayMedia + State.Action.PrepareMedia(
@@ -179,8 +178,8 @@ class NavigationActivityViewModel @Inject constructor(
                 mediaProgressRepository.setMediaProgress(
                     MediaProgressDO(
                         isEnded,
-                        mediaPosition,
-                        it.sourceUrl
+                        it.id,
+                        mediaPosition
                     )
                 )
             }

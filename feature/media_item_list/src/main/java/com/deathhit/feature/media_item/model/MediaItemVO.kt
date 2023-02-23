@@ -6,6 +6,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class MediaItemVO(
+    val id: String,
     val description: String,
     val sourceUrl: String,
     val subtitle: String,
@@ -13,4 +14,4 @@ data class MediaItemVO(
     val title: String
 ) : Parcelable
 
-fun MediaItemDO.toMediaItemVO() = MediaItemVO(description, sourceUrl, subtitle, thumbUrl, title)
+fun MediaItemDO.toMediaItemVO() = MediaItemVO(id, description, sourceUrl, subtitle, thumbUrl, title)

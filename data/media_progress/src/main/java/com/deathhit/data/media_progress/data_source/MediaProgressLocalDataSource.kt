@@ -7,8 +7,8 @@ import javax.inject.Singleton
 
 @Singleton
 internal class MediaProgressLocalDataSource @Inject constructor(private val appDatabase: AppDatabase) {
-    suspend fun getMediaProgressBySourceUrl(sourceUrl: String) =
-        appDatabase.mediaProgressDao().getBySourceUrl(sourceUrl)
+    suspend fun getMediaProgressByMediaItemId(mediaItemId: String) =
+        appDatabase.mediaProgressDao().getByMediaItemId(mediaItemId)
 
     suspend fun setMediaProgress(mediaProgressEntity: MediaProgressEntity) =
         appDatabase.mediaProgressDao().upsert(mediaProgressEntity)

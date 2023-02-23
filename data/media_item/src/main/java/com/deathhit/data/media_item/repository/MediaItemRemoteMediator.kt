@@ -11,8 +11,10 @@ import com.deathhit.data.media_item.toEntity
 
 @ExperimentalPagingApi
 internal class MediaItemRemoteMediator(
+    private val exclusiveId: String?,
     private val mediaItemLocalDataSource: MediaItemLocalDataSource,
-    private val mediaItemRemoteDataSource: MediaItemRemoteDataSource
+    private val mediaItemRemoteDataSource: MediaItemRemoteDataSource,
+    private val subtitle: String?
 ) : RemoteMediator<Int, MediaItemEntity>() {
     override suspend fun load(
         loadType: LoadType,
@@ -47,7 +49,12 @@ internal class MediaItemRemoteMediator(
             // be wrapped in a withContext(Dispatcher.IO) { ... } block
             // since Retrofit's Coroutine CallAdapter dispatches on a
             // worker thread.
-            val imageList = mediaItemRemoteDataSource.getMediaList(loadKey, state.config.pageSize)
+            val imageList = mediaItemRemoteDataSource.getMediaList(
+                exclusiveId,
+                loadKey,
+                state.config.pageSize,
+                subtitle
+            )
 
             mediaItemLocalDataSource.insertMediaItemPage(
                 imageList.map { it.toEntity() },

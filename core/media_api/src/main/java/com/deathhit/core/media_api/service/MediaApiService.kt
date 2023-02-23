@@ -7,5 +7,5 @@ interface MediaApiService {
         const val DEFAULT_PAGE = 0
     }
 
-    suspend fun getMediaList(page: Int?, pageSize: Int): List<Media>
+    suspend fun getMediaList(exclusiveId: String?, page: Int?, pageSize: Int, subtitle: String?): List<Media>
 }

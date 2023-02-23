@@ -10,6 +10,6 @@ internal class MediaItemRemoteDataSource @Inject constructor(private val mediaAp
         const val DEFAULT_PAGE = MediaApiService.DEFAULT_PAGE
     }
 
-    suspend fun getMediaList(page: Int?, pageSize: Int) =
-        mediaApiService.getMediaList(page ?: 0, pageSize)
+    suspend fun getMediaList(exclusiveId: String?, page: Int?, pageSize: Int, subtitle: String?) =
+        mediaApiService.getMediaList(exclusiveId, page ?: 0, pageSize, subtitle)
 }
