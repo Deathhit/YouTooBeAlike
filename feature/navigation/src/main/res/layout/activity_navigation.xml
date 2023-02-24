@@ -22,8 +22,6 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="?android:attr/windowBackground"
-        android:clickable="true"
-        android:focusable="true"
         app:layout_constraintBottom_toBottomOf="@id/container_playerView"
         app:layout_constraintEnd_toEndOf="@id/container_playerView"
         app:layout_constraintStart_toStartOf="@id/container_playerView"

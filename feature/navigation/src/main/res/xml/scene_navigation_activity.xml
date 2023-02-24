@@ -8,7 +8,7 @@
         android:id="@+id/pop"
         motion:constraintSetEnd="@+id/playerView_expanded"
         motion:constraintSetStart="@+id/playerView_hidden"
-        motion:duration="250" >
+        motion:duration="250">
         <KeyFrameSet>
             <KeyPosition
                 motion:curveFit="linear"
@@ -61,10 +61,13 @@
         motion:duration="250"
         motion:motionInterpolator="linear"
         motion:transitionFlags="onInterceptTouchReturnSwipe">
+        <OnClick
+            motion:clickAction="transitionToStart"
+            motion:targetId="@+id/view_playerViewContainerBackground" />
+
         <OnSwipe
             motion:dragDirection="dragUp"
             motion:touchAnchorId="@+id/container_playerView"
-            motion:touchAnchorSide="bottom"
             motion:touchRegionId="@+id/container_playerView" />
 
         <KeyFrameSet>
