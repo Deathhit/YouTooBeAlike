@@ -12,8 +12,6 @@
     <string name="common_pause">Pause</string>
     <string name="common_play">Play</string>
     <string name="common_previous">Previous</string>
+    <string name="common_recommended_list">Recommended List</string>
     <string name="common_retry">Retry</string>
-
-    <!--Sample-->
-    <string name="sample_text">Sample Text</string>
 </resources>

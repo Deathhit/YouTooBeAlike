@@ -53,7 +53,7 @@ class NavigationActivity : AppCompatActivity() {
 
     private lateinit var glideRequestManager: RequestManager
 
-    private lateinit var playbackInfoAdapter: PlaybackInfoAdapter
+    private lateinit var playbackDetailsAdapter: PlaybackDetailsAdapter
 
     private lateinit var recommendedItemAdapter: MediaItemAdapter
 
@@ -198,8 +198,8 @@ class NavigationActivity : AppCompatActivity() {
         savedInstanceState
             ?: MediaPlayerService.startService(this) //Starts service to survive configuration changes.
 
-        with(binding.recyclerViewPlayback) {
-            adapter = ConcatAdapter(PlaybackInfoAdapter().also { playbackInfoAdapter = it },
+        with(binding.recyclerViewPlaybackDetails) {
+            adapter = ConcatAdapter(PlaybackDetailsAdapter().also { playbackDetailsAdapter = it },
                 object : MediaItemAdapter(glideRequestManager) {
                     override fun onBindPlayPosition(item: MediaItemVO) {}
 
@@ -335,7 +335,7 @@ class NavigationActivity : AppCompatActivity() {
                             text = it?.title
                         }
 
-                        playbackInfoAdapter.submitList(it?.let { listOf(it) } ?: emptyList())
+                        playbackDetailsAdapter.submitList(it?.let { listOf(it) } ?: emptyList())
                     }
                 }
 
@@ -440,7 +440,7 @@ class NavigationActivity : AppCompatActivity() {
         binding.playerControlViewPlayPause.player = null
         binding.playerView.player = null
 
-        binding.recyclerViewPlayback.adapter = null
+        binding.recyclerViewPlaybackDetails.adapter = null
 
         player?.removeListener(playerListener)
 

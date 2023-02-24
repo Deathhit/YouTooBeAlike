@@ -44,7 +44,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/styledPlayerView"
-            tools:text="@string/sample_text" />
+            tools:text="Title" />
 
         <TextView
             android:id="@+id/textView_subtitle"
@@ -55,7 +55,7 @@
             app:layout_constraintEnd_toEndOf="@+id/textView_title"
             app:layout_constraintStart_toStartOf="@+id/textView_title"
             app:layout_constraintTop_toBottomOf="@+id/textView_title"
-            tools:text="@string/sample_text" />
+            tools:text="Subtitle" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

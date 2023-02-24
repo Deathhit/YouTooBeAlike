@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Todo figure out how to apply this correctly-->
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:motion="http://schemas.android.com/apk/res-auto">
+
+    <!--Due to historical reasons the start state of the first transition in the file is the initial state.-->
+    <Transition
+        android:id="@+id/dragUp"
+        motion:constraintSetEnd="@+id/details_collapsed"
+        motion:constraintSetStart="@+id/details_expanded"
+        motion:duration="250"
+        motion:motionInterpolator="overshoot"
+        motion:transitionFlags="onInterceptTouchReturnSwipe">
+
+        <OnSwipe
+            motion:dragDirection="dragUp"
+            app:onTouchUp="autoComplete"
+            motion:touchAnchorId="@+id/container_details" />
+    </Transition>
+
+    <ConstraintSet android:id="@id/details_expanded">
+        <Constraint
+            android:id="@id/container_details"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="parent"/>
+
+        <Constraint
+            android:id="@+id/container_recommendedHeader"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@+id/container_details" />
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@id/details_collapsed">
+        <Constraint
+            android:id="@id/container_details"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            motion:layout_constraintBottom_toTopOf="parent"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent" />
+
+        <Constraint
+            android:id="@+id/container_recommendedHeader"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@+id/container_details" />
+    </ConstraintSet>
+</MotionScene>

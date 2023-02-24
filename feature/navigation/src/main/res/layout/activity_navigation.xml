@@ -57,7 +57,7 @@
         app:layout_constraintStart_toStartOf="@id/playerView"
         app:layout_constraintTop_toTopOf="@id/playerView"
         tools:ignore="ContentDescription"
-        tools:srcCompat="@tools:sample/backgrounds/scenic"/>
+        tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/container_playbackInfo"
@@ -66,7 +66,7 @@
         app:layout_constraintBottom_toBottomOf="@id/container_playerView"
         app:layout_constraintEnd_toStartOf="@id/playerControlView_playPause"
         app:layout_constraintStart_toEndOf="@id/playerView"
-        app:layout_constraintTop_toTopOf="@id/container_playerView" >
+        app:layout_constraintTop_toTopOf="@id/container_playerView">
 
         <TextView
             android:id="@+id/textView_playbackTitle"
@@ -82,6 +82,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="TextContrastCheck"
             tools:text="Media Title" />
 
         <TextView
@@ -123,7 +124,7 @@
         app:layout_constraintTop_toTopOf="@id/container_playerView" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView_playback"
+        android:id="@+id/recyclerView_playbackDetails"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="?android:attr/windowBackground"

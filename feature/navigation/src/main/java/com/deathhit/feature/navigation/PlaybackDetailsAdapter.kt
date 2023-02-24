@@ -5,9 +5,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.deathhit.feature.media_item.model.MediaItemVO
-import com.deathhit.feature.navigation.databinding.ItemPlaybackInfoBinding
+import com.deathhit.feature.navigation.databinding.ItemPlaybackDetailsBinding
 
-class PlaybackInfoAdapter : ListAdapter<MediaItemVO, PlaybackInfoViewHolder>(COMPARATOR) {
+class PlaybackDetailsAdapter : ListAdapter<MediaItemVO, PlaybackDetailsViewHolder>(COMPARATOR) {
     companion object {
         private val COMPARATOR = object : DiffUtil.ItemCallback<MediaItemVO>() {
             override fun areItemsTheSame(oldItem: MediaItemVO, newItem: MediaItemVO): Boolean =
@@ -17,10 +17,13 @@ class PlaybackInfoAdapter : ListAdapter<MediaItemVO, PlaybackInfoViewHolder>(COM
                 oldItem == newItem
         }
     }
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaybackInfoViewHolder = PlaybackInfoViewHolder(
-        ItemPlaybackInfoBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
-    override fun onBindViewHolder(holder: PlaybackInfoViewHolder, position: Int) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaybackDetailsViewHolder =
+        PlaybackDetailsViewHolder(
+            ItemPlaybackDetailsBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        )
+
+    override fun onBindViewHolder(holder: PlaybackDetailsViewHolder, position: Int) {
         holder.item = getItem(position)?.also { item ->
             with(holder.binding.textViewDescription) {
                 text = item.description

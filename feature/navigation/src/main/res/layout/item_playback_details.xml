@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:foreground="@drawable/fg_bottom_border"
-    android:paddingBottom="24dp">
+    app:layoutDescription="@xml/scene_playback_details">
 
     <TextView
         android:id="@+id/textView_title"
@@ -37,6 +37,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/textView_title"
         app:layout_constraintStart_toStartOf="@+id/textView_title"
