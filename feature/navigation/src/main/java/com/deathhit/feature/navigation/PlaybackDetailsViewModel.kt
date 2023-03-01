@@ -34,7 +34,6 @@ class PlaybackDetailsViewModel @Inject constructor(
     ) {
         sealed interface Action {
             data class OpenPlayableItem(val item: MediaItemVO) : Action
-            object ResetView : Action
         }
     }
 
@@ -102,10 +101,7 @@ class PlaybackDetailsViewModel @Inject constructor(
             return
 
         _stateFlow.update { state ->
-            state.copy(
-                actions = state.actions + State.Action.ResetView,
-                playableItemId = playableItemId
-            )
+            state.copy(playableItemId = playableItemId)
         }
     }
 }

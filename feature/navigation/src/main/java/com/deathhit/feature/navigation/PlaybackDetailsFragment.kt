@@ -9,8 +9,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.ConcatAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
+import com.deathhit.core.ui.AppLoadStateAdapter
 import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.FragmentPlaybackDetailsBinding
@@ -23,9 +25,6 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class PlaybackDetailsFragment : Fragment() {
     companion object {
-        private const val TAG = "PlaybackDetailsFragment"
-        private const val KEY_MOTION_TRANSITION_STATE = "$TAG.KEY_MOTION_TRANSITION_STATE"
-
         fun create() = PlaybackDetailsFragment()
     }
 
@@ -45,6 +44,9 @@ class PlaybackDetailsFragment : Fragment() {
 
     private val playableItemAdapter get() = _playableItemAdapter!!
     private var _playableItemAdapter: MediaItemAdapter? = null
+
+    private val playbackDetailsAdapter get() = _playbackDetailsAdapter!!
+    private var _playbackDetailsAdapter: PlaybackDetailsAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -67,8 +69,18 @@ class PlaybackDetailsFragment : Fragment() {
             }
         }
 
+        _playbackDetailsAdapter = PlaybackDetailsAdapter()
+
         with(binding.recyclerView) {
-            adapter = playableItemAdapter
+            adapter = ConcatAdapter(
+                playbackDetailsAdapter,
+                playableItemAdapter.withLoadStateFooter(object :
+                    AppLoadStateAdapter() {
+                    override fun onRetryLoading() {
+                        playableItemAdapter.retry()
+                    }
+                })
+            )
             setHasFixedSize(true)
         }
 
@@ -82,11 +94,6 @@ class PlaybackDetailsFragment : Fragment() {
                                     is PlaybackDetailsViewModel.State.Action.OpenPlayableItem -> callback?.onOpenPlayableItem(
                                         action.item
                                     )
-                                    PlaybackDetailsViewModel.State.Action.ResetView -> {
-                                        //todo
-                                        //binding.motionLayout.transitionToStart()
-                                        //binding.recyclerView.adapter = playableItemAdapter
-                                    }
                                 }
 
                                 viewModel.onAction(action)
@@ -96,17 +103,7 @@ class PlaybackDetailsFragment : Fragment() {
 
                 launch {
                     viewModel.stateFlow.map { it.playableItem }.distinctUntilChanged().collect {
-                        with(binding.textViewDescription) {
-                            text = it?.description
-                        }
-
-                        with(binding.textViewSubtitle) {
-                            text = it?.subtitle
-                        }
-
-                        with(binding.textViewTitle) {
-                            text = it?.title
-                        }
+                        playbackDetailsAdapter.submitList(listOf(it))
                     }
                 }
             }
@@ -128,20 +125,11 @@ class PlaybackDetailsFragment : Fragment() {
         _glideRequestManager = null
 
         _playableItemAdapter = null
-    }
 
-    override fun onViewStateRestored(savedInstanceState: Bundle?) {
-        super.onViewStateRestored(savedInstanceState)
-        with(binding.motionLayout) {
-            transitionState = savedInstanceState?.getBundle(KEY_MOTION_TRANSITION_STATE) ?: transitionState
-        }
+        _playbackDetailsAdapter = null
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        with(binding.motionLayout) {
-            outState.putBundle(KEY_MOTION_TRANSITION_STATE, transitionState)
-        }
-
         viewModel.saveState()
         super.onSaveInstanceState(outState)
     }
