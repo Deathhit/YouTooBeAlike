@@ -121,6 +121,7 @@ class NavigationActivityViewModel @Inject constructor(
             )
         }
 
+        prepareItem(null)
         prepareItem(itemId)
     }
 
