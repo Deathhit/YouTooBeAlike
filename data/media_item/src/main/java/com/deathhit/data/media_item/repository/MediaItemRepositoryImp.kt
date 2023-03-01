@@ -21,6 +21,9 @@ internal class MediaItemRepositoryImp(
     override suspend fun clearAll(mediaItemSourceType: MediaItemSourceType) =
         mediaItemLocalDataSource.clearAll(mediaItemSourceType)
 
+    override fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemDO?> =
+        mediaItemLocalDataSource.getMediaItemFlowById(mediaItemId).map { it?.toDO() }
+
     override fun getMediaItemPagingDataFlow(
         exclusiveId: String?,
         mediaItemSourceType: MediaItemSourceType,

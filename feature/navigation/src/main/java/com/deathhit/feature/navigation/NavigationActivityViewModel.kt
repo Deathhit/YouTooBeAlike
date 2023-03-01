@@ -3,23 +3,16 @@ package com.deathhit.feature.navigation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.cachedIn
-import androidx.paging.map
-import com.deathhit.data.media_item.MediaItemSourceType
-import com.deathhit.data.media_item.repository.MediaItemRepository
 import com.deathhit.data.media_progress.MediaProgressDO
 import com.deathhit.data.media_progress.repository.MediaProgressRepository
 import com.deathhit.feature.media_item.model.MediaItemVO
-import com.deathhit.feature.media_item.model.toMediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class NavigationActivityViewModel @Inject constructor(
-    mediaItemRepository: MediaItemRepository,
     private val mediaProgressRepository: MediaProgressRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -82,25 +75,6 @@ class NavigationActivityViewModel @Inject constructor(
         )
     val stateFlow = _stateFlow.asStateFlow()
 
-    val recommendedItemPagingDataFlow = stateFlow.distinctUntilChanged { old, new ->
-        old.isPlayingByPlayerView == new.isPlayingByPlayerView && old.pendingPlayItem == new.pendingPlayItem
-    }.flatMapLatest { state ->
-        val mediaItemSourceType = MediaItemSourceType.RECOMMENDED
-
-        mediaItemRepository.clearAll(mediaItemSourceType)   //Clear data when query changes.
-
-        with(state) {
-            if (isPlayingByPlayerView && pendingPlayItem != null)
-                mediaItemRepository.getMediaItemPagingDataFlow(
-                    pendingPlayItem.id,
-                    mediaItemSourceType,
-                    pendingPlayItem.subtitle
-                ).map { pagingData -> pagingData.map { it.toMediaItemVO() } }
-            else
-                emptyFlow()
-        }
-    }.cachedIn(viewModelScope)
-
     private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded
     private val isPlayingByTabPage get() = stateFlow.value.isPlayingByTabPage
     private val pendingPlayItem get() = stateFlow.value.pendingPlayItem
@@ -142,6 +116,7 @@ class NavigationActivityViewModel @Inject constructor(
             )
         }
 
+        prepareItem(null)
         prepareItem(item)
     }
 

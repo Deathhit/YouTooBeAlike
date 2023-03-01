@@ -11,16 +11,21 @@ import javax.inject.Singleton
 
 @Singleton
 internal class MediaItemLocalDataSource @Inject constructor(private val appDatabase: AppDatabase) {
+    private val mediaItemDao = appDatabase.mediaItemDao()
+    private val remoteKeyDao = appDatabase.remoteKeyDao()
+
     suspend fun clearAll(mediaItemSourceType: MediaItemSourceType) =
-        appDatabase.mediaItemDao().clearAll(mediaItemSourceType.columnValue)
+        mediaItemDao.clearAll(mediaItemSourceType.columnValue)
 
     fun getMediaItemPagingSource(mediaItemSourceType: MediaItemSourceType): PagingSource<Int, MediaItemEntity> =
-        appDatabase.mediaItemDao().getPagingSource(mediaItemSourceType.columnValue)
+        mediaItemDao.getPagingSource(mediaItemSourceType.columnValue)
+
+    fun getMediaItemFlowById(mediaItemId: String) = mediaItemDao.getFlowById(mediaItemId)
 
     suspend fun getNextMediaItemPageKey(mediaItemSourceType: MediaItemSourceType) =
         with(appDatabase) {
             withTransaction {
-                remoteKeyDao().getByLabel(mediaItemSourceType.remoteKeyLabel)?.nextKey
+                remoteKeyDao.getByLabel(mediaItemSourceType.remoteKeyLabel)?.nextKey
             }
         }
 
@@ -32,19 +37,19 @@ internal class MediaItemLocalDataSource @Inject constructor(private val appDatab
     ) = with(appDatabase) {
         withTransaction {
             if (isRefreshing) {
-                mediaItemDao().clearAll(mediaItemSourceType.columnValue)
+                mediaItemDao.clearAll(mediaItemSourceType.columnValue)
                 remoteKeyDao().clearAll(mediaItemSourceType.remoteKeyLabel)
             }
 
             // Update RemoteKey for this query.
-            remoteKeyDao().insertOrReplace(
+            remoteKeyDao.insertOrReplace(
                 RemoteKeyEntity(mediaItemSourceType.remoteKeyLabel, pageIndex + 1)
             )
 
             // Insert the new data into database, which invalidates the
             // current PagingData, allowing Paging to present the updates
             // in the DB.
-            mediaItemDao().upsert(mediaItemList)
+            mediaItemDao.upsert(mediaItemList)
         }
     }
 }

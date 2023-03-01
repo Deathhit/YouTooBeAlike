@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ItemPlaybackDetailsBinding
 
+//todo
 class PlaybackDetailsAdapter : ListAdapter<MediaItemVO, PlaybackDetailsViewHolder>(COMPARATOR) {
     companion object {
         private val COMPARATOR = object : DiffUtil.ItemCallback<MediaItemVO>() {

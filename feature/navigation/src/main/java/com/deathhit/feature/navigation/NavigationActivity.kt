@@ -13,14 +13,11 @@ import androidx.fragment.app.commit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.recyclerview.widget.ConcatAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
-import com.deathhit.core.ui.AppLoadStateAdapter
-import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
 import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemSourceType
 import com.deathhit.feature.media_item.model.MediaItemVO
@@ -31,7 +28,6 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.StyledPlayerView.FullscreenButtonClickListener
 import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -44,6 +40,7 @@ class NavigationActivity : AppCompatActivity() {
         private const val TAG_DASHBOARD = "$TAG.TAG_DASHBOARD"
         private const val TAG_HOME = "$TAG.TAG_HOME"
         private const val TAG_NOTIFICATIONS = "$TAG.TAG_NOTIFICATIONS"
+        private const val TAG_PLAYBACK_DETAILS = "$TAG.TAG_PLAYBACK_DETAILS"
     }
 
     private lateinit var binding: ActivityNavigationBinding
@@ -52,10 +49,6 @@ class NavigationActivity : AppCompatActivity() {
     private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingByTabPage
 
     private lateinit var glideRequestManager: RequestManager
-
-    private lateinit var playbackDetailsAdapter: PlaybackDetailsAdapter
-
-    private lateinit var recommendedItemAdapter: MediaItemAdapter
 
     private var mediaSession: MediaSessionCompat? = null
     private var player: Player? = null
@@ -67,6 +60,10 @@ class NavigationActivity : AppCompatActivity() {
         get() = supportFragmentManager.findFragmentByTag(TAG_HOME) as MediaItemListFragment?
     private val notificationsFragment
         get() = supportFragmentManager.findFragmentByTag(TAG_NOTIFICATIONS) as MediaItemListFragment?
+    private val playbackDetailsFragment
+        get() = supportFragmentManager.findFragmentByTag(
+            TAG_PLAYBACK_DETAILS
+        ) as PlaybackDetailsFragment?
 
     private val fullscreenButtonClickListener = FullscreenButtonClickListener {
         //todo implement
@@ -185,6 +182,13 @@ class NavigationActivity : AppCompatActivity() {
 
                     fragment.player = player
                 }
+                is PlaybackDetailsFragment -> {
+                    fragment.callback = object : PlaybackDetailsFragment.Callback {
+                        override fun onOpenPlayableItem(item: MediaItemVO) {
+                            viewModel.openItem(item)
+                        }
+                    }
+                }
             }
         }
 
@@ -199,22 +203,8 @@ class NavigationActivity : AppCompatActivity() {
         savedInstanceState
             ?: MediaPlayerService.startService(this) //Starts service to survive configuration changes.
 
-        with(binding.recyclerViewPlaybackDetails) {
-            adapter = ConcatAdapter(PlaybackDetailsAdapter().also { playbackDetailsAdapter = it },
-                object : MediaItemAdapter(glideRequestManager) {
-                    override fun onBindPlayPosition(item: MediaItemVO) {}
-
-                    override fun onClickItem(item: MediaItemVO) {
-                        viewModel.openItem(item)
-                    }
-                }.also { recommendedItemAdapter = it }.withLoadStateFooter(object : AppLoadStateAdapter() {
-                    override fun onRetryLoading() {
-                        recommendedItemAdapter.retry()
-                    }
-                })
-            )
-
-            setHasFixedSize(true)
+        savedInstanceState ?: supportFragmentManager.commit {
+            add(binding.containerPlaybackDetails.id, PlaybackDetailsFragment.create(), TAG_PLAYBACK_DETAILS)
         }
 
         lifecycleScope.launch {
@@ -336,7 +326,7 @@ class NavigationActivity : AppCompatActivity() {
                             text = it?.title
                         }
 
-                        playbackDetailsAdapter.submitList(it?.let { listOf(it) } ?: emptyList())
+                        playbackDetailsFragment?.setPlayableItemId(it?.id)
                     }
                 }
 
@@ -404,12 +394,6 @@ class NavigationActivity : AppCompatActivity() {
                 }
             }
         }
-
-        lifecycleScope.launch {
-            viewModel.recommendedItemPagingDataFlow.collectLatest {
-                recommendedItemAdapter.submitData(lifecycle, it)
-            }
-        }
     }
 
     override fun onResume() {
@@ -440,8 +424,6 @@ class NavigationActivity : AppCompatActivity() {
         //Releases the internal listeners from the player.
         binding.playerControlViewPlayPause.player = null
         binding.playerView.player = null
-
-        binding.recyclerViewPlaybackDetails.adapter = null
 
         player?.removeListener(playerListener)
 

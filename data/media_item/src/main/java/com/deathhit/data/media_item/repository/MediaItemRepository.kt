@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 interface MediaItemRepository {
     suspend fun clearAll(mediaItemSourceType: MediaItemSourceType)
 
+    fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemDO?>
+
     fun getMediaItemPagingDataFlow(
         exclusiveId: String? = null,
         mediaItemSourceType: MediaItemSourceType,

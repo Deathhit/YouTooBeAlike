@@ -123,16 +123,14 @@
         app:layout_constraintEnd_toEndOf="@id/container_playerView"
         app:layout_constraintTop_toTopOf="@id/container_playerView" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView_playbackDetails"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/container_playbackDetails"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="?android:attr/windowBackground"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/container_playerView"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+        app:layout_constraintTop_toBottomOf="@id/container_playerView" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
