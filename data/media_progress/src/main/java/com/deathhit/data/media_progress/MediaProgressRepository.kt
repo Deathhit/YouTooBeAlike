@@ -1,6 +1,6 @@
-package com.deathhit.data.media_progress.repository
+package com.deathhit.data.media_progress
 
-import com.deathhit.data.media_progress.MediaProgressDO
+import com.deathhit.data.media_progress.model.MediaProgressDO
 
 interface MediaProgressRepository {
     suspend fun getMediaProgressByMediaItemId(mediaItemId: String): MediaProgressDO?

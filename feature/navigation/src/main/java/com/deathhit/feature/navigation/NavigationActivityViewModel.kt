@@ -3,9 +3,9 @@ package com.deathhit.feature.navigation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.deathhit.data.media_item.repository.MediaItemRepository
-import com.deathhit.data.media_progress.MediaProgressDO
-import com.deathhit.data.media_progress.repository.MediaProgressRepository
+import com.deathhit.data.media_item.MediaItemRepository
+import com.deathhit.data.media_progress.model.MediaProgressDO
+import com.deathhit.data.media_progress.MediaProgressRepository
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item.model.toMediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel

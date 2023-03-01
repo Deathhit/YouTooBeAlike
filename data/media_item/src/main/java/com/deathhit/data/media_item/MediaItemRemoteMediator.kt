@@ -1,14 +1,13 @@
-package com.deathhit.data.media_item.repository
+package com.deathhit.data.media_item
 
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import com.deathhit.core.database.model.MediaItemEntity
-import com.deathhit.data.media_item.MediaItemSourceType
+import com.deathhit.data.media_item.model.MediaItemSourceType
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
-import com.deathhit.data.media_item.toEntity
 
 @ExperimentalPagingApi
 internal class MediaItemRemoteMediator(

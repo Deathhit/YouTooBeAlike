@@ -1,7 +1,6 @@
-package com.deathhit.core.database.dao
+package com.deathhit.core.database
 
 import androidx.room.*
-import com.deathhit.core.database.Column
 import com.deathhit.core.database.model.MediaProgressEntity
 
 @Dao

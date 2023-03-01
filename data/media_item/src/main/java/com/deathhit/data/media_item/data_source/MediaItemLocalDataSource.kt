@@ -5,7 +5,7 @@ import androidx.room.withTransaction
 import com.deathhit.core.database.AppDatabase
 import com.deathhit.core.database.model.MediaItemEntity
 import com.deathhit.core.database.model.RemoteKeyEntity
-import com.deathhit.data.media_item.MediaItemSourceType
+import com.deathhit.data.media_item.model.MediaItemSourceType
 import javax.inject.Inject
 import javax.inject.Singleton
 

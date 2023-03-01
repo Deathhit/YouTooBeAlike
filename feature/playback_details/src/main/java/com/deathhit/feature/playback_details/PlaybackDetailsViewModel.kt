@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import com.deathhit.data.media_item.MediaItemSourceType
-import com.deathhit.data.media_item.repository.MediaItemRepository
+import com.deathhit.data.media_item.model.MediaItemSourceType
+import com.deathhit.data.media_item.MediaItemRepository
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item.model.toMediaItemVO
 import com.deathhit.feature.playback_details.model.PlaybackDetailsVO

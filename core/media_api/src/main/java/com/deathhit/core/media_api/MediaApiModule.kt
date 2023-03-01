@@ -1,7 +1,5 @@
 package com.deathhit.core.media_api
 
-import com.deathhit.core.media_api.service.MediaApiService
-import com.deathhit.core.media_api.service.MediaApiServiceImp
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

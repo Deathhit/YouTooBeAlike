@@ -1,4 +1,4 @@
-package com.deathhit.data.media_item
+package com.deathhit.data.media_item.model
 
 data class MediaItemDO(
     val description: String,

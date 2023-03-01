@@ -1,11 +1,6 @@
-package com.deathhit.core.database.dao
+package com.deathhit.core.database
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Transaction
-import com.deathhit.core.database.Column
+import androidx.room.*
 import com.deathhit.core.database.model.RemoteKeyEntity
 
 @Dao

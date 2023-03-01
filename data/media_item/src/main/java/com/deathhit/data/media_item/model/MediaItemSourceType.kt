@@ -1,4 +1,4 @@
-package com.deathhit.data.media_item
+package com.deathhit.data.media_item.model
 
 enum class MediaItemSourceType(internal val columnValue: String, internal val remoteKeyLabel: String) {
     DASHBOARD("dashboard", "5c45c0e673d545328060adf114bf81ff"),

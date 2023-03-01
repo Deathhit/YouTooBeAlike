@@ -2,6 +2,7 @@ package com.deathhit.data.media_item
 
 import com.deathhit.core.database.model.MediaItemEntity
 import com.deathhit.core.media_api.model.Media
+import com.deathhit.data.media_item.model.MediaItemDO
 
 internal fun Media.toEntity(mediaItemSource: String) =
     MediaItemEntity(

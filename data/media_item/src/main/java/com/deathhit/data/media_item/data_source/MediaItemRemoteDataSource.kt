@@ -1,6 +1,6 @@
 package com.deathhit.data.media_item.data_source
 
-import com.deathhit.core.media_api.service.MediaApiService
+import com.deathhit.core.media_api.MediaApiService
 import javax.inject.Inject
 import javax.inject.Singleton
 

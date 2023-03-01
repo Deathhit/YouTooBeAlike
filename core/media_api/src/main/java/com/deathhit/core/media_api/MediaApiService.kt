@@ -1,4 +1,4 @@
-package com.deathhit.core.media_api.service
+package com.deathhit.core.media_api
 
 import com.deathhit.core.media_api.model.Media
 

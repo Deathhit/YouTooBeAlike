@@ -1,8 +1,7 @@
-package com.deathhit.core.database.dao
+package com.deathhit.core.database
 
 import androidx.paging.PagingSource
 import androidx.room.*
-import com.deathhit.core.database.Column
 import com.deathhit.core.database.model.MediaItemEntity
 import kotlinx.coroutines.flow.Flow
 
