@@ -107,6 +107,7 @@ class NavigationActivity : AppCompatActivity() {
 
         override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
             viewModel.setIsPlayerViewExpanded(currentId == R.id.playerView_expanded)
+            //todo show controls if playback is ended.
         }
 
         override fun onTransitionTrigger(
