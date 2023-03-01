@@ -20,7 +20,6 @@ import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
 import com.deathhit.feature.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemSourceType
-import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem
@@ -171,12 +170,12 @@ class NavigationActivity : AppCompatActivity() {
             when (fragment) {
                 is MediaItemListFragment -> {
                     fragment.callback = object : MediaItemListFragment.Callback {
-                        override fun onOpenItem(item: MediaItemVO) {
-                            viewModel.openItem(item)
+                        override fun onOpenItem(itemId: String) {
+                            viewModel.openItem(itemId)
                         }
 
-                        override fun onPrepareItem(item: MediaItemVO?) {
-                            viewModel.prepareItem(item)
+                        override fun onPrepareItem(itemId: String?) {
+                            viewModel.prepareItem(itemId)
                         }
                     }
 
@@ -184,8 +183,8 @@ class NavigationActivity : AppCompatActivity() {
                 }
                 is PlaybackDetailsFragment -> {
                     fragment.callback = object : PlaybackDetailsFragment.Callback {
-                        override fun onOpenItem(item: MediaItemVO) {
-                            viewModel.openItem(item)
+                        override fun onOpenItem(itemId: String) {
+                            viewModel.openItem(itemId)
                         }
                     }
                 }
@@ -248,7 +247,7 @@ class NavigationActivity : AppCompatActivity() {
                                     NavigationActivityViewModel.State.Action.PlayMedia -> player?.play()
                                     is NavigationActivityViewModel.State.Action.PrepareMedia -> player?.run {
                                         setMediaItem(
-                                            MediaItem.fromUri(action.item.sourceUrl),
+                                            MediaItem.fromUri(action.sourceUrl),
                                             if (action.isEnded) C.TIME_UNSET else action.position
                                         )
                                         prepare()
@@ -293,7 +292,7 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.pendingPlayItem }.distinctUntilChanged().collect {
+                    viewModel.stateFlow.map { it.playItem }.distinctUntilChanged().collect {
                         it?.let {
                             //Since the size of the image view is dynamic, we need to load the image with a fixed size.
                             glideRequestManager.clear(thumbnailGlideTarget)

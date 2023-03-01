@@ -33,8 +33,8 @@ class MediaItemListFragment : Fragment() {
     }
 
     interface Callback {
-        fun onOpenItem(item: MediaItemVO)
-        fun onPrepareItem(item: MediaItemVO?)
+        fun onOpenItem(itemId: String)
+        fun onPrepareItem(itemId: String?)
     }
 
     var callback: Callback? = null
@@ -131,10 +131,10 @@ class MediaItemListFragment : Fragment() {
                             actions.forEach { action ->
                                 when (action) {
                                     is MediaItemListViewModel.State.Action.OpenItem -> callback?.onOpenItem(
-                                        action.item
+                                        action.item.id
                                     )
                                     is MediaItemListViewModel.State.Action.PrepareItem -> callback?.onPrepareItem(
-                                        action.item
+                                        action.item?.id
                                     )
                                     MediaItemListViewModel.State.Action.ScrollToTop -> binding.recyclerView.scrollToPosition(
                                         0

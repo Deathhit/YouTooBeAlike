@@ -29,7 +29,7 @@ class PlaybackDetailsFragment : Fragment() {
     }
 
     interface Callback {
-        fun onOpenItem(item: MediaItemVO)
+        fun onOpenItem(itemId: String)
     }
 
     var callback: Callback? = null
@@ -65,7 +65,7 @@ class PlaybackDetailsFragment : Fragment() {
             }
 
             override fun onClickItem(item: MediaItemVO) {
-                viewModel.openPlayableItem(item)
+                viewModel.openItem(item)
             }
         }
 
@@ -93,7 +93,7 @@ class PlaybackDetailsFragment : Fragment() {
                             actions.forEach { action ->
                                 when (action) {
                                     is PlaybackDetailsViewModel.State.Action.OpenItem -> callback?.onOpenItem(
-                                        action.item
+                                        action.itemId
                                     )
                                 }
 
