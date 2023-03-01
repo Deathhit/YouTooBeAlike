@@ -1,4 +1,4 @@
-package com.deathhit.feature.navigation
+package com.deathhit.feature.playback_details
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -15,7 +15,7 @@ import com.bumptech.glide.RequestManager
 import com.deathhit.core.ui.AppLoadStateAdapter
 import com.deathhit.feature.media_item.MediaItemAdapter
 import com.deathhit.feature.media_item.model.MediaItemVO
-import com.deathhit.feature.navigation.databinding.FragmentPlaybackDetailsBinding
+import com.deathhit.feature.playback_details.databinding.FragmentPlaybackDetailsBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged

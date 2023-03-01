@@ -1,11 +1,11 @@
-package com.deathhit.feature.navigation
+package com.deathhit.feature.playback_details
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import com.deathhit.feature.navigation.databinding.ItemPlaybackDetailsBinding
-import com.deathhit.feature.navigation.model.PlaybackDetailsVO
+import com.deathhit.feature.playback_details.databinding.ItemPlaybackDetailsBinding
+import com.deathhit.feature.playback_details.model.PlaybackDetailsVO
 
 class PlaybackDetailsAdapter : ListAdapter<PlaybackDetailsVO, PlaybackDetailsViewHolder>(COMPARATOR) {
     companion object {

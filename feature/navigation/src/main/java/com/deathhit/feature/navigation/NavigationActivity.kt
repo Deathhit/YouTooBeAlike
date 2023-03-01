@@ -21,6 +21,7 @@ import com.bumptech.glide.request.transition.Transition
 import com.deathhit.feature.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemSourceType
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
+import com.deathhit.feature.playback_details.PlaybackDetailsFragment
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player

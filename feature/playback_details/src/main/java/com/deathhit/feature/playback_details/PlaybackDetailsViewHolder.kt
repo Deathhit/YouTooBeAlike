@@ -1,8 +1,8 @@
-package com.deathhit.feature.navigation
+package com.deathhit.feature.playback_details
 
 import androidx.recyclerview.widget.RecyclerView
-import com.deathhit.feature.navigation.databinding.ItemPlaybackDetailsBinding
-import com.deathhit.feature.navigation.model.PlaybackDetailsVO
+import com.deathhit.feature.playback_details.databinding.ItemPlaybackDetailsBinding
+import com.deathhit.feature.playback_details.model.PlaybackDetailsVO
 
 class PlaybackDetailsViewHolder(
     val binding: ItemPlaybackDetailsBinding,

@@ -1,4 +1,4 @@
-package com.deathhit.feature.navigation
+package com.deathhit.feature.playback_details
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -10,8 +10,8 @@ import com.deathhit.data.media_item.MediaItemSourceType
 import com.deathhit.data.media_item.repository.MediaItemRepository
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item.model.toMediaItemVO
-import com.deathhit.feature.navigation.model.PlaybackDetailsVO
-import com.deathhit.feature.navigation.model.toPlaybackDetailsVO
+import com.deathhit.feature.playback_details.model.PlaybackDetailsVO
+import com.deathhit.feature.playback_details.model.toPlaybackDetailsVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*

@@ -43,14 +43,10 @@ dependencies {
     //Constraint Layout
     api 'androidx.constraintlayout:constraintlayout:2.1.4'
 
-    //Coroutines
-    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
-
     //Exo Player
     def exo_version = '2.18.3'
     api "com.google.android.exoplayer:exoplayer:$exo_version"
     api "com.google.android.exoplayer:exoplayer-ui:$exo_version"
-    api "com.google.android.exoplayer:extension-mediasession:$exo_version"
 
     //Material
     api 'com.google.android.material:material:1.8.0'

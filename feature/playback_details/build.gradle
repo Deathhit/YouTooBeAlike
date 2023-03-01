@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace 'com.deathhit.feature.navigation'
+    namespace 'com.deathhit.feature.playback_details'
     compileSdk 33
 
     defaultConfig {
@@ -42,18 +42,12 @@ android {
 dependencies {
     implementation project(':core:ui')
     implementation project(':data:media_item')
-    implementation project(':data:media_progress')
     implementation project(':feature:media_item_list')
-    implementation project(':feature:playback_details')
 
     //Coroutine
     def coroutine_version = '1.6.4'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutine_version"
     androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutine_version"
-
-    //Exo Player
-    def exo_version = '2.18.3'
-    implementation "com.google.android.exoplayer:extension-mediasession:$exo_version"
 
     //Glide
     def glide_version = '4.14.2'

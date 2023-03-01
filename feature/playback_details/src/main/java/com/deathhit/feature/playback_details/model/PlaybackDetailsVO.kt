@@ -1,4 +1,4 @@
-package com.deathhit.feature.navigation.model
+package com.deathhit.feature.playback_details.model
 
 import com.deathhit.data.media_item.MediaItemDO
 
