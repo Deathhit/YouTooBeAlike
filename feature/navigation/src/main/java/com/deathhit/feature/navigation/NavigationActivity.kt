@@ -18,7 +18,7 @@ import com.bumptech.glide.RequestManager
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
-import com.deathhit.feature.media_item.fragment.media_item.MediaItemListFragment
+import com.deathhit.feature.media_item.MediaItemListFragment
 import com.deathhit.feature.media_item.model.MediaItemSourceType
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
@@ -184,7 +184,7 @@ class NavigationActivity : AppCompatActivity() {
                 }
                 is PlaybackDetailsFragment -> {
                     fragment.callback = object : PlaybackDetailsFragment.Callback {
-                        override fun onOpenPlayableItem(item: MediaItemVO) {
+                        override fun onOpenItem(item: MediaItemVO) {
                             viewModel.openItem(item)
                         }
                     }

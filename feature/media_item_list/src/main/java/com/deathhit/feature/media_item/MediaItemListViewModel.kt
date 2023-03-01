@@ -1,4 +1,4 @@
-package com.deathhit.feature.media_item.fragment.media_item
+package com.deathhit.feature.media_item
 
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle

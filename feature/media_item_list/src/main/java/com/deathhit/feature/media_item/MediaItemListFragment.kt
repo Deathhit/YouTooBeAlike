@@ -1,4 +1,4 @@
-package com.deathhit.feature.media_item.fragment.media_item
+package com.deathhit.feature.media_item
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.deathhit.core.ui.AppLoadStateAdapter
-import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
 import com.deathhit.feature.media_item.model.MediaItemSourceType
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.FragmentMediaItemListBinding

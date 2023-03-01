@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.ConcatAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.deathhit.core.ui.AppLoadStateAdapter
-import com.deathhit.feature.media_item.adapter.media_item.MediaItemAdapter
+import com.deathhit.feature.media_item.MediaItemAdapter
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.FragmentPlaybackDetailsBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,7 +29,7 @@ class PlaybackDetailsFragment : Fragment() {
     }
 
     interface Callback {
-        fun onOpenPlayableItem(item: MediaItemVO)
+        fun onOpenItem(item: MediaItemVO)
     }
 
     var callback: Callback? = null
@@ -81,6 +81,7 @@ class PlaybackDetailsFragment : Fragment() {
                     }
                 })
             )
+
             setHasFixedSize(true)
         }
 
@@ -91,7 +92,7 @@ class PlaybackDetailsFragment : Fragment() {
                         .collect { actions ->
                             actions.forEach { action ->
                                 when (action) {
-                                    is PlaybackDetailsViewModel.State.Action.OpenPlayableItem -> callback?.onOpenPlayableItem(
+                                    is PlaybackDetailsViewModel.State.Action.OpenItem -> callback?.onOpenItem(
                                         action.item
                                     )
                                 }
@@ -102,7 +103,7 @@ class PlaybackDetailsFragment : Fragment() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.playableItem }.distinctUntilChanged().collect {
+                    viewModel.stateFlow.map { it.playbackDetails }.distinctUntilChanged().collect {
                         playbackDetailsAdapter.submitList(listOf(it))
                     }
                 }
@@ -135,6 +136,6 @@ class PlaybackDetailsFragment : Fragment() {
     }
 
     fun setPlayableItemId(playableItemId: String?) {
-        viewModel.setPlayableItemId(playableItemId)
+        viewModel.setPlayItemId(playableItemId)
     }
 }

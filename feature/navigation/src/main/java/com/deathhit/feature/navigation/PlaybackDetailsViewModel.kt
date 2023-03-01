@@ -10,6 +10,8 @@ import com.deathhit.data.media_item.MediaItemSourceType
 import com.deathhit.data.media_item.repository.MediaItemRepository
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item.model.toMediaItemVO
+import com.deathhit.feature.navigation.model.PlaybackDetailsVO
+import com.deathhit.feature.navigation.model.toPlaybackDetailsVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -24,41 +26,41 @@ class PlaybackDetailsViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private const val TAG = "PlaybackDetailsViewModel"
-        private const val KEY_PLAYABLE_ITEM_ID = "$TAG.KEY_PLAYABLE_ITEM_ID"
+        private const val KEY_PLAY_ITEM_ID = "$TAG.KEY_PLAY_ITEM_ID"
     }
 
     data class State(
         val actions: List<Action>,
-        val playableItem: MediaItemVO?,
-        val playableItemId: String?
+        val playbackDetails: PlaybackDetailsVO?,
+        val playItemId: String?
     ) {
         sealed interface Action {
-            data class OpenPlayableItem(val item: MediaItemVO) : Action
+            data class OpenItem(val item: MediaItemVO) : Action
         }
     }
 
     private val _stateFlow = MutableStateFlow(
         State(
             actions = emptyList(),
-            playableItem = null,
-            playableItemId = savedStateHandle[KEY_PLAYABLE_ITEM_ID]
+            playbackDetails = null,
+            playItemId = savedStateHandle[KEY_PLAY_ITEM_ID]
         )
     )
     val stateFlow = _stateFlow.asStateFlow()
 
-    private val playableItemId get() = stateFlow.value.playableItemId
+    private val playItemId get() = stateFlow.value.playItemId
 
     val recommendedItemPagingDataFlow =
-        stateFlow.map { it.playableItem }.distinctUntilChanged().flatMapLatest { playableItem ->
+        stateFlow.map { it.playbackDetails }.distinctUntilChanged().flatMapLatest { playbackDetails ->
             val mediaItemSourceType = MediaItemSourceType.RECOMMENDED
 
             mediaItemRepository.clearAll(mediaItemSourceType)   //Clear data when query changes.
 
-            if (playableItem != null)
+            if (playbackDetails != null)
                 mediaItemRepository.getMediaItemPagingDataFlow(
-                    playableItem.id,
+                    playItemId,
                     mediaItemSourceType,
-                    playableItem.subtitle
+                    playbackDetails.subtitle
                 ).map { pagingData -> pagingData.map { it.toMediaItemVO() } }
             else
                 flowOf(PagingData.empty())
@@ -67,13 +69,15 @@ class PlaybackDetailsViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             launch {
-                stateFlow.map { it.playableItemId }.flatMapLatest { playableItemId ->
+                stateFlow.map { it.playItemId }.flatMapLatest { playableItemId ->
                     playableItemId?.let { mediaItemRepository.getMediaItemFlowById(it) } ?: flowOf(
                         null
                     )
                 }.collectLatest {
                     _stateFlow.update { state ->
-                        state.copy(playableItem = it?.toMediaItemVO())
+                        state.copy(
+                            playbackDetails = it?.toPlaybackDetailsVO(),
+                        )
                     }
                 }
             }
@@ -88,20 +92,20 @@ class PlaybackDetailsViewModel @Inject constructor(
 
     fun openPlayableItem(item: MediaItemVO) {
         _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.OpenPlayableItem(item))
+            state.copy(actions = state.actions + State.Action.OpenItem(item))
         }
     }
 
     fun saveState() {
-        savedStateHandle[KEY_PLAYABLE_ITEM_ID] = playableItemId
+        savedStateHandle[KEY_PLAY_ITEM_ID] = playItemId
     }
 
-    fun setPlayableItemId(playableItemId: String?) {
-        if (playableItemId == this.playableItemId)
+    fun setPlayItemId(playItemId: String?) {
+        if (playItemId == this.playItemId)
             return
 
         _stateFlow.update { state ->
-            state.copy(playableItemId = playableItemId)
+            state.copy(playItemId = playItemId)
         }
     }
 }

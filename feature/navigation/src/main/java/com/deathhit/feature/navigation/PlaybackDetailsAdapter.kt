@@ -4,17 +4,16 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.navigation.databinding.ItemPlaybackDetailsBinding
+import com.deathhit.feature.navigation.model.PlaybackDetailsVO
 
-//todo
-class PlaybackDetailsAdapter : ListAdapter<MediaItemVO, PlaybackDetailsViewHolder>(COMPARATOR) {
+class PlaybackDetailsAdapter : ListAdapter<PlaybackDetailsVO, PlaybackDetailsViewHolder>(COMPARATOR) {
     companion object {
-        private val COMPARATOR = object : DiffUtil.ItemCallback<MediaItemVO>() {
-            override fun areItemsTheSame(oldItem: MediaItemVO, newItem: MediaItemVO): Boolean =
-                oldItem.id == newItem.id
+        private val COMPARATOR = object : DiffUtil.ItemCallback<PlaybackDetailsVO>() {
+            override fun areItemsTheSame(oldItem: PlaybackDetailsVO, newItem: PlaybackDetailsVO): Boolean =
+                oldItem == newItem
 
-            override fun areContentsTheSame(oldItem: MediaItemVO, newItem: MediaItemVO): Boolean =
+            override fun areContentsTheSame(oldItem: PlaybackDetailsVO, newItem: PlaybackDetailsVO): Boolean =
                 oldItem == newItem
         }
     }

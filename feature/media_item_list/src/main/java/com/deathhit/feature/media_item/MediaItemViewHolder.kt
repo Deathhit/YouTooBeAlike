@@ -1,4 +1,4 @@
-package com.deathhit.feature.media_item.adapter.media_item
+package com.deathhit.feature.media_item
 
 import androidx.recyclerview.widget.RecyclerView
 import com.deathhit.feature.media_item.model.MediaItemVO
