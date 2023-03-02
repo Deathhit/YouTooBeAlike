@@ -57,7 +57,7 @@ class MediaItemListViewModel @Inject constructor(
                 isFirstPageLoaded = false,
                 isPlaying = savedStateHandle[KEY_IS_PLAYING] ?: true,
                 mediaItemLabel = savedStateHandle[KEY_MEDIA_ITEM_SOURCE_TYPE]
-                    ?: throw RuntimeException("mediaItemSourceType can not be null!"),
+                    ?: throw RuntimeException("mediaItemLabel can not be null!"),
                 playPosition = null
             )
         )

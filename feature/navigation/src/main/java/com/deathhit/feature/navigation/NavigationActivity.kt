@@ -46,7 +46,7 @@ class NavigationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityNavigationBinding
 
     private val viewModel: NavigationActivityViewModel by viewModels()
-    private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingByTab
+    private val isPlayingByTab get() = viewModel.stateFlow.value.isPlayingByTab
 
     private lateinit var glideRequestManager: RequestManager
 
@@ -81,6 +81,9 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 viewModel.setIsPlayerConnected(true)
+
+                if (player?.playbackState != Player.STATE_READY)
+                    viewModel.resumePlayerViewPlayback()
             }
         }
 
@@ -119,7 +122,7 @@ class NavigationActivity : AppCompatActivity() {
     }
 
     private val onClearListener = OnClickListener {
-        viewModel.clearItem()
+        viewModel.clearPlayerViewPlayback()
     }
 
     private val onNavigationSelectedListener = OnItemSelectedListener {
@@ -177,8 +180,6 @@ class NavigationActivity : AppCompatActivity() {
                             viewModel.prepareItemAndPlay(itemId)
                         }
                     }
-
-                    viewModel.setPlayerToTab()
                 }
                 is PlaybackDetailsFragment -> {
                     fragment.callback = object : PlaybackDetailsFragment.Callback {
@@ -201,14 +202,13 @@ class NavigationActivity : AppCompatActivity() {
         savedInstanceState
             ?: MediaPlayerService.startService(this) //Starts service to survive configuration changes.
 
-        savedInstanceState?.run { viewModel.resumePlayerViewPlayback() }
-            ?: supportFragmentManager.commit {
-                add(
-                    binding.containerPlaybackDetails.id,
-                    PlaybackDetailsFragment.create(),
-                    TAG_PLAYBACK_DETAILS
-                )
-            }
+        savedInstanceState ?: supportFragmentManager.commit {
+            add(
+                binding.containerPlaybackDetails.id,
+                PlaybackDetailsFragment.create(),
+                TAG_PLAYBACK_DETAILS
+            )
+        }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -256,11 +256,6 @@ class NavigationActivity : AppCompatActivity() {
                                         )
                                         prepare()
                                     }
-                                    is NavigationActivityViewModel.State.Action.SetPlayerToTab -> {
-                                        dashboardFragment?.player = player
-                                        homeFragment?.player = player
-                                        notificationsFragment?.player = player
-                                    }
                                     NavigationActivityViewModel.State.Action.ShowPlayerViewControls -> binding.playerView.showController()
                                     NavigationActivityViewModel.State.Action.StopMedia -> player?.stop()
                                 }
@@ -302,6 +297,14 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
+                    viewModel.stateFlow.map { it.isPlayingByTab }.distinctUntilChanged().collect {
+                        dashboardFragment?.player = player
+                        homeFragment?.player = player
+                        notificationsFragment?.player = player
+                    }
+                }
+
+                launch {
                     viewModel.stateFlow.map { it.playItem }.distinctUntilChanged().collect {
                         it?.let {
                             //Since the size of the image view is dynamic, we need to load the image with a fixed size.
@@ -340,7 +343,7 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.playingTab }.distinctUntilChanged().collect {
+                    viewModel.stateFlow.map { it.playTab }.distinctUntilChanged().collect {
                         dashboardFragment?.setIsPlaying(it == NavigationActivityViewModel.State.Tab.DASHBOARD)
                         homeFragment?.setIsPlaying(it == NavigationActivityViewModel.State.Tab.HOME)
                         notificationsFragment?.setIsPlaying(it == NavigationActivityViewModel.State.Tab.NOTIFICATIONS)
@@ -355,7 +358,7 @@ class NavigationActivity : AppCompatActivity() {
                                     dashboardFragment?.let { show(it) } ?: add(
                                         binding.containerNavigationTabPage.id,
                                         MediaItemListFragment.create(
-                                            isPlayingInList,
+                                            isPlayingByTab,
                                             MediaItemLabel.DASHBOARD
                                         ),
                                         TAG_DASHBOARD
@@ -372,7 +375,7 @@ class NavigationActivity : AppCompatActivity() {
                                     homeFragment?.let { show(it) } ?: add(
                                         binding.containerNavigationTabPage.id,
                                         MediaItemListFragment.create(
-                                            isPlayingInList,
+                                            isPlayingByTab,
                                             MediaItemLabel.HOME
                                         ),
                                         TAG_HOME
@@ -389,7 +392,7 @@ class NavigationActivity : AppCompatActivity() {
                                     notificationsFragment?.let { show(it) } ?: add(
                                         binding.containerNavigationTabPage.id,
                                         MediaItemListFragment.create(
-                                            isPlayingInList,
+                                            isPlayingByTab,
                                             MediaItemLabel.NOTIFICATIONS
                                         ),
                                         TAG_NOTIFICATIONS

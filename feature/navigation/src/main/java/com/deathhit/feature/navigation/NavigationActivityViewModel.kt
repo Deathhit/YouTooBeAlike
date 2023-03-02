@@ -23,8 +23,8 @@ class NavigationActivityViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private const val TAG = "NavigationActivityViewModel"
+        private const val KEY_IS_FOR_TAB_TO_PLAY = "$TAG.KEY_IS_FOR_TAB_TO_PLAY"
         private const val KEY_IS_PLAYER_VIEW_EXPANDED = "$TAG.KEY_IS_PLAYER_VIEW_EXPANDED"
-        private const val KEY_IS_PLAYING_BY_TAB = "$TAG.KEY_IS_PLAYING_BY_TAB"
         private const val KEY_PLAY_ITEM_ID = "$TAG.KEY_PLAY_ITEM_ID"
         private const val KEY_TAB = "$TAG.KEY_TAB"
 
@@ -34,9 +34,9 @@ class NavigationActivityViewModel @Inject constructor(
     data class State(
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
+        val isForTabToPlay: Boolean,
         val isPlayerConnected: Boolean,
         val isPlayerViewExpanded: Boolean,
-        val isPlayingByTab: Boolean,
         val pendingPlayItemId: String?,
         val playItem: MediaItemVO?,
         val playItemId: String?,
@@ -54,7 +54,6 @@ class NavigationActivityViewModel @Inject constructor(
                 val sourceUrl: String
             ) : Action
 
-            object SetPlayerToTab : Action
             object ShowPlayerViewControls : Action
             object StopMedia : Action
         }
@@ -65,8 +64,9 @@ class NavigationActivityViewModel @Inject constructor(
             NOTIFICATIONS
         }
 
-        val isPlayingByPlayerView = isPlayerConnected && !isPlayingByTab
-        val playingTab = if (isPlayingByTab) tab else null
+        val isPlayingByPlayerView = !isForTabToPlay && isPlayerConnected
+        val isPlayingByTab = isForTabToPlay && isPlayerConnected
+        val playTab = if (isPlayingByTab) tab else null
     }
 
     private val _stateFlow =
@@ -74,9 +74,9 @@ class NavigationActivityViewModel @Inject constructor(
             State(
                 actions = emptyList(),
                 isFirstFrameRendered = false,
+                isForTabToPlay = savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] ?: true,
                 isPlayerConnected = false,
                 isPlayerViewExpanded = savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] ?: false,
-                isPlayingByTab = savedStateHandle[KEY_IS_PLAYING_BY_TAB] ?: true,
                 pendingPlayItemId = null,
                 playItem = null,
                 playItemId = savedStateHandle[KEY_PLAY_ITEM_ID],
@@ -85,7 +85,9 @@ class NavigationActivityViewModel @Inject constructor(
         )
     val stateFlow = _stateFlow.asStateFlow()
 
+    private val isForTabToPlay get() = stateFlow.value.isForTabToPlay
     private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded
+    private val isPlayingByPlayerView get() = stateFlow.value.isPlayingByPlayerView
     private val isPlayingByTab get() = stateFlow.value.isPlayingByTab
     private val pendingPlayItemId get() = stateFlow.value.pendingPlayItemId
     private val playItemId get() = stateFlow.value.playItemId
@@ -108,11 +110,11 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
-    fun clearItem() {
+    fun clearPlayerViewPlayback() {
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.HidePlayerView,
-                isPlayingByTab = true
+                isForTabToPlay = true
             )
         }
 
@@ -137,16 +139,16 @@ class NavigationActivityViewModel @Inject constructor(
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.ExpandPlayerView + State.Action.PlayMedia,
-                isPlayingByTab = false
+                isForTabToPlay = false,
+                pendingPlayItemId = null,
             )
         }
 
-        prepareItem(null)
         prepareItem(itemId)
     }
 
     fun pausePlayerViewPlayback() {
-        if (isPlayingByTab)
+        if (!isPlayingByPlayerView)
             return
 
         _stateFlow.update { state ->
@@ -163,13 +165,14 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun resumePlayerViewPlayback() {
-        if (isPlayingByTab)
+        if (!isPlayingByPlayerView)
             return
 
-        val itemId = playItemId
+        _stateFlow.update { state ->
+            state.copy(actions = state.actions + State.Action.PlayMedia, pendingPlayItemId = null)
+        }
 
-        prepareItem(null)
-        prepareItem(itemId)
+        prepareItem(playItemId)
     }
 
     fun savePlayItemPosition(isEnded: Boolean, mediaPosition: Long) {
@@ -188,7 +191,7 @@ class NavigationActivityViewModel @Inject constructor(
 
     fun saveState() {
         savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] = isPlayerViewExpanded
-        savedStateHandle[KEY_IS_PLAYING_BY_TAB] = isPlayingByTab
+        savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] = isForTabToPlay
         savedStateHandle[KEY_PLAY_ITEM_ID] = playItemId
         savedStateHandle[KEY_TAB] = tab
     }
@@ -203,20 +206,11 @@ class NavigationActivityViewModel @Inject constructor(
         _stateFlow.update { state ->
             state.copy(isPlayerConnected = isPlayerConnected)
         }
-
-        if (isPlayerConnected)
-            setPlayerToTab()
     }
 
     fun setIsPlayerViewExpanded(isPlayerViewExpanded: Boolean) {
         _stateFlow.update { state ->
             state.copy(isPlayerViewExpanded = isPlayerViewExpanded)
-        }
-    }
-
-    fun setPlayerToTab() {
-        _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.SetPlayerToTab)
         }
     }
 
@@ -233,7 +227,7 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun showPlayerViewControls() {
-        if (isPlayingByTab)
+        if (!isPlayingByPlayerView)
             return
 
         _stateFlow.update { state ->
