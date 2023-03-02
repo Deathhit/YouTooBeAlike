@@ -38,13 +38,11 @@ internal class MediaItemLocalDataSource @Inject constructor(private val appDatab
         withTransaction {
             if (isRefreshing) {
                 mediaItemDao.clearAll(mediaItemSourceType.columnValue)
-                remoteKeyDao().clearAll(mediaItemSourceType.remoteKeyLabel)
+                remoteKeyDao.clearAll(mediaItemSourceType.remoteKeyLabel)
             }
 
             // Update RemoteKey for this query.
-            remoteKeyDao.insertOrReplace(
-                RemoteKeyEntity(mediaItemSourceType.remoteKeyLabel, pageIndex + 1)
-            )
+            remoteKeyDao.upsert(RemoteKeyEntity(mediaItemSourceType.remoteKeyLabel, pageIndex + 1))
 
             // Insert the new data into database, which invalidates the
             // current PagingData, allowing Paging to present the updates
