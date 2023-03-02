@@ -31,6 +31,7 @@
     <style name="Widget.VideoListExample.PlayerView.Portrait" parent="Widget.VideoListExample.PlayerView">
         <item name="android:background">@color/black</item>
         <item name="android:minHeight">@dimen/min_height_player_view_portrait</item>
+        <item name="auto_show">false</item>
         <item name="controller_layout_id">@layout/block_player_control_portrait</item>
         <item name="resize_mode">zoom</item>
     </style>

@@ -161,8 +161,11 @@ class NavigationActivity : AppCompatActivity() {
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
-            if (playbackState == Player.STATE_IDLE)
-                viewModel.setIsFirstFrameRendered(false)
+            when (playbackState) {
+                Player.STATE_ENDED -> viewModel.showPlayerViewControls()
+                Player.STATE_IDLE -> viewModel.setIsFirstFrameRendered(false)
+                else -> {}
+            }
         }
     }
 
@@ -204,7 +207,11 @@ class NavigationActivity : AppCompatActivity() {
             ?: MediaPlayerService.startService(this) //Starts service to survive configuration changes.
 
         savedInstanceState ?: supportFragmentManager.commit {
-            add(binding.containerPlaybackDetails.id, PlaybackDetailsFragment.create(), TAG_PLAYBACK_DETAILS)
+            add(
+                binding.containerPlaybackDetails.id,
+                PlaybackDetailsFragment.create(),
+                TAG_PLAYBACK_DETAILS
+            )
         }
 
         lifecycleScope.launch {
@@ -253,6 +260,7 @@ class NavigationActivity : AppCompatActivity() {
                                         )
                                         prepare()
                                     }
+                                    NavigationActivityViewModel.State.Action.ShowPlayerViewControls -> binding.playerView.showController()
                                     NavigationActivityViewModel.State.Action.StopMedia -> player?.stop()
                                 }
 

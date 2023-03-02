@@ -51,6 +51,7 @@ class NavigationActivityViewModel @Inject constructor(
                 val sourceUrl: String
             ) : Action
 
+            object ShowPlayerViewControls : Action
             object StopMedia : Action
         }
 
@@ -219,5 +220,14 @@ class NavigationActivityViewModel @Inject constructor(
 
         if (isPlayingByTabPage)
             prepareItem(null)
+    }
+
+    fun showPlayerViewControls() {
+        if (isPlayingByTabPage)
+            return
+
+        _stateFlow.update { state ->
+            state.copy(actions = state.actions + State.Action.ShowPlayerViewControls)
+        }
     }
 }
