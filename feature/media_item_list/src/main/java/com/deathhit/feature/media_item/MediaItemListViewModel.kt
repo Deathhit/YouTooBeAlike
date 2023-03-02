@@ -44,7 +44,7 @@ class MediaItemListViewModel @Inject constructor(
     ) {
         sealed interface Action {
             data class OpenItem(val item: MediaItemVO) : Action
-            data class PrepareItem(val item: MediaItemVO?) : Action
+            data class PrepareItemAndPlay(val item: MediaItemVO?) : Action
             object ScrollToTop : Action
         }
     }
@@ -63,12 +63,11 @@ class MediaItemListViewModel @Inject constructor(
         )
     val stateFlow = _stateFlow.asStateFlow()
 
-    val mediaItemPagingDataFlow = stateFlow.distinctUntilChanged { old, new ->
-        old.mediaItemLabel == new.mediaItemLabel
-    }.flatMapLatest {
-        mediaItemRepository.getMediaItemPagingDataFlow(mediaItemLabel = mediaItemSourceType.toDO())
-            .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
-    }.cachedIn(viewModelScope)
+    val mediaItemPagingDataFlow =
+        stateFlow.map { it.mediaItemLabel }.distinctUntilChanged().flatMapLatest {
+            mediaItemRepository.getMediaItemPagingDataFlow(mediaItemLabel = mediaItemSourceType.toDO())
+                .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
+        }.cachedIn(viewModelScope)
 
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
     private val isPlaying get() = stateFlow.value.isPlaying
@@ -86,12 +85,12 @@ class MediaItemListViewModel @Inject constructor(
         }
     }
 
-    fun prepareItem(item: MediaItemVO?) {
+    fun prepareItemAndPlay(item: MediaItemVO?) {
         if (!isPlaying)
             return
 
         _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.PrepareItem(item))
+            state.copy(actions = state.actions + State.Action.PrepareItemAndPlay(item))
         }
     }
 
@@ -127,6 +126,6 @@ class MediaItemListViewModel @Inject constructor(
         }
 
         if (playPosition == null)
-            prepareItem(null)
+            prepareItemAndPlay(null)
     }
 }

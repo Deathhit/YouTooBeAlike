@@ -46,7 +46,7 @@ class NavigationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityNavigationBinding
 
     private val viewModel: NavigationActivityViewModel by viewModels()
-    private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingByTabPage
+    private val isPlayingInList get() = viewModel.stateFlow.value.isPlayingByTab
 
     private lateinit var glideRequestManager: RequestManager
 
@@ -80,10 +80,6 @@ class NavigationActivity : AppCompatActivity() {
                     }
                 }
 
-                dashboardFragment?.player = player
-                homeFragment?.player = player
-                notificationsFragment?.player = player
-
                 viewModel.setIsPlayerConnected(true)
             }
         }
@@ -104,7 +100,6 @@ class NavigationActivity : AppCompatActivity() {
 
         override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
             viewModel.setIsPlayerViewExpanded(currentId == R.id.playerView_expanded)
-            //todo show controls if playback is ended.
         }
 
         override fun onTransitionTrigger(
@@ -178,12 +173,12 @@ class NavigationActivity : AppCompatActivity() {
                             viewModel.openItem(itemId)
                         }
 
-                        override fun onPrepareItem(itemId: String?) {
-                            viewModel.prepareItem(itemId)
+                        override fun onPrepareItemAndPlay(itemId: String?) {
+                            viewModel.prepareItemAndPlay(itemId)
                         }
                     }
 
-                    fragment.player = player
+                    viewModel.setPlayerToTab()
                 }
                 is PlaybackDetailsFragment -> {
                     fragment.callback = object : PlaybackDetailsFragment.Callback {
@@ -206,13 +201,14 @@ class NavigationActivity : AppCompatActivity() {
         savedInstanceState
             ?: MediaPlayerService.startService(this) //Starts service to survive configuration changes.
 
-        savedInstanceState ?: supportFragmentManager.commit {
-            add(
-                binding.containerPlaybackDetails.id,
-                PlaybackDetailsFragment.create(),
-                TAG_PLAYBACK_DETAILS
-            )
-        }
+        savedInstanceState?.run { viewModel.resumePlayerViewPlayback() }
+            ?: supportFragmentManager.commit {
+                add(
+                    binding.containerPlaybackDetails.id,
+                    PlaybackDetailsFragment.create(),
+                    TAG_PLAYBACK_DETAILS
+                )
+            }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -259,6 +255,11 @@ class NavigationActivity : AppCompatActivity() {
                                             if (action.isEnded) C.TIME_UNSET else action.position
                                         )
                                         prepare()
+                                    }
+                                    is NavigationActivityViewModel.State.Action.SetPlayerToTab -> {
+                                        dashboardFragment?.player = player
+                                        homeFragment?.player = player
+                                        notificationsFragment?.player = player
                                     }
                                     NavigationActivityViewModel.State.Action.ShowPlayerViewControls -> binding.playerView.showController()
                                     NavigationActivityViewModel.State.Action.StopMedia -> player?.stop()
@@ -424,7 +425,7 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         if (!isChangingConfigurations)
-            viewModel.pauseMedia()
+            viewModel.pausePlayerViewPlayback()
     }
 
     override fun onDestroy() {

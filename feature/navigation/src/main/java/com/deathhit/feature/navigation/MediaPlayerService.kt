@@ -11,6 +11,7 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import java.lang.ref.WeakReference
 
 class MediaPlayerService : Service() {
     companion object {
@@ -35,7 +36,10 @@ class MediaPlayerService : Service() {
             Intent(context, MediaPlayerService::class.java)
     }
 
-    class ServiceBinder(val service: MediaPlayerService) : Binder()
+    class ServiceBinder(service: MediaPlayerService) : Binder() {
+        private val serviceWeakRef = WeakReference(service)
+        val service = serviceWeakRef.get()!!
+    }
 
     abstract class ServiceConnection : android.content.ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {

@@ -34,13 +34,16 @@ class MediaItemListFragment : Fragment() {
 
     interface Callback {
         fun onOpenItem(itemId: String)
-        fun onPrepareItem(itemId: String?)
+        fun onPrepareItemAndPlay(itemId: String?)
     }
 
     var callback: Callback? = null
 
     var player: Player? = null
         set(value) {
+            if(value == field)
+                return
+
             field?.removeListener(playerListener)
             field = value?.apply { addListener(playerListener) }
             _mediaItemAdapter?.setPlayer(player)
@@ -102,7 +105,7 @@ class MediaItemListFragment : Fragment() {
 
             _mediaItemAdapter = object : MediaItemAdapter(Glide.with(view)) {
                 override fun onBindPlayPosition(item: MediaItemVO) {
-                    viewModel.prepareItem(item)
+                    viewModel.prepareItemAndPlay(item)
                 }
 
                 override fun onClickItem(item: MediaItemVO) {
@@ -133,7 +136,7 @@ class MediaItemListFragment : Fragment() {
                                     is MediaItemListViewModel.State.Action.OpenItem -> callback?.onOpenItem(
                                         action.item.id
                                     )
-                                    is MediaItemListViewModel.State.Action.PrepareItem -> callback?.onPrepareItem(
+                                    is MediaItemListViewModel.State.Action.PrepareItemAndPlay -> callback?.onPrepareItemAndPlay(
                                         action.item?.id
                                     )
                                     MediaItemListViewModel.State.Action.ScrollToTop -> binding.recyclerView.scrollToPosition(
