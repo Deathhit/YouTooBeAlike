@@ -43,7 +43,7 @@ dependencies {
     implementation project(':feature:navigation')
 
     //Hilt
-    def hilt_version = '2.44.2'
+    def hilt_version = '2.45'
     kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
     implementation "com.google.dagger:hilt-android:$hilt_version"
 
