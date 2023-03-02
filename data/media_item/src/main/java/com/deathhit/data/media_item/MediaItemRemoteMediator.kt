@@ -5,7 +5,7 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import com.deathhit.core.database.model.MediaItemEntity
-import com.deathhit.data.media_item.model.MediaItemSourceType
+import com.deathhit.data.media_item.model.MediaItemLabel
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
 
@@ -14,7 +14,7 @@ internal class MediaItemRemoteMediator(
     private val exclusiveId: String?,
     private val mediaItemLocalDataSource: MediaItemLocalDataSource,
     private val mediaItemRemoteDataSource: MediaItemRemoteDataSource,
-    private val mediaItemSourceType: MediaItemSourceType,
+    private val mediaItemLabel: MediaItemLabel,
     private val subtitle: String?
 ) : RemoteMediator<Int, MediaItemEntity>() {
     override suspend fun load(
@@ -40,7 +40,7 @@ internal class MediaItemRemoteMediator(
                     // If you receive null for APPEND, that means you have
                     // reached the end of pagination and there are no more
                     // items to load.
-                    mediaItemLocalDataSource.getNextMediaItemPageKey(mediaItemSourceType)
+                    mediaItemLocalDataSource.getNextMediaItemPageKey(mediaItemLabel)
                         ?: return MediatorResult.Success(
                             true
                         )
@@ -58,8 +58,8 @@ internal class MediaItemRemoteMediator(
             )
 
             mediaItemLocalDataSource.insertMediaItemPage(
-                itemList.map { it.toEntity(mediaItemSourceType.columnValue) },
-                mediaItemSourceType,
+                itemList.map { it.toEntity(mediaItemLabel.toLabel()) },
+                mediaItemLabel,
                 loadType == LoadType.REFRESH,
                 loadKey
             )

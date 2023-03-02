@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import com.deathhit.data.media_item.model.MediaItemSourceType
+import com.deathhit.data.media_item.model.MediaItemLabel
 import com.deathhit.data.media_item.MediaItemRepository
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item.model.toMediaItemVO
@@ -52,14 +52,14 @@ class PlaybackDetailsViewModel @Inject constructor(
 
     val recommendedItemPagingDataFlow =
         stateFlow.map { it.playbackDetails }.distinctUntilChanged().flatMapLatest { playbackDetails ->
-            val mediaItemSourceType = MediaItemSourceType.RECOMMENDED
+            val mediaItemLabel = MediaItemLabel.RECOMMENDED
 
-            mediaItemRepository.clearAll(mediaItemSourceType)   //Clear data when query changes.
+            mediaItemRepository.clearAll(mediaItemLabel)   //Clear data when query changes.
 
             if (playbackDetails != null)
                 mediaItemRepository.getMediaItemPagingDataFlow(
                     playItemId,
-                    mediaItemSourceType,
+                    mediaItemLabel,
                     playbackDetails.subtitle
                 ).map { pagingData -> pagingData.map { it.toMediaItemVO() } }
             else

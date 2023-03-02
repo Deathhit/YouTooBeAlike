@@ -2,7 +2,7 @@ package com.deathhit.data.media_item
 
 import androidx.paging.*
 import com.deathhit.data.media_item.model.MediaItemDO
-import com.deathhit.data.media_item.model.MediaItemSourceType
+import com.deathhit.data.media_item.model.MediaItemLabel
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
 import kotlinx.coroutines.flow.Flow
@@ -17,15 +17,15 @@ internal class MediaItemRepositoryImp(
         private const val PAGE_SIZE = 5 //PAGE_SIZE should be much larger. This is for demo purpose.
     }
 
-    override suspend fun clearAll(mediaItemSourceType: MediaItemSourceType) =
-        mediaItemLocalDataSource.clearAll(mediaItemSourceType)
+    override suspend fun clearAll(mediaItemLabel: MediaItemLabel) =
+        mediaItemLocalDataSource.clearAll(mediaItemLabel)
 
     override fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemDO?> =
         mediaItemLocalDataSource.getMediaItemFlowById(mediaItemId).map { it?.toDO() }
 
     override fun getMediaItemPagingDataFlow(
         exclusiveId: String?,
-        mediaItemSourceType: MediaItemSourceType,
+        mediaItemLabel: MediaItemLabel,
         subtitle: String?
     ): Flow<PagingData<MediaItemDO>> = Pager(
         PagingConfig(PAGE_SIZE),
@@ -34,10 +34,10 @@ internal class MediaItemRepositoryImp(
             exclusiveId,
             mediaItemLocalDataSource,
             mediaItemRemoteDataSource,
-            mediaItemSourceType,
+            mediaItemLabel,
             subtitle
         )
     ) {
-        mediaItemLocalDataSource.getMediaItemPagingSource(mediaItemSourceType)
+        mediaItemLocalDataSource.getMediaItemPagingSource(mediaItemLabel)
     }.flow.map { pagingData -> pagingData.map { it.toDO() } }
 }

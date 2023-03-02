@@ -5,7 +5,8 @@ import androidx.room.withTransaction
 import com.deathhit.core.database.AppDatabase
 import com.deathhit.core.database.model.MediaItemEntity
 import com.deathhit.core.database.model.RemoteKeyEntity
-import com.deathhit.data.media_item.model.MediaItemSourceType
+import com.deathhit.data.media_item.model.MediaItemLabel
+import com.deathhit.data.media_item.toLabel
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -14,35 +15,37 @@ internal class MediaItemLocalDataSource @Inject constructor(private val appDatab
     private val mediaItemDao = appDatabase.mediaItemDao()
     private val remoteKeyDao = appDatabase.remoteKeyDao()
 
-    suspend fun clearAll(mediaItemSourceType: MediaItemSourceType) =
-        mediaItemDao.clearAll(mediaItemSourceType.columnValue)
+    suspend fun clearAll(mediaItemLabel: MediaItemLabel) =
+        mediaItemDao.clearAll(mediaItemLabel.toLabel())
 
-    fun getMediaItemPagingSource(mediaItemSourceType: MediaItemSourceType): PagingSource<Int, MediaItemEntity> =
-        mediaItemDao.getPagingSource(mediaItemSourceType.columnValue)
+    fun getMediaItemPagingSource(mediaItemLabel: MediaItemLabel): PagingSource<Int, MediaItemEntity> =
+        mediaItemDao.getPagingSource(mediaItemLabel.toLabel())
 
     fun getMediaItemFlowById(mediaItemId: String) = mediaItemDao.getFlowById(mediaItemId)
 
-    suspend fun getNextMediaItemPageKey(mediaItemSourceType: MediaItemSourceType) =
+    suspend fun getNextMediaItemPageKey(mediaItemLabel: MediaItemLabel) =
         with(appDatabase) {
             withTransaction {
-                remoteKeyDao.getByLabel(mediaItemSourceType.remoteKeyLabel)?.nextKey
+                remoteKeyDao.getByLabel(mediaItemLabel.toLabel())?.nextKey
             }
         }
 
     suspend fun insertMediaItemPage(
         mediaItemList: List<MediaItemEntity>,
-        mediaItemSourceType: MediaItemSourceType,
+        mediaItemLabel: MediaItemLabel,
         isRefreshing: Boolean,
         pageIndex: Int,
     ) = with(appDatabase) {
         withTransaction {
+            val label = mediaItemLabel.toLabel()
+
             if (isRefreshing) {
-                mediaItemDao.clearAll(mediaItemSourceType.columnValue)
-                remoteKeyDao.clearAll(mediaItemSourceType.remoteKeyLabel)
+                mediaItemDao.clearAll(label)
+                remoteKeyDao.clearAll(label)
             }
 
             // Update RemoteKey for this query.
-            remoteKeyDao.upsert(RemoteKeyEntity(mediaItemSourceType.remoteKeyLabel, pageIndex + 1))
+            remoteKeyDao.upsert(RemoteKeyEntity(label, pageIndex + 1))
 
             // Insert the new data into database, which invalidates the
             // current PagingData, allowing Paging to present the updates

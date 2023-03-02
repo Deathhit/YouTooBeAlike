@@ -19,7 +19,7 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
 import com.deathhit.feature.media_item.MediaItemListFragment
-import com.deathhit.feature.media_item.model.MediaItemSourceType
+import com.deathhit.feature.media_item.model.MediaItemLabel
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
 import com.deathhit.feature.playback_details.PlaybackDetailsFragment
 import com.google.android.exoplayer2.C
@@ -347,7 +347,7 @@ class NavigationActivity : AppCompatActivity() {
                                         binding.containerNavigationTabPage.id,
                                         MediaItemListFragment.create(
                                             isPlayingInList,
-                                            MediaItemSourceType.DASHBOARD
+                                            MediaItemLabel.DASHBOARD
                                         ),
                                         TAG_DASHBOARD
                                     )
@@ -364,7 +364,7 @@ class NavigationActivity : AppCompatActivity() {
                                         binding.containerNavigationTabPage.id,
                                         MediaItemListFragment.create(
                                             isPlayingInList,
-                                            MediaItemSourceType.HOME
+                                            MediaItemLabel.HOME
                                         ),
                                         TAG_HOME
                                     )
@@ -381,7 +381,7 @@ class NavigationActivity : AppCompatActivity() {
                                         binding.containerNavigationTabPage.id,
                                         MediaItemListFragment.create(
                                             isPlayingInList,
-                                            MediaItemSourceType.NOTIFICATIONS
+                                            MediaItemLabel.NOTIFICATIONS
                                         ),
                                         TAG_NOTIFICATIONS
                                     )
