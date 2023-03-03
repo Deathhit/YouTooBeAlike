@@ -25,15 +25,15 @@ class PlaybackDetailsAdapter : ListAdapter<PlaybackDetailsVO, PlaybackDetailsVie
 
     override fun onBindViewHolder(holder: PlaybackDetailsViewHolder, position: Int) {
         holder.item = getItem(position)?.also { item ->
-            with(holder.binding.textViewDescription) {
+            holder.binding.textViewDescription.apply {
                 text = item.description
             }
 
-            with(holder.binding.textViewSubtitle) {
+            holder.binding.textViewSubtitle.apply {
                 text = item.subtitle
             }
 
-            with(holder.binding.textViewTitle) {
+            holder.binding.textViewTitle.apply {
                 text = item.title
             }
         }

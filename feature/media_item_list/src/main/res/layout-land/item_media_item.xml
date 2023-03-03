@@ -4,31 +4,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="0dp">
+    app:cardCornerRadius="0dp"
+    app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="16dp">
-
-        <com.google.android.exoplayer2.ui.StyledPlayerView
-            android:id="@+id/styledPlayerView"
-            style="@style/Widget.VideoListExample.PlayerView.List"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        android:padding="8dp">
 
         <ImageView
             android:id="@+id/imageView_thumbnail"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="168dp"
+            android:layout_height="88dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
             android:scaleType="centerCrop"
-            app:layout_constraintBottom_toBottomOf="@+id/styledPlayerView"
-            app:layout_constraintEnd_toEndOf="@+id/styledPlayerView"
-            app:layout_constraintStart_toStartOf="@+id/styledPlayerView"
-            app:layout_constraintTop_toTopOf="@+id/styledPlayerView"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:ignore="ContentDescription,ImageContrastCheck"
             tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
@@ -37,13 +30,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
             android:layout_marginEnd="16dp"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/styledPlayerView"
+            app:layout_constraintStart_toEndOf="@+id/imageView_thumbnail"
+            app:layout_constraintTop_toTopOf="@+id/imageView_thumbnail"
             tools:text="Title" />
 
         <TextView

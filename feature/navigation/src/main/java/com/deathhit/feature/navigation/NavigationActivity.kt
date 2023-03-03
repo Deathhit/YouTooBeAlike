@@ -315,7 +315,7 @@ class NavigationActivity : AppCompatActivity() {
                                 .placeholder(com.deathhit.core.ui.R.color.black)
                                 .override(
                                     Target.SIZE_ORIGINAL,
-                                    resources.getDimensionPixelSize(com.deathhit.core.ui.R.dimen.min_height_player_view_list)
+                                    resources.getDimensionPixelSize(com.deathhit.core.ui.R.dimen.min_height_player_view)
                                 )
                                 .into(object : CustomTarget<Drawable>() {
                                     override fun onResourceReady(

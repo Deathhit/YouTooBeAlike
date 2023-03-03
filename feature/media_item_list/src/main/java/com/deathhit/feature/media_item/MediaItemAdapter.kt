@@ -33,7 +33,7 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
         MediaItemViewHolder(
             ItemMediaItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         ).apply {
-            with(binding.styledPlayerView) {
+            binding.styledPlayerView?.apply {
                 //Prevents StyledPlayerView from blocking item views from being clicked.
                 isClickable = false
                 isFocusable = false
@@ -44,17 +44,17 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
 
     override fun onBindViewHolder(holder: MediaItemViewHolder, position: Int) {
         holder.item = getItem(position)?.also { item ->
-            with(holder.binding.imageViewThumbnail) {
+            holder.binding.imageViewThumbnail.apply {
                 glideRequestManager.load(item.thumbUrl)
                     .placeholder(com.deathhit.core.ui.R.color.black)
                     .into(this)
             }
 
-            with(holder.binding.textViewSubtitle) {
+            holder.binding.textViewSubtitle.apply {
                 text = item.subtitle
             }
 
-            with(holder.binding.textViewTitle) {
+            holder.binding.textViewTitle.apply {
                 text = item.title
             }
 
@@ -84,7 +84,7 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
         with(holder.binding) {
             glideRequestManager.clear(imageViewThumbnail)
 
-            styledPlayerView.player = null  //Releases the internal listeners from the player.
+            styledPlayerView?.player = null  //Releases the internal listeners from the player.
         }
     }
 
@@ -112,11 +112,11 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
         val isAtPlayPosition = holder.absoluteAdapterPosition == playPosition && player != null
         val isFirstFrameRendered = isAtPlayPosition && isFirstFrameRendered
 
-        with(holder.binding.imageViewThumbnail) {
+        holder.binding.imageViewThumbnail.apply {
             isInvisible = isFirstFrameRendered
         }
 
-        with(holder.binding.styledPlayerView) {
+        holder.binding.styledPlayerView?.apply {
             //Set the player to the player view first to render the first frame.
             player = if (isAtPlayPosition) this@MediaItemAdapter.player else null
 
@@ -124,10 +124,10 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
                 showController()
             else
                 hideController()
-        }
 
-        if (isAtPlayPosition)
-            onBindPlayPosition(item)
+            if (isAtPlayPosition)
+                onBindPlayPosition(item)
+        }
     }
 
     abstract fun onBindPlayPosition(item: MediaItemVO)
