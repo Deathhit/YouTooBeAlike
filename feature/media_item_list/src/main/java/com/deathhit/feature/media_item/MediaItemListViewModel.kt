@@ -24,13 +24,13 @@ class MediaItemListViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private const val TAG = "MediaItemListViewModel"
-        private const val KEY_IS_PLAYING = "$TAG.KEY_IS_PLAYING"
-        private const val KEY_MEDIA_ITEM_SOURCE_TYPE = "$TAG.KEY_MEDIA_ITEM_SOURCE_TYPE"
+        private const val KEY_IS_FIRST_FRAME_RENDERED = "$TAG.KEY_IS_FIRST_FRAME_RENDERED"
+        private const val KEY_IS_FIRST_PAGE_LOADED = "$TAG.KEY_IS_FIRST_PAGE_LOADED"
+        private const val KEY_MEDIA_ITEM_LABEL = "$TAG.KEY_MEDIA_ITEM_LABEL"
 
-        fun createArgs(isPlaying: Boolean, mediaItemLabel: MediaItemLabel) =
+        fun createArgs(mediaItemLabel: MediaItemLabel) =
             Bundle().apply {
-                putBoolean(KEY_IS_PLAYING, isPlaying)
-                putSerializable(KEY_MEDIA_ITEM_SOURCE_TYPE, mediaItemLabel)
+                putSerializable(KEY_MEDIA_ITEM_LABEL, mediaItemLabel)
             }
     }
 
@@ -38,8 +38,9 @@ class MediaItemListViewModel @Inject constructor(
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
         val isFirstPageLoaded: Boolean,
-        val isPlaying: Boolean,
+        val isPlayerSet: Boolean,
         val mediaItemLabel: MediaItemLabel,
+        val playItem: MediaItemVO?,
         val playPosition: Int?
     ) {
         sealed interface Action {
@@ -53,11 +54,12 @@ class MediaItemListViewModel @Inject constructor(
         MutableStateFlow(
             State(
                 actions = emptyList(),
-                isFirstFrameRendered = false,
-                isFirstPageLoaded = false,
-                isPlaying = savedStateHandle[KEY_IS_PLAYING] ?: true,
-                mediaItemLabel = savedStateHandle[KEY_MEDIA_ITEM_SOURCE_TYPE]
+                isFirstFrameRendered = savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] ?: false,
+                isFirstPageLoaded = savedStateHandle[KEY_IS_FIRST_PAGE_LOADED] ?: false,
+                isPlayerSet = false,
+                mediaItemLabel = savedStateHandle[KEY_MEDIA_ITEM_LABEL]
                     ?: throw RuntimeException("mediaItemLabel can not be null!"),
+                playItem = null,
                 playPosition = null
             )
         )
@@ -65,13 +67,22 @@ class MediaItemListViewModel @Inject constructor(
 
     val mediaItemPagingDataFlow =
         stateFlow.map { it.mediaItemLabel }.distinctUntilChanged().flatMapLatest {
-            mediaItemRepository.getMediaItemPagingDataFlow(mediaItemLabel = mediaItemSourceType.toDO())
+            mediaItemRepository.getMediaItemPagingDataFlow(mediaItemLabel = mediaItemLabel.toDO())
                 .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
         }.cachedIn(viewModelScope)
 
+    private val isFirstFrameRendered get() = stateFlow.value.isFirstFrameRendered
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
-    private val isPlaying get() = stateFlow.value.isPlaying
-    private val mediaItemSourceType get() = stateFlow.value.mediaItemLabel
+    private val isPlayerSet get() = stateFlow.value.isPlayerSet
+    private val mediaItemLabel get() = stateFlow.value.mediaItemLabel
+    private val playItem get() = stateFlow.value.playItem
+    private val playPosition get() = stateFlow.value.playPosition
+
+    fun notifyFirstFrameRendered() {
+        _stateFlow.update { state ->
+            state.copy(isFirstFrameRendered = true)
+        }
+    }
 
     fun onAction(action: State.Action) {
         _stateFlow.update { state ->
@@ -86,17 +97,22 @@ class MediaItemListViewModel @Inject constructor(
     }
 
     fun prepareItemAndPlay(item: MediaItemVO?) {
-        if (!isPlaying)
+        if (!isPlayerSet || item == playItem)
             return
 
         _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.PrepareItemAndPlay(item))
+            state.copy(
+                actions = state.actions + State.Action.PrepareItemAndPlay(item),
+                isFirstFrameRendered = false,
+                playItem = item
+            )
         }
     }
 
     fun saveState() {
-        savedStateHandle[KEY_IS_PLAYING] = isPlaying
-        savedStateHandle[KEY_MEDIA_ITEM_SOURCE_TYPE] = mediaItemSourceType
+        savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] = isFirstFrameRendered
+        savedStateHandle[KEY_IS_FIRST_PAGE_LOADED] = isFirstPageLoaded
+        savedStateHandle[KEY_MEDIA_ITEM_LABEL] = mediaItemLabel
     }
 
     fun scrollToTopOnFirstPageLoaded() {
@@ -108,19 +124,19 @@ class MediaItemListViewModel @Inject constructor(
         }
     }
 
-    fun setIsFirstFrameRendered(isFirstFrameRendered: Boolean) {
-        _stateFlow.update { state ->
-            state.copy(isFirstFrameRendered = isFirstFrameRendered)
-        }
-    }
+    fun setIsPlayerSet(isPlayerSet: Boolean) {
+        if (isPlayerSet == this.isPlayerSet)
+            return
 
-    fun setIsPlaying(isPlaying: Boolean) {
         _stateFlow.update { state ->
-            state.copy(isPlaying = isPlaying)
+            state.copy(isPlayerSet = isPlayerSet, playItem = null)
         }
     }
 
     fun setPlayPosition(playPosition: Int?) {
+        if (playPosition == this.playPosition)
+          return
+
         _stateFlow.update { state ->
             state.copy(playPosition = playPosition)
         }

@@ -136,6 +136,8 @@ class PlaybackDetailsFragment : Fragment() {
     }
 
     fun setPlayableItemId(playableItemId: String?) {
-        viewModel.setPlayItemId(playableItemId)
+        lifecycleScope.launchWhenCreated {
+            viewModel.setPlayItemId(playableItemId)
+        }
     }
 }

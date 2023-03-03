@@ -26,9 +26,9 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MediaItemListFragment : Fragment() {
     companion object {
-        fun create(isPlayingInList: Boolean, mediaItemLabel: MediaItemLabel) =
+        fun create(mediaItemLabel: MediaItemLabel) =
             MediaItemListFragment().apply {
-                arguments = MediaItemListViewModel.createArgs(isPlayingInList, mediaItemLabel)
+                arguments = MediaItemListViewModel.createArgs(mediaItemLabel)
             }
     }
 
@@ -38,16 +38,6 @@ class MediaItemListFragment : Fragment() {
     }
 
     var callback: Callback? = null
-
-    var player: Player? = null
-        set(value) {
-            if(value == field)
-                return
-
-            field?.removeListener(playerListener)
-            field = value?.apply { addListener(playerListener) }
-            _mediaItemAdapter?.setPlayer(player)
-        }
 
     private val binding get() = _binding!!
     private var _binding: FragmentMediaItemListBinding? = null
@@ -67,6 +57,8 @@ class MediaItemListFragment : Fragment() {
     private val mediaItemAdapter get() = _mediaItemAdapter!!
     private var _mediaItemAdapter: MediaItemAdapter? = null
 
+    private var player: Player? = null
+
     private val onScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
@@ -77,13 +69,7 @@ class MediaItemListFragment : Fragment() {
     private val playerListener = object : Player.Listener {
         override fun onRenderedFirstFrame() {
             super.onRenderedFirstFrame()
-            viewModel.setIsFirstFrameRendered(true)
-        }
-
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            super.onPlaybackStateChanged(playbackState)
-            if (playbackState == Player.STATE_IDLE)
-                viewModel.setIsFirstFrameRendered(false)
+            viewModel.notifyFirstFrameRendered()
         }
     }
 
@@ -111,7 +97,7 @@ class MediaItemListFragment : Fragment() {
                 override fun onClickItem(item: MediaItemVO) {
                     viewModel.openItem(item)
                 }
-            }.apply { setPlayer(player?.apply { addListener(playerListener) }) }.also {
+            }.also {
                 adapter =
                     it.apply {
                         addOnPagesUpdatedListener {
@@ -163,12 +149,12 @@ class MediaItemListFragment : Fragment() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.isPlaying }.distinctUntilChanged().collect {
+                    viewModel.stateFlow.map { it.isPlayerSet }.distinctUntilChanged().collect {
                         //The Runnable has the potential to outlive the viewLifecycleScope,
                         // so we use an extra launch{} to make sure it only runs within the scope.
                         binding.recyclerView.post {
                             launch {
-                                mediaItemAdapter.notifyIsPlayingByAdapter(it)
+                                mediaItemAdapter.notifyPlayerChanged(player)
                             }
                         }
                     }
@@ -234,7 +220,15 @@ class MediaItemListFragment : Fragment() {
         super.onSaveInstanceState(outState)
     }
 
-    fun setIsPlaying(isPlaying: Boolean) {
-        viewModel.setIsPlaying(isPlaying)
+    fun setPlayer(player: Player?) {
+        if (player == this.player)
+            return
+
+        this.player?.removeListener(playerListener)
+        this.player = player?.apply { addListener(playerListener) }
+
+        lifecycleScope.launchWhenCreated {
+            viewModel.setIsPlayerSet(this@MediaItemListFragment.player != null)
+        }
     }
 }

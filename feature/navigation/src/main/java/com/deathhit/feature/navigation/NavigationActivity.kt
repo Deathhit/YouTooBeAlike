@@ -46,12 +46,15 @@ class NavigationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityNavigationBinding
 
     private val viewModel: NavigationActivityViewModel by viewModels()
-    private val isPlayingByTab get() = viewModel.stateFlow.value.isPlayingByTab
 
     private lateinit var glideRequestManager: RequestManager
 
-    private var mediaSession: MediaSessionCompat? = null
-    private var player: Player? = null
+    private val mediaSession get() = _mediaSession!!
+    private var _mediaSession: MediaSessionCompat? = null
+
+    private val player get() = _player!!
+    private var _player: Player? = null
+
     private var thumbnailGlideTarget: Target<Drawable>? = null
 
     private val dashboardFragment
@@ -73,16 +76,16 @@ class NavigationActivity : AppCompatActivity() {
         object : MediaPlayerService.ServiceConnection() {
             override fun onServiceConnected(binder: MediaPlayerService.ServiceBinder) {
                 with(binder.service) {
-                    this@NavigationActivity.mediaSession = mediaSession
+                    this@NavigationActivity._mediaSession = mediaSession
 
-                    this@NavigationActivity.player = player.apply {
+                    this@NavigationActivity._player = player.apply {
                         addListener(playerListener)
                     }
                 }
 
                 viewModel.setIsPlayerConnected(true)
 
-                if (player?.playbackState != Player.STATE_READY)
+                if (player.playbackState == Player.STATE_IDLE)
                     viewModel.resumePlayerViewPlayback()
             }
         }
@@ -141,10 +144,10 @@ class NavigationActivity : AppCompatActivity() {
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
-            mediaSession!!.isActive = isPlaying
+            mediaSession.isActive = isPlaying
 
             if (!isPlaying)
-                player!!.run {
+                player.run {
                     viewModel.savePlayItemPosition(
                         playbackState == Player.STATE_ENDED,
                         currentPosition
@@ -154,14 +157,13 @@ class NavigationActivity : AppCompatActivity() {
 
         override fun onRenderedFirstFrame() {
             super.onRenderedFirstFrame()
-            viewModel.setIsFirstFrameRendered(true)
+            viewModel.notifyFirstFrameRendered()
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
             when (playbackState) {
                 Player.STATE_ENDED -> viewModel.showPlayerViewControls()
-                Player.STATE_IDLE -> viewModel.setIsFirstFrameRendered(false)
                 else -> {}
             }
         }
@@ -189,6 +191,13 @@ class NavigationActivity : AppCompatActivity() {
                     }
                 }
             }
+
+            when (fragment.tag) {
+                TAG_DASHBOARD -> NavigationActivityViewModel.State.Tab.DASHBOARD
+                TAG_HOME -> NavigationActivityViewModel.State.Tab.HOME
+                TAG_NOTIFICATIONS -> NavigationActivityViewModel.State.Tab.NOTIFICATIONS
+                else -> null
+            }?.let { viewModel.addAttachedTab(it) }
         }
 
         super.onCreate(savedInstanceState)
@@ -247,9 +256,9 @@ class NavigationActivity : AppCompatActivity() {
                                         setTransition(R.id.hide)
                                         transitionToEnd()
                                     }
-                                    NavigationActivityViewModel.State.Action.PauseMedia -> player?.pause()
-                                    NavigationActivityViewModel.State.Action.PlayMedia -> player?.play()
-                                    is NavigationActivityViewModel.State.Action.PrepareMedia -> player?.run {
+                                    NavigationActivityViewModel.State.Action.PauseMedia -> player.pause()
+                                    NavigationActivityViewModel.State.Action.PlayMedia -> player.play()
+                                    is NavigationActivityViewModel.State.Action.PrepareMedia -> player.run {
                                         setMediaItem(
                                             MediaItem.fromUri(action.sourceUrl),
                                             if (action.isEnded) C.TIME_UNSET else action.position
@@ -257,7 +266,7 @@ class NavigationActivity : AppCompatActivity() {
                                         prepare()
                                     }
                                     NavigationActivityViewModel.State.Action.ShowPlayerViewControls -> binding.playerView.showController()
-                                    NavigationActivityViewModel.State.Action.StopMedia -> player?.stop()
+                                    NavigationActivityViewModel.State.Action.StopMedia -> player.stop()
                                 }
 
                                 viewModel.onAction(action)
@@ -294,14 +303,6 @@ class NavigationActivity : AppCompatActivity() {
                                 this.player = player
                             }
                         }
-                }
-
-                launch {
-                    viewModel.stateFlow.map { it.isPlayingByTab }.distinctUntilChanged().collect {
-                        dashboardFragment?.player = player
-                        homeFragment?.player = player
-                        notificationsFragment?.player = player
-                    }
                 }
 
                 launch {
@@ -343,64 +344,64 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.playTab }.distinctUntilChanged().collect {
-                        dashboardFragment?.setIsPlaying(it == NavigationActivityViewModel.State.Tab.DASHBOARD)
-                        homeFragment?.setIsPlaying(it == NavigationActivityViewModel.State.Tab.HOME)
-                        notificationsFragment?.setIsPlaying(it == NavigationActivityViewModel.State.Tab.NOTIFICATIONS)
-                    }
+                    viewModel.stateFlow.map { it.playTab }.distinctUntilChanged()
+                        .collect { playTab ->
+                            dashboardFragment?.setPlayer(
+                                if (playTab == NavigationActivityViewModel.State.Tab.DASHBOARD)
+                                    player
+                                else
+                                    null
+                            )
+                            homeFragment?.setPlayer(
+                                if (playTab == NavigationActivityViewModel.State.Tab.HOME)
+                                    player
+                                else
+                                    null
+                            )
+                            notificationsFragment?.setPlayer(
+                                if (playTab == NavigationActivityViewModel.State.Tab.NOTIFICATIONS)
+                                    player
+                                else
+                                    null
+                            )
+                        }
                 }
 
                 launch {
                     viewModel.stateFlow.map { it.tab }.distinctUntilChanged().collect { tab ->
-                        when (tab) {
-                            NavigationActivityViewModel.State.Tab.DASHBOARD -> {
-                                supportFragmentManager.commit {
-                                    dashboardFragment?.let { show(it) } ?: add(
-                                        binding.containerNavigationTabPage.id,
-                                        MediaItemListFragment.create(
-                                            isPlayingByTab,
-                                            MediaItemLabel.DASHBOARD
-                                        ),
-                                        TAG_DASHBOARD
-                                    )
-                                    homeFragment?.let { hide(it) }
-                                    notificationsFragment?.let { hide(it) }
-                                }
+                        binding.bottomNavigationView.selectedItemId = when (tab) {
+                            NavigationActivityViewModel.State.Tab.DASHBOARD -> R.id.dashboard
+                            NavigationActivityViewModel.State.Tab.HOME -> R.id.home
+                            NavigationActivityViewModel.State.Tab.NOTIFICATIONS -> R.id.notifications
+                        }
 
-                                binding.bottomNavigationView.selectedItemId = R.id.dashboard
-                            }
-                            NavigationActivityViewModel.State.Tab.HOME -> {
-                                supportFragmentManager.commit {
-                                    dashboardFragment?.let { hide(it) }
-                                    homeFragment?.let { show(it) } ?: add(
-                                        binding.containerNavigationTabPage.id,
-                                        MediaItemListFragment.create(
-                                            isPlayingByTab,
-                                            MediaItemLabel.HOME
-                                        ),
-                                        TAG_HOME
-                                    )
-                                    notificationsFragment?.let { hide(it) }
-                                }
+                        supportFragmentManager.commit {
+                            if (tab == NavigationActivityViewModel.State.Tab.DASHBOARD)
+                                dashboardFragment?.let { show(it) } ?: add(
+                                    binding.containerNavigationTabPage.id,
+                                    MediaItemListFragment.create(MediaItemLabel.DASHBOARD),
+                                    TAG_DASHBOARD
+                                )
+                            else
+                                dashboardFragment?.let { hide(it) }
 
-                                binding.bottomNavigationView.selectedItemId = R.id.home
-                            }
-                            NavigationActivityViewModel.State.Tab.NOTIFICATIONS -> {
-                                supportFragmentManager.commit {
-                                    dashboardFragment?.let { hide(it) }
-                                    homeFragment?.let { hide(it) }
-                                    notificationsFragment?.let { show(it) } ?: add(
-                                        binding.containerNavigationTabPage.id,
-                                        MediaItemListFragment.create(
-                                            isPlayingByTab,
-                                            MediaItemLabel.NOTIFICATIONS
-                                        ),
-                                        TAG_NOTIFICATIONS
-                                    )
-                                }
+                            if (tab == NavigationActivityViewModel.State.Tab.HOME)
+                                homeFragment?.let { show(it) } ?: add(
+                                    binding.containerNavigationTabPage.id,
+                                    MediaItemListFragment.create(MediaItemLabel.HOME),
+                                    TAG_HOME
+                                )
+                            else
+                                homeFragment?.let { hide(it) }
 
-                                binding.bottomNavigationView.selectedItemId = R.id.notifications
-                            }
+                            if (tab == NavigationActivityViewModel.State.Tab.NOTIFICATIONS)
+                                notificationsFragment?.let { show(it) } ?: add(
+                                    binding.containerNavigationTabPage.id,
+                                    MediaItemListFragment.create(MediaItemLabel.NOTIFICATIONS),
+                                    TAG_NOTIFICATIONS
+                                )
+                            else
+                                notificationsFragment?.let { hide(it) }
                         }
                     }
                 }
@@ -437,7 +438,10 @@ class NavigationActivity : AppCompatActivity() {
         binding.playerControlViewPlayPause.player = null
         binding.playerView.player = null
 
-        player?.removeListener(playerListener)
+        _mediaSession = null
+
+        _player?.removeListener(playerListener)
+        _player = null
 
         MediaPlayerService.unbindService(this, mediaPlayerServiceConnection)
         if (isFinishing)

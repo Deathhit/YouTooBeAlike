@@ -1,8 +1,8 @@
 package com.deathhit.feature.media_item
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isInvisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.bumptech.glide.RequestManager
@@ -26,7 +26,6 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
     }
 
     private var isFirstFrameRendered = false
-    private var isPlayingByAdapter = true
     private var player: Player? = null
     private var playPosition: Int? = null   //This is an absoluteAdapterPosition.
 
@@ -95,10 +94,10 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
         notifyPlayPositionChanged(playPosition)
     }
 
-    fun notifyIsPlayingByAdapter(isPlayingByAdapter: Boolean) {
-        this.isPlayingByAdapter = isPlayingByAdapter
+    fun notifyPlayerChanged(player: Player?) {
+        this.player = player
 
-        notifyPlayPositionChanged(playPosition)
+        notifyIsFirstFrameRendered(isFirstFrameRendered)
     }
 
     fun notifyPlayPositionChanged(playPosition: Int?) {
@@ -109,21 +108,12 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
         this.playPosition?.let { notifyItemChanged(it, PAYLOAD_PLAY_POSITION) }
     }
 
-    fun setPlayer(player: Player?) {
-        this.player = player
-
-        notifyIsFirstFrameRendered(false)
-    }
-
     private fun bindPlayPosition(holder: MediaItemViewHolder, item: MediaItemVO) {
-        val isAtPlayPosition = holder.absoluteAdapterPosition == playPosition && isPlayingByAdapter
+        val isAtPlayPosition = holder.absoluteAdapterPosition == playPosition && player != null
         val isFirstFrameRendered = isAtPlayPosition && isFirstFrameRendered
 
         with(holder.binding.imageViewThumbnail) {
-            visibility = if (isFirstFrameRendered)
-                View.INVISIBLE
-            else
-                View.VISIBLE
+            isInvisible = isFirstFrameRendered
         }
 
         with(holder.binding.styledPlayerView) {
