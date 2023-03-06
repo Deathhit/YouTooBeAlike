@@ -88,19 +88,14 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
         }
     }
 
-    fun notifyIsFirstFrameRendered(isFirstFrameRendered: Boolean) {
+    fun notifyListStateChanged(isFirstFrameRendered: Boolean, player: Player?, playPosition: Int?) {
+        if (isFirstFrameRendered == this.isFirstFrameRendered && player == this.player && playPosition == this.playPosition)
+            return
+
         this.isFirstFrameRendered = isFirstFrameRendered
 
-        notifyPlayPositionChanged(playPosition)
-    }
-
-    fun notifyPlayerChanged(player: Player?) {
         this.player = player
 
-        notifyIsFirstFrameRendered(isFirstFrameRendered)
-    }
-
-    fun notifyPlayPositionChanged(playPosition: Int?) {
         val oldPlayPosition = this.playPosition
         this.playPosition = playPosition
 
@@ -118,7 +113,7 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
 
         holder.binding.styledPlayerView?.apply {
             //Set the player to the player view first to render the first frame.
-            player = if (isAtPlayPosition) this@MediaItemAdapter.player else null
+            player = if (isAtPlayPosition) this@MediaItemAdapter.player else null   //todo setting player cause isFirstFrameRendered being updated
 
             if (isFirstFrameRendered)
                 showController()

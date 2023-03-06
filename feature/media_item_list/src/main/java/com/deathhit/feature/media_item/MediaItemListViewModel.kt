@@ -48,13 +48,22 @@ class MediaItemListViewModel @Inject constructor(
             data class PrepareItemAndPlay(val item: MediaItemVO?) : Action
             object ScrollToTop : Action
         }
+
+        data class ListState(
+            val isFirstFrameRendered: Boolean,
+            val isPlayerSet: Boolean,
+            val playPosition: Int?
+        )
+
+        val listState = ListState(isFirstFrameRendered, isPlayerSet, playPosition)
     }
 
     private val _stateFlow =
         MutableStateFlow(
             State(
                 actions = emptyList(),
-                isFirstFrameRendered = savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] ?: false,
+                isFirstFrameRendered = savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED]
+                    ?: false,  //todo do we need to save this?
                 isFirstPageLoaded = savedStateHandle[KEY_IS_FIRST_PAGE_LOADED] ?: false,
                 isPlayerSet = false,
                 mediaItemLabel = savedStateHandle[KEY_MEDIA_ITEM_LABEL]
@@ -103,7 +112,6 @@ class MediaItemListViewModel @Inject constructor(
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.PrepareItemAndPlay(item),
-                isFirstFrameRendered = false,
                 playItem = item
             )
         }
@@ -135,10 +143,10 @@ class MediaItemListViewModel @Inject constructor(
 
     fun setPlayPosition(playPosition: Int?) {
         if (playPosition == this.playPosition)
-          return
+            return
 
         _stateFlow.update { state ->
-            state.copy(playPosition = playPosition)
+            state.copy(isFirstFrameRendered = false, playPosition = playPosition)
         }
 
         if (playPosition == null)

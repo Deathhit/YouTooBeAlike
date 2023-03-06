@@ -157,13 +157,14 @@ class NavigationActivity : AppCompatActivity() {
 
         override fun onRenderedFirstFrame() {
             super.onRenderedFirstFrame()
-            viewModel.notifyFirstFrameRendered()
+            viewModel.setIsFirstFrameRendered(true)
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
             when (playbackState) {
                 Player.STATE_ENDED -> viewModel.showPlayerViewControls()
+                Player.STATE_IDLE -> viewModel.setIsFirstFrameRendered(false)
                 else -> {}
             }
         }

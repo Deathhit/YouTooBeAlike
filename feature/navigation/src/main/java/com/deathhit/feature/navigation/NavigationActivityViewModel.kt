@@ -76,7 +76,7 @@ class NavigationActivityViewModel @Inject constructor(
             State(
                 actions = emptyList(),
                 attachedTabs = emptySet(),
-                isFirstFrameRendered = savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] ?: false,
+                isFirstFrameRendered = savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] ?: false,  //todo do we need to save this?
                 isForTabToPlay = savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] ?: true,
                 isPlayerConnected = false,
                 isPlayerViewExpanded = savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] ?: false,
@@ -141,12 +141,6 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
-    fun notifyFirstFrameRendered() {
-        _stateFlow.update { state ->
-            state.copy(isFirstFrameRendered = true)
-        }
-    }
-
     fun onAction(action: State.Action) {
         _stateFlow.update { state ->
             state.copy(actions = state.actions - action)
@@ -175,6 +169,9 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun prepareItemAndPlay(itemId: String?) {
+        if (itemId == pendingPlayItemId)
+            return
+
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.PlayMedia)
         }
@@ -213,6 +210,12 @@ class NavigationActivityViewModel @Inject constructor(
         savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] = isPlayerViewExpanded
         savedStateHandle[KEY_PLAY_ITEM_ID] = playItemId
         savedStateHandle[KEY_TAB] = tab
+    }
+
+    fun setIsFirstFrameRendered(isFirstFrameRendered: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isFirstFrameRendered = isFirstFrameRendered)
+        }
     }
 
     fun setIsPlayerConnected(isPlayerConnected: Boolean) {
@@ -257,7 +260,6 @@ class NavigationActivityViewModel @Inject constructor(
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.StopMedia,
-                isFirstFrameRendered = false,
                 pendingPlayItemId = itemId
             )
         }

@@ -136,41 +136,15 @@ class MediaItemListFragment : Fragment() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.isFirstFrameRendered }.distinctUntilChanged()
-                        .collect {
-                            //The Runnable has the potential to outlive the viewLifecycleScope,
-                            // so we use an extra launch{} to make sure it only runs within the scope.
-                            binding.recyclerView.post {
-                                launch {
-                                    mediaItemAdapter.notifyIsFirstFrameRendered(it)
-                                }
-                            }
-                        }
-                }
-
-                launch {
-                    viewModel.stateFlow.map { it.isPlayerSet }.distinctUntilChanged().collect {
+                    viewModel.stateFlow.map { it.listState }.distinctUntilChanged().collect {
                         //The Runnable has the potential to outlive the viewLifecycleScope,
                         // so we use an extra launch{} to make sure it only runs within the scope.
                         binding.recyclerView.post {
                             launch {
-                                mediaItemAdapter.notifyPlayerChanged(player)
+                                mediaItemAdapter.notifyListStateChanged(it.isFirstFrameRendered, player, it.playPosition)
                             }
                         }
                     }
-                }
-
-                launch {
-                    viewModel.stateFlow.map { it.playPosition }.distinctUntilChanged()
-                        .collect {
-                            //The Runnable has the potential to outlive the viewLifecycleScope,
-                            // so we use an extra launch{} to make sure it only runs within the scope.
-                            binding.recyclerView.post {
-                                launch {
-                                    mediaItemAdapter.notifyPlayPositionChanged(it)
-                                }
-                            }
-                        }
                 }
             }
         }
