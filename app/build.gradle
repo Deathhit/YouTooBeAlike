@@ -9,7 +9,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.deathhit.video_list_example"
+        applicationId "com.deathhit.you_too_be_alike"
         minSdk 24
         targetSdk 33
         versionCode 1
@@ -35,7 +35,7 @@ android {
         jvmTarget = '1.8'
     }
 
-    namespace 'com.deathhit.video_list_example'
+    namespace 'com.deathhit.you_too_be_alike'
 }
 
 dependencies {

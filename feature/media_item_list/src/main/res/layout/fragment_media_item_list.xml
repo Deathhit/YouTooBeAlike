@@ -13,7 +13,6 @@
             android:id="@+id/materialToolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/purple_500"
             app:layout_scrollFlags="scroll|enterAlways"
             app:title="@string/app_name" />
 

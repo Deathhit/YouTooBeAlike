@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Widget.VideoListExample.PlayerView" parent="">
+    <style name="Widget.YouTooBeAlike.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:minHeight">56dp</item>
+        <item name="itemPaddingBottom">8dp</item>
+        <item name="itemPaddingTop">4dp</item>
+    </style>
+
+    <style name="Widget.YouTooBeAlike.PlayerView" parent="">
         <item name="bar_height">3dp</item>
         <item name="buffered_color">@color/grey_200</item>
         <item name="played_color">@color/purple_200</item>
@@ -9,7 +15,7 @@
         <item name="scrubber_enabled_size">12dp</item>
     </style>
 
-    <style name="Widget.VideoListExample.PlayerView.List" parent="Widget.VideoListExample.PlayerView">
+    <style name="Widget.YouTooBeAlike.PlayerView.List" parent="Widget.YouTooBeAlike.PlayerView">
         <item name="android:minHeight">@dimen/min_height_player_view</item>
         <item name="auto_show">false</item>
         <item name="controller_layout_id">@layout/block_player_control_list</item>
@@ -20,7 +26,7 @@
         <item name="show_timeout">0</item>
     </style>
 
-    <style name="Widget.VideoListExample.PlayerView.PlayPause" parent="Widget.VideoListExample.PlayerView">
+    <style name="Widget.YouTooBeAlike.PlayerView.PlayPause" parent="Widget.YouTooBeAlike.PlayerView">
         <item name="android:minHeight">48dp</item>
         <item name="android:minWidth">48dp</item>
         <item name="auto_show">false</item>
@@ -28,11 +34,18 @@
         <item name="show_timeout">0</item>
     </style>
 
-    <style name="Widget.VideoListExample.PlayerView.Portrait" parent="Widget.VideoListExample.PlayerView">
+    <style name="Widget.YouTooBeAlike.PlayerView.Collapsible" parent="Widget.YouTooBeAlike.PlayerView">
         <item name="android:background">@color/black</item>
-        <item name="android:minHeight">@dimen/min_height_player_view_collapsed</item>
+        <item name="android:minHeight">@dimen/min_height_player_view_collapsible</item>
         <item name="auto_show">false</item>
-        <item name="controller_layout_id">@layout/block_player_control_portrait</item>
+        <item name="controller_layout_id">@layout/block_player_control_collapsible</item>
         <item name="resize_mode">zoom</item>
+    </style>
+
+    <!--Toolbar-->
+    <style name="Widget.YouTooBeAlike.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:background">@color/white</item>
+        <item name="titleTextColor">@color/purple_200</item>
     </style>
 </resources>

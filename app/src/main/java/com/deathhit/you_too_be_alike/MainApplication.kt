@@ -1,4 +1,4 @@
-package com.deathhit.video_list_example
+package com.deathhit.you_too_be_alike
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

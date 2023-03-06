@@ -1,6 +1,6 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.VideoListExample" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.YouTooBeAlike" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
@@ -12,6 +12,8 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor" >?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
-        <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView</item> <!-- Use Material 2 Style-->
+        <item name="android:layoutDirection">ltr</item>
+        <item name="bottomNavigationStyle">@style/Widget.YouTooBeAlike.BottomNavigationView</item>
+        <item name="toolbarStyle">@style/Widget.YouTooBeAlike.Toolbar</item>
     </style>
 </resources>

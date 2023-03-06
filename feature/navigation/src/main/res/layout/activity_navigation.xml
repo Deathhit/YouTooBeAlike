@@ -39,7 +39,7 @@
 
     <com.google.android.exoplayer2.ui.StyledPlayerView
         android:id="@+id/playerView"
-        style="@style/Widget.VideoListExample.PlayerView.Portrait"
+        style="@style/Widget.YouTooBeAlike.PlayerView.Collapsible"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="@id/container_playerView"
@@ -105,7 +105,7 @@
 
     <com.google.android.exoplayer2.ui.StyledPlayerControlView
         android:id="@+id/playerControlView_playPause"
-        style="@style/Widget.VideoListExample.PlayerView.PlayPause"
+        style="@style/Widget.YouTooBeAlike.PlayerView.PlayPause"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="@id/container_playerView"
