@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deathhit.data.media_item.MediaItemRepository
-import com.deathhit.data.media_item.model.MediaItemDO
 import com.deathhit.data.media_progress.model.MediaProgressDO
 import com.deathhit.data.media_progress.MediaProgressRepository
 import com.deathhit.feature.media_item.model.MediaItemVO
@@ -28,8 +27,6 @@ class NavigationActivityViewModel @Inject constructor(
         private const val KEY_IS_PLAYER_VIEW_EXPANDED = "$TAG.KEY_IS_PLAYER_VIEW_EXPANDED"
         private const val KEY_PLAY_ITEM_ID = "$TAG.KEY_PLAY_ITEM_ID"
         private const val KEY_TAB = "$TAG.KEY_TAB"
-
-        private const val MEDIA_SWITCHING_DELAY = 500L
     }
 
     data class State(
@@ -39,7 +36,6 @@ class NavigationActivityViewModel @Inject constructor(
         val isForTabToPlay: Boolean,
         val isPlayerConnected: Boolean,
         val isPlayerViewExpanded: Boolean,
-        val pendingPlayItemId: String?,
         val playItem: MediaItemVO?,
         val playItemId: String?,
         val tab: Tab
@@ -48,16 +44,16 @@ class NavigationActivityViewModel @Inject constructor(
             object CollapsePlayerView : Action
             object ExpandPlayerView : Action
             object HidePlayerView : Action
-            object PauseMedia : Action
-            object PlayMedia : Action
-            data class PrepareMedia(
+            object PausePlayback : Action
+            object PlayPlayback : Action
+            data class PreparePlayback(
                 val isEnded: Boolean,
                 val position: Long,
                 val sourceUrl: String
             ) : Action
 
             object ShowPlayerViewControls : Action
-            object StopMedia : Action
+            object StopPlayback : Action
         }
 
         enum class Tab {
@@ -67,8 +63,8 @@ class NavigationActivityViewModel @Inject constructor(
         }
 
         val isPlayingByPlayerView = !isForTabToPlay && isPlayerConnected
-        val isPlayingByTab = isForTabToPlay && isPlayerConnected
-        val playTab = if (attachedTabs.contains(tab) && isPlayingByTab) tab else null
+        val playTab =
+            if (attachedTabs.contains(tab) && isForTabToPlay && isPlayerConnected) tab else null
     }
 
     private val _stateFlow =
@@ -76,11 +72,10 @@ class NavigationActivityViewModel @Inject constructor(
             State(
                 actions = emptyList(),
                 attachedTabs = emptySet(),
-                isFirstFrameRendered = savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] ?: false,  //todo do we need to save this?
+                isFirstFrameRendered = savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] ?: false,
                 isForTabToPlay = savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] ?: true,
                 isPlayerConnected = false,
                 isPlayerViewExpanded = savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] ?: false,
-                pendingPlayItemId = null,
                 playItem = null,
                 playItemId = savedStateHandle[KEY_PLAY_ITEM_ID],
                 tab = savedStateHandle[KEY_TAB] ?: State.Tab.HOME
@@ -92,21 +87,21 @@ class NavigationActivityViewModel @Inject constructor(
     private val isForTabToPlay get() = stateFlow.value.isForTabToPlay
     private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded
     private val isPlayingByPlayerView get() = stateFlow.value.isPlayingByPlayerView
-    private val isPlayingByTab get() = stateFlow.value.isPlayingByTab
-    private val pendingPlayItemId get() = stateFlow.value.pendingPlayItemId
     private val playItemId get() = stateFlow.value.playItemId
     private val tab get() = stateFlow.value.tab
 
-    private val playItemDOFlow: Flow<MediaItemDO?> =
+    private val playItemFlow: Flow<MediaItemVO?> =
         stateFlow.map { it.playItemId }.distinctUntilChanged().flatMapLatest { playItemId ->
-            playItemId?.let { mediaItemRepository.getMediaItemFlowById(it) } ?: flowOf(null)
+            playItemId?.let {
+                mediaItemRepository.getMediaItemFlowById(playItemId).map { it?.toMediaItemVO() }
+            } ?: flowOf(null)
         }
 
     private var prepareItemJob: Job? = null
 
     init {
         viewModelScope.launch {
-            playItemDOFlow.map { it?.toMediaItemVO() }.collectLatest {
+            playItemFlow.distinctUntilChanged().collectLatest {
                 _stateFlow.update { state ->
                     state.copy(playItem = it)
                 }
@@ -141,6 +136,12 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
+    fun notifyFirstFrameRendered() {
+        _stateFlow.update { state ->
+            state.copy(isFirstFrameRendered = true)
+        }
+    }
+
     fun onAction(action: State.Action) {
         _stateFlow.update { state ->
             state.copy(actions = state.actions - action)
@@ -150,9 +151,9 @@ class NavigationActivityViewModel @Inject constructor(
     fun openItem(itemId: String) {
         _stateFlow.update { state ->
             state.copy(
-                actions = state.actions + State.Action.ExpandPlayerView + State.Action.PlayMedia,
+                actions = state.actions + State.Action.ExpandPlayerView + State.Action.PlayPlayback,
                 isForTabToPlay = false,
-                pendingPlayItemId = null,
+                playItemId = null   //Clear previous content to prevent seeing it
             )
         }
 
@@ -164,28 +165,13 @@ class NavigationActivityViewModel @Inject constructor(
             return
 
         _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.PauseMedia)
+            state.copy(actions = state.actions + State.Action.PausePlayback)
         }
-    }
-
-    fun prepareItemAndPlay(itemId: String?) {
-        if (itemId == pendingPlayItemId)
-            return
-
-        _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.PlayMedia)
-        }
-
-        prepareItem(itemId)
     }
 
     fun resumePlayerViewPlayback() {
         if (!isPlayingByPlayerView)
             return
-
-        _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.PlayMedia, pendingPlayItemId = null)
-        }
 
         prepareItem(playItemId)
     }
@@ -212,12 +198,6 @@ class NavigationActivityViewModel @Inject constructor(
         savedStateHandle[KEY_TAB] = tab
     }
 
-    fun setIsFirstFrameRendered(isFirstFrameRendered: Boolean) {
-        _stateFlow.update { state ->
-            state.copy(isFirstFrameRendered = isFirstFrameRendered)
-        }
-    }
-
     fun setIsPlayerConnected(isPlayerConnected: Boolean) {
         _stateFlow.update { state ->
             state.copy(isPlayerConnected = isPlayerConnected)
@@ -237,9 +217,6 @@ class NavigationActivityViewModel @Inject constructor(
         _stateFlow.update { state ->
             state.copy(tab = tab)
         }
-
-        if (isPlayingByTab)
-            prepareItem(null)
     }
 
     fun showPlayerViewControls() {
@@ -252,15 +229,9 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     private fun prepareItem(itemId: String?) {
-        if (itemId == pendingPlayItemId)
-            return
-
-        //Stop the player before a new item is ready.
-        //Only set pendingPlayItem first to allow time to save media progress.
         _stateFlow.update { state ->
             state.copy(
-                actions = state.actions + State.Action.StopMedia,
-                pendingPlayItemId = itemId
+                actions = state.actions + State.Action.StopPlayback, isFirstFrameRendered = false
             )
         }
 
@@ -272,20 +243,18 @@ class NavigationActivityViewModel @Inject constructor(
                 state.copy(playItemId = itemId)
             }
 
-            delay(MEDIA_SWITCHING_DELAY)
+            val playItem = playItemFlow.first()
 
-            val itemDO = playItemDOFlow.first()
-
-            if (itemDO != null)
+            if (playItem != null)
                 _stateFlow.update { state ->
                     val progress =
-                        mediaProgressRepository.getMediaProgressByMediaItemId(itemDO.mediaItemId)
+                        mediaProgressRepository.getMediaProgressByMediaItemId(playItem.id)
 
                     state.copy(
-                        actions = state.actions + State.Action.PrepareMedia(
+                        actions = state.actions + State.Action.PreparePlayback(
                             progress?.isEnded ?: false,
                             progress?.position ?: 0L,
-                            itemDO.sourceUrl
+                            playItem.sourceUrl
                         )
                     )
                 }

@@ -157,14 +157,13 @@ class NavigationActivity : AppCompatActivity() {
 
         override fun onRenderedFirstFrame() {
             super.onRenderedFirstFrame()
-            viewModel.setIsFirstFrameRendered(true)
+            viewModel.notifyFirstFrameRendered()
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
             when (playbackState) {
                 Player.STATE_ENDED -> viewModel.showPlayerViewControls()
-                Player.STATE_IDLE -> viewModel.setIsFirstFrameRendered(false)
                 else -> {}
             }
         }
@@ -177,10 +176,6 @@ class NavigationActivity : AppCompatActivity() {
                     fragment.callback = object : MediaItemListFragment.Callback {
                         override fun onOpenItem(itemId: String) {
                             viewModel.openItem(itemId)
-                        }
-
-                        override fun onPrepareItemAndPlay(itemId: String?) {
-                            viewModel.prepareItemAndPlay(itemId)
                         }
                     }
                 }
@@ -257,9 +252,9 @@ class NavigationActivity : AppCompatActivity() {
                                         setTransition(R.id.hide)
                                         transitionToEnd()
                                     }
-                                    NavigationActivityViewModel.State.Action.PauseMedia -> player.pause()
-                                    NavigationActivityViewModel.State.Action.PlayMedia -> player.play()
-                                    is NavigationActivityViewModel.State.Action.PrepareMedia -> player.run {
+                                    NavigationActivityViewModel.State.Action.PausePlayback -> player.pause()
+                                    NavigationActivityViewModel.State.Action.PlayPlayback -> player.play()
+                                    is NavigationActivityViewModel.State.Action.PreparePlayback -> player.run {
                                         setMediaItem(
                                             MediaItem.fromUri(action.sourceUrl),
                                             if (action.isEnded) C.TIME_UNSET else action.position
@@ -267,7 +262,7 @@ class NavigationActivity : AppCompatActivity() {
                                         prepare()
                                     }
                                     NavigationActivityViewModel.State.Action.ShowPlayerViewControls -> binding.playerView.showController()
-                                    NavigationActivityViewModel.State.Action.StopMedia -> player.stop()
+                                    NavigationActivityViewModel.State.Action.StopPlayback -> player.stop()
                                 }
 
                                 viewModel.onAction(action)

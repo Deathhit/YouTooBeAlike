@@ -16,6 +16,8 @@ import com.deathhit.core.ui.AppLoadStateAdapter
 import com.deathhit.feature.media_item.model.MediaItemLabel
 import com.deathhit.feature.media_item.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.FragmentMediaItemListBinding
+import com.google.android.exoplayer2.C
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -34,7 +36,6 @@ class MediaItemListFragment : Fragment() {
 
     interface Callback {
         fun onOpenItem(itemId: String)
-        fun onPrepareItemAndPlay(itemId: String?)
     }
 
     var callback: Callback? = null
@@ -67,6 +68,17 @@ class MediaItemListFragment : Fragment() {
     }
 
     private val playerListener = object : Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            super.onIsPlayingChanged(isPlaying)
+            if (!isPlaying)
+                player?.run {
+                    viewModel.savePlayItemPosition(
+                        playbackState == Player.STATE_ENDED,
+                        currentPosition
+                    )
+                }
+        }
+
         override fun onRenderedFirstFrame() {
             super.onRenderedFirstFrame()
             viewModel.notifyFirstFrameRendered()
@@ -91,7 +103,7 @@ class MediaItemListFragment : Fragment() {
 
             _mediaItemAdapter = object : MediaItemAdapter(Glide.with(view)) {
                 override fun onBindPlayPosition(item: MediaItemVO) {
-                    viewModel.prepareItemAndPlay(item)
+                    viewModel.prepareItem(item)
                 }
 
                 override fun onClickItem(item: MediaItemVO) {
@@ -122,12 +134,18 @@ class MediaItemListFragment : Fragment() {
                                     is MediaItemListViewModel.State.Action.OpenItem -> callback?.onOpenItem(
                                         action.item.id
                                     )
-                                    is MediaItemListViewModel.State.Action.PrepareItemAndPlay -> callback?.onPrepareItemAndPlay(
-                                        action.item?.id
-                                    )
+                                    is MediaItemListViewModel.State.Action.PrepareAndPlayPlayback -> player?.run {
+                                        setMediaItem(
+                                            MediaItem.fromUri(action.sourceUrl),
+                                            if (action.isEnded) C.TIME_UNSET else action.position
+                                        )
+                                        prepare()
+                                        play()
+                                    }
                                     MediaItemListViewModel.State.Action.ScrollToTop -> binding.recyclerView.scrollToPosition(
                                         0
                                     )
+                                    MediaItemListViewModel.State.Action.StopPlayback -> player?.stop()
                                 }
 
                                 viewModel.onAction(action)
@@ -141,7 +159,11 @@ class MediaItemListFragment : Fragment() {
                         // so we use an extra launch{} to make sure it only runs within the scope.
                         binding.recyclerView.post {
                             launch {
-                                mediaItemAdapter.notifyListStateChanged(it.isFirstFrameRendered, player, it.playPosition)
+                                mediaItemAdapter.notifyListStateChanged(
+                                    it.isFirstFrameRendered,
+                                    player,
+                                    it.playPosition
+                                )
                             }
                         }
                     }
@@ -160,14 +182,14 @@ class MediaItemListFragment : Fragment() {
         super.onResume()
         binding.recyclerView.addOnScrollListener(onScrollListener)
 
-        viewModel.setPlayPosition(playPosition)
+        resumePlayPosition()
     }
 
     override fun onPause() {
         super.onPause()
         binding.recyclerView.removeOnScrollListener(onScrollListener)
 
-        viewModel.setPlayPosition(null)
+        clearPlayPosition()
     }
 
     override fun onDestroyView() {
@@ -186,7 +208,12 @@ class MediaItemListFragment : Fragment() {
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        viewModel.setPlayPosition(if (hidden) null else playPosition)
+        lifecycleScope.launchWhenStarted {
+            if (isHidden)
+                clearPlayPosition()
+            else
+                resumePlayPosition()
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -198,11 +225,26 @@ class MediaItemListFragment : Fragment() {
         if (player == this.player)
             return
 
-        this.player?.removeListener(playerListener)
+        this.player?.run {
+            stop()
+            removeListener(playerListener)
+        }
         this.player = player?.apply { addListener(playerListener) }
 
-        lifecycleScope.launchWhenCreated {
-            viewModel.setIsPlayerSet(this@MediaItemListFragment.player != null)
+        lifecycleScope.launchWhenStarted {
+            if (this@MediaItemListFragment.player == null)
+                clearPlayPosition()
+            else
+                resumePlayPosition()
         }
     }
+
+    private fun clearPlayPosition() {
+        viewModel.setPlayPosition(null)
+    }
+
+    private fun resumePlayPosition() {
+        viewModel.setPlayPosition(playPosition)
+    }
+
 }
