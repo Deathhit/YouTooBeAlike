@@ -335,7 +335,7 @@ class NavigationActivity : AppCompatActivity() {
                             text = it?.title
                         }
 
-                        playbackDetailsFragment?.setPlayableItemId(it?.id)
+                        playbackDetailsFragment?.setPlayItemId(it?.id)
                     }
                 }
 

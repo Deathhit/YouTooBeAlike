@@ -135,9 +135,9 @@ class PlaybackDetailsFragment : Fragment() {
         super.onSaveInstanceState(outState)
     }
 
-    fun setPlayableItemId(playableItemId: String?) {
+    fun setPlayItemId(playItemId: String?) {
         lifecycleScope.launchWhenCreated {
-            viewModel.setPlayItemId(playableItemId)
+            viewModel.setPlayItemId(playItemId)
         }
     }
 }

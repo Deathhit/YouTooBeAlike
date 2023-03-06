@@ -101,9 +101,6 @@ class PlaybackDetailsViewModel @Inject constructor(
     }
 
     fun setPlayItemId(playItemId: String?) {
-        if (playItemId == this.playItemId)
-            return
-
         _stateFlow.update { state ->
             state.copy(playItemId = playItemId)
         }

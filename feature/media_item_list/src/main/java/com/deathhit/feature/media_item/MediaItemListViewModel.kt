@@ -42,6 +42,7 @@ class MediaItemListViewModel @Inject constructor(
         val actions: List<Action>,
         val isFirstFrameRendered: Boolean,
         val isFirstPageLoaded: Boolean,
+        val isRefreshing: Boolean,
         val mediaItemLabel: MediaItemLabel,
         val playItem: MediaItemVO?,
         val playPosition: Int?
@@ -72,6 +73,7 @@ class MediaItemListViewModel @Inject constructor(
                 actions = emptyList(),
                 isFirstFrameRendered = false,
                 isFirstPageLoaded = savedStateHandle[KEY_IS_FIRST_PAGE_LOADED] ?: false,
+                isRefreshing = false,
                 mediaItemLabel = savedStateHandle[KEY_MEDIA_ITEM_LABEL]
                     ?: throw RuntimeException("mediaItemLabel can not be null!"),
                 playItem = null,
@@ -166,6 +168,12 @@ class MediaItemListViewModel @Inject constructor(
 
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.ScrollToTop, isFirstPageLoaded = true)
+        }
+    }
+
+    fun setIsRefreshing(isRefreshing: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isRefreshing = isRefreshing)
         }
     }
 

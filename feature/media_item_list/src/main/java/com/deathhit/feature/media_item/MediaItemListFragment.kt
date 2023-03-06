@@ -9,8 +9,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.deathhit.core.ui.AppLoadStateAdapter
 import com.deathhit.feature.media_item.model.MediaItemLabel
@@ -59,6 +61,9 @@ class MediaItemListFragment : Fragment() {
     private var _mediaItemAdapter: MediaItemAdapter? = null
 
     private var player: Player? = null
+
+    private val onRefreshListener =
+        SwipeRefreshLayout.OnRefreshListener { mediaItemAdapter.refresh() }
 
     private val onScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -116,6 +121,10 @@ class MediaItemListFragment : Fragment() {
                             if (itemCount > 0)
                                 viewModel.scrollToTopOnFirstPageLoaded()
                         }
+
+                        addLoadStateListener { loadStates ->
+                            viewModel.setIsRefreshing(loadStates.refresh is LoadState.Loading)
+                        }
                     }.withLoadStateFooter(object : AppLoadStateAdapter() {
                         override fun onRetryLoading() {
                             mediaItemAdapter.retry()
@@ -154,6 +163,12 @@ class MediaItemListFragment : Fragment() {
                 }
 
                 launch {
+                    viewModel.stateFlow.map { it.isRefreshing }.distinctUntilChanged().collect {
+                        binding.swipeRefreshLayout.isRefreshing = it
+                    }
+                }
+
+                launch {
                     viewModel.stateFlow.map { it.listState }.distinctUntilChanged().collect {
                         //The Runnable has the potential to outlive the viewLifecycleScope,
                         // so we use an extra launch{} to make sure it only runs within the scope.
@@ -180,14 +195,20 @@ class MediaItemListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        binding.recyclerView.addOnScrollListener(onScrollListener)
+        binding.apply {
+            recyclerView.addOnScrollListener(onScrollListener)
+            swipeRefreshLayout.setOnRefreshListener(onRefreshListener)
+        }
 
         resumePlayPosition()
     }
 
     override fun onPause() {
         super.onPause()
-        binding.recyclerView.removeOnScrollListener(onScrollListener)
+        binding.apply {
+            recyclerView.removeOnScrollListener(onScrollListener)
+            swipeRefreshLayout.setOnRefreshListener(null)
+        }
 
         clearPlayPosition()
     }
