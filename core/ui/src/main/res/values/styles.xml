@@ -45,7 +45,7 @@
     <!--Toolbar-->
     <style name="Widget.YouTooBeAlike.Toolbar" parent="Widget.Material3.Toolbar">
         <item name="android:minHeight">48dp</item>
-        <item name="android:background">@color/white</item>
+        <item name="android:background">@color/grey_200</item>
         <item name="titleTextColor">@color/purple_200</item>
     </style>
 </resources>
