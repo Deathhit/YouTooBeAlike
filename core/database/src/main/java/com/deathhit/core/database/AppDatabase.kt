@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.deathhit.core.database.model.*
+import com.deathhit.core.database.entity.*
 
 @Database(
     entities = [MediaItemEntity::class, MediaProgressEntity::class, RemoteKeyEntity::class],

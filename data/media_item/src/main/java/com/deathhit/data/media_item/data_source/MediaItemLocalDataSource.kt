@@ -3,8 +3,8 @@ package com.deathhit.data.media_item.data_source
 import androidx.paging.PagingSource
 import androidx.room.withTransaction
 import com.deathhit.core.database.AppDatabase
-import com.deathhit.core.database.model.MediaItemEntity
-import com.deathhit.core.database.model.RemoteKeyEntity
+import com.deathhit.core.database.entity.MediaItemEntity
+import com.deathhit.core.database.entity.RemoteKeyEntity
 import com.deathhit.data.media_item.model.MediaItemLabel
 import com.deathhit.data.media_item.toLabel
 import javax.inject.Inject

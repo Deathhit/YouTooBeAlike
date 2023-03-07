@@ -1,4 +1,4 @@
-package com.deathhit.core.database.model
+package com.deathhit.core.database.entity
 
 import androidx.room.*
 import com.deathhit.core.database.Column
