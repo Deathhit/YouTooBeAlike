@@ -1,6 +1,6 @@
 package com.deathhit.core.database
 
-object Column {
+internal object Column {
     const val DESCRIPTION = "description"
     const val IS_ENDED = "isEnded"
     const val LABEL = "label"
