@@ -63,7 +63,7 @@
         motion:transitionFlags="onInterceptTouchReturnSwipe">
         <OnClick
             motion:clickAction="transitionToStart"
-            motion:targetId="@+id/view_playerViewContainerBackground" />
+            motion:targetId="@+id/view_playerViewRectBackground" />
 
         <OnSwipe
             motion:dragDirection="dragUp"
@@ -127,7 +127,6 @@
             android:layout_height="@dimen/min_height_player_view_collapsible"
             motion:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
             motion:layout_constraintEnd_toEndOf="parent"
-            motion:layout_constraintHorizontal_bias="1"
             motion:layout_constraintStart_toStartOf="parent" />
 
         <Constraint
