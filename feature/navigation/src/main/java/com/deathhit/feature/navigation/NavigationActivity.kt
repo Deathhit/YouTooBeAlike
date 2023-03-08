@@ -1,5 +1,6 @@
 package com.deathhit.feature.navigation
 
+import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
@@ -8,6 +9,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isInvisible
 import androidx.fragment.app.commit
 import androidx.lifecycle.Lifecycle
@@ -48,6 +52,8 @@ class NavigationActivity : AppCompatActivity() {
     private val viewModel: NavigationActivityViewModel by viewModels()
 
     private lateinit var glideRequestManager: RequestManager
+
+    private lateinit var windowInsetsController: WindowInsetsControllerCompat
 
     private val mediaSession get() = _mediaSession!!
     private var _mediaSession: MediaSessionCompat? = null
@@ -106,6 +112,8 @@ class NavigationActivity : AppCompatActivity() {
 
         override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
             viewModel.setIsPlayerViewExpanded(currentId == R.id.playerView_expanded)
+
+            toggleSystemBars()
         }
 
         override fun onTransitionTrigger(
@@ -147,7 +155,7 @@ class NavigationActivity : AppCompatActivity() {
             mediaSession.isActive = isPlaying
 
             if (!isPlaying)
-                player.run {
+                with(player) {
                     viewModel.savePlayItemPosition(
                         playbackState == Player.STATE_ENDED,
                         currentPosition
@@ -170,6 +178,8 @@ class NavigationActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        onBackPressedDispatcher.addCallback(onCollapsePlayerViewCallback)
+
         supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
             when (fragment) {
                 is MediaItemListFragment -> {
@@ -197,11 +207,14 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         super.onCreate(savedInstanceState)
-        onBackPressedDispatcher.addCallback(onCollapsePlayerViewCallback)
-
         binding = ActivityNavigationBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
         glideRequestManager = Glide.with(this)
+
+        windowInsetsController = WindowCompat.getInsetsController(window, window.decorView).apply {
+            systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
 
         MediaPlayerService.bindService(this, mediaPlayerServiceConnection)
         savedInstanceState
@@ -252,9 +265,14 @@ class NavigationActivity : AppCompatActivity() {
                                         setTransition(R.id.hide)
                                         transitionToEnd()
                                     }
+                                    NavigationActivityViewModel.State.Action.HideSystemBars -> windowInsetsController.hide(
+                                        WindowInsetsCompat.Type.systemBars()
+                                    )
                                     NavigationActivityViewModel.State.Action.PausePlayback -> player.pause()
                                     NavigationActivityViewModel.State.Action.PlayPlayback -> player.play()
-                                    is NavigationActivityViewModel.State.Action.PreparePlayback -> player.run {
+                                    is NavigationActivityViewModel.State.Action.PreparePlayback -> with(
+                                        player
+                                    ) {
                                         setMediaItem(
                                             MediaItem.fromUri(action.sourceUrl),
                                             if (action.isEnded) C.TIME_UNSET else action.position
@@ -262,6 +280,9 @@ class NavigationActivity : AppCompatActivity() {
                                         prepare()
                                     }
                                     NavigationActivityViewModel.State.Action.ShowPlayerViewControls -> binding.playerView.showController()
+                                    NavigationActivityViewModel.State.Action.ShowSystemBars -> windowInsetsController.show(
+                                        WindowInsetsCompat.Type.systemBars()
+                                    )
                                     NavigationActivityViewModel.State.Action.StopPlayback -> player.stop()
                                 }
 
@@ -460,5 +481,14 @@ class NavigationActivity : AppCompatActivity() {
 
         viewModel.saveState()
         super.onSaveInstanceState(outState)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        toggleSystemBars()
+    }
+
+    private fun toggleSystemBars() {
+        viewModel.toggleSystemBars(resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
     }
 }

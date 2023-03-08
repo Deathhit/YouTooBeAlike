@@ -44,6 +44,7 @@ class NavigationActivityViewModel @Inject constructor(
             object CollapsePlayerView : Action
             object ExpandPlayerView : Action
             object HidePlayerView : Action
+            object HideSystemBars : Action
             object PausePlayback : Action
             object PlayPlayback : Action
             data class PreparePlayback(
@@ -53,6 +54,7 @@ class NavigationActivityViewModel @Inject constructor(
             ) : Action
 
             object ShowPlayerViewControls : Action
+            object ShowSystemBars : Action
             object StopPlayback : Action
         }
 
@@ -225,6 +227,17 @@ class NavigationActivityViewModel @Inject constructor(
 
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.ShowPlayerViewControls)
+        }
+    }
+
+    fun toggleSystemBars(isLandscape: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(
+                actions = state.actions + if (isLandscape && isPlayerViewExpanded)
+                    State.Action.HideSystemBars
+                else
+                    State.Action.ShowSystemBars
+            )
         }
     }
 
