@@ -22,14 +22,14 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="?android:attr/windowBackground"
-        app:layout_constraintBottom_toBottomOf="@id/container_playerView"
-        app:layout_constraintEnd_toEndOf="@id/container_playerView"
-        app:layout_constraintStart_toStartOf="@id/container_playerView"
-        app:layout_constraintTop_toTopOf="@id/container_playerView"
+        app:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
+        app:layout_constraintEnd_toEndOf="@id/view_playerViewRect"
+        app:layout_constraintStart_toStartOf="@id/view_playerViewRect"
+        app:layout_constraintTop_toTopOf="@id/view_playerViewRect"
         tools:ignore="SpeakableTextPresentCheck" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/container_playerView"
+    <View
+        android:id="@+id/view_playerViewRect"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -42,10 +42,10 @@
         style="@style/Widget.YouTooBeAlike.PlayerView.Collapsible"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="@id/container_playerView"
-        app:layout_constraintEnd_toEndOf="@id/container_playerView"
-        app:layout_constraintStart_toStartOf="@id/container_playerView"
-        app:layout_constraintTop_toTopOf="@id/container_playerView" />
+        app:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
+        app:layout_constraintEnd_toEndOf="@id/view_playerViewRect"
+        app:layout_constraintStart_toStartOf="@id/view_playerViewRect"
+        app:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
     <ImageView
         android:id="@+id/imageView_thumbnail"
@@ -63,10 +63,10 @@
         android:id="@+id/container_playbackInfo"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="@id/container_playerView"
+        app:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
         app:layout_constraintEnd_toStartOf="@id/playerControlView_playPause"
         app:layout_constraintStart_toEndOf="@id/playerView"
-        app:layout_constraintTop_toTopOf="@id/container_playerView">
+        app:layout_constraintTop_toTopOf="@id/view_playerViewRect">
 
         <TextView
             android:id="@+id/textView_playbackTitle"
@@ -107,9 +107,9 @@
         style="@style/Widget.YouTooBeAlike.PlayerView.PlayPause"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="@id/container_playerView"
+        app:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
         app:layout_constraintEnd_toStartOf="@id/button_clear"
-        app:layout_constraintTop_toTopOf="@id/container_playerView" />
+        app:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
     <Button
         android:id="@+id/button_clear"
@@ -118,9 +118,9 @@
         android:layout_height="0dp"
         android:contentDescription="@string/common_clear"
         app:icon="@drawable/ic_clear"
-        app:layout_constraintBottom_toBottomOf="@id/container_playerView"
-        app:layout_constraintEnd_toEndOf="@id/container_playerView"
-        app:layout_constraintTop_toTopOf="@id/container_playerView" />
+        app:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
+        app:layout_constraintEnd_toEndOf="@id/view_playerViewRect"
+        app:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/container_playbackDetails"
@@ -129,7 +129,7 @@
         app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/container_playerView" />
+        app:layout_constraintTop_toBottomOf="@id/view_playerViewRect" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"

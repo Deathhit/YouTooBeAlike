@@ -13,7 +13,7 @@
             <KeyPosition
                 motion:curveFit="linear"
                 motion:framePosition="0"
-                motion:motionTarget="@id/container_playerView"
+                motion:motionTarget="@id/view_playerViewRect"
                 motion:percentWidth="1" />
 
             <KeyPosition
@@ -67,14 +67,14 @@
 
         <OnSwipe
             motion:dragDirection="dragUp"
-            motion:touchAnchorId="@+id/container_playerView"
-            motion:touchRegionId="@+id/container_playerView" />
+            motion:touchAnchorId="@+id/view_playerViewRect"
+            motion:touchRegionId="@+id/view_playerViewRect" />
 
         <KeyFrameSet>
             <KeyPosition
                 motion:curveFit="linear"
                 motion:framePosition="90"
-                motion:motionTarget="@id/container_playerView"
+                motion:motionTarget="@id/view_playerViewRect"
                 motion:percentWidth="0" />
 
             <KeyPosition
@@ -122,7 +122,7 @@
 
     <ConstraintSet android:id="@id/playerView_collapsed">
         <Constraint
-            android:id="@id/container_playerView"
+            android:id="@id/view_playerViewRect"
             android:layout_width="0dp"
             android:layout_height="@dimen/min_height_player_view_collapsible"
             motion:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
@@ -134,10 +134,10 @@
             android:id="@id/playerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
             motion:layout_constraintDimensionRatio="H,1:2.5"
-            motion:layout_constraintStart_toStartOf="@id/container_playerView"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintStart_toStartOf="@id/view_playerViewRect"
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint android:id="@id/imageView_thumbnail">
             <PropertySet app:visibilityMode="ignore" />
@@ -147,26 +147,26 @@
             android:id="@id/container_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
             motion:layout_constraintEnd_toStartOf="@id/playerControlView_playPause"
             motion:layout_constraintStart_toEndOf="@id/playerView"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint
             android:id="@id/playerControlView_playPause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
             motion:layout_constraintEnd_toStartOf="@id/button_clear"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint
             android:id="@id/button_clear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
-            motion:layout_constraintEnd_toEndOf="@id/container_playerView"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
+            motion:layout_constraintEnd_toEndOf="@id/view_playerViewRect"
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint
             android:id="@id/container_playbackDetails"
@@ -187,7 +187,7 @@
 
     <ConstraintSet android:id="@id/playerView_expanded">
         <Constraint
-            android:id="@id/container_playerView"
+            android:id="@id/view_playerViewRect"
             android:layout_width="0dp"
             android:layout_height="@dimen/min_height_player_view"
             motion:layout_constraintEnd_toEndOf="parent"
@@ -198,10 +198,10 @@
             android:id="@id/playerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
-            motion:layout_constraintEnd_toEndOf="@id/container_playerView"
-            motion:layout_constraintStart_toStartOf="@id/container_playerView"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
+            motion:layout_constraintEnd_toEndOf="@id/view_playerViewRect"
+            motion:layout_constraintStart_toStartOf="@id/view_playerViewRect"
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint android:id="@id/imageView_thumbnail">
             <PropertySet app:visibilityMode="ignore" />
@@ -211,26 +211,26 @@
             android:id="@id/container_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
             motion:layout_constraintEnd_toStartOf="@id/playerControlView_playPause"
             motion:layout_constraintStart_toEndOf="@id/playerView"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint
             android:id="@id/playerControlView_playPause"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
             motion:layout_constraintEnd_toStartOf="@id/button_clear"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint
             android:id="@id/button_clear"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
-            motion:layout_constraintEnd_toEndOf="@id/container_playerView"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
+            motion:layout_constraintEnd_toEndOf="@id/view_playerViewRect"
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint
             android:id="@id/container_playbackDetails"
@@ -239,7 +239,7 @@
             motion:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
-            motion:layout_constraintTop_toBottomOf="@id/container_playerView" />
+            motion:layout_constraintTop_toBottomOf="@id/view_playerViewRect" />
 
         <Constraint
             android:id="@id/bottomNavigationView"
@@ -252,7 +252,7 @@
 
     <ConstraintSet android:id="@id/playerView_hidden">
         <Constraint
-            android:id="@id/container_playerView"
+            android:id="@id/view_playerViewRect"
             android:layout_width="0dp"
             android:layout_height="@dimen/min_height_player_view_collapsible"
             motion:layout_constraintBottom_toBottomOf="@id/bottomNavigationView"
@@ -264,10 +264,10 @@
             android:id="@id/playerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
             motion:layout_constraintDimensionRatio="H,1:2.5"
-            motion:layout_constraintStart_toStartOf="@id/container_playerView"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintStart_toStartOf="@id/view_playerViewRect"
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint android:id="@id/imageView_thumbnail">
             <PropertySet app:visibilityMode="ignore" />
@@ -277,26 +277,26 @@
             android:id="@id/container_playbackInfo"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
             motion:layout_constraintEnd_toStartOf="@id/playerControlView_playPause"
             motion:layout_constraintStart_toEndOf="@id/playerView"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint
             android:id="@id/playerControlView_playPause"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
             motion:layout_constraintEnd_toStartOf="@id/button_clear"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint
             android:id="@id/button_clear"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="@id/container_playerView"
-            motion:layout_constraintEnd_toEndOf="@id/container_playerView"
-            motion:layout_constraintTop_toTopOf="@id/container_playerView" />
+            motion:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
+            motion:layout_constraintEnd_toEndOf="@id/view_playerViewRect"
+            motion:layout_constraintTop_toTopOf="@id/view_playerViewRect" />
 
         <Constraint
             android:id="@id/container_playbackDetails"
