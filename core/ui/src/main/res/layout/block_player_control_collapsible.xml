@@ -23,9 +23,9 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|start"
                 android:layout_marginStart="8dp"
-                app:layout_constraintBottom_toBottomOf="@+id/exo_fullscreen"
+                app:layout_constraintBottom_toBottomOf="@+id/button_fullscreen"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/exo_fullscreen">
+                app:layout_constraintTop_toTopOf="@+id/button_fullscreen">
 
                 <TextView
                     android:id="@id/exo_position"
@@ -44,7 +44,7 @@
             </LinearLayout>
 
             <ImageButton
-                android:id="@id/exo_fullscreen"
+                android:id="@+id/button_fullscreen"
                 style="@style/ExoStyledControls.Button.Bottom.FullScreen"
                 android:layout_marginBottom="8dp"
                 android:contentDescription="@string/common_fullscreen"

@@ -1,10 +1,13 @@
 package com.deathhit.feature.navigation
 
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
+import android.view.OrientationEventListener
 import android.view.View.OnClickListener
+import android.widget.ImageButton
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -29,7 +32,6 @@ import com.deathhit.feature.playback_details.PlaybackDetailsFragment
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.ui.StyledPlayerView.FullscreenButtonClickListener
 import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -48,12 +50,15 @@ class NavigationActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityNavigationBinding
+    private lateinit var buttonFullscreen: ImageButton
 
     private val viewModel: NavigationActivityViewModel by viewModels()
 
     private lateinit var glideRequestManager: RequestManager
 
     private lateinit var windowInsetsController: WindowInsetsControllerCompat
+
+    private val isInLandscapeConfig get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     private val mediaSession get() = _mediaSession!!
     private var _mediaSession: MediaSessionCompat? = null
@@ -73,10 +78,6 @@ class NavigationActivity : AppCompatActivity() {
         get() = supportFragmentManager.findFragmentByTag(
             TAG_PLAYBACK_DETAILS
         ) as PlaybackDetailsFragment?
-
-    private val fullscreenButtonClickListener = FullscreenButtonClickListener {
-        //todo implement
-    }
 
     private val mediaPlayerServiceConnection: MediaPlayerService.ServiceConnection =
         object : MediaPlayerService.ServiceConnection() {
@@ -111,9 +112,10 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-            viewModel.setIsPlayerViewExpanded(currentId == R.id.playerView_expanded)
-
-            toggleSystemBars()
+            with(viewModel) {
+                setIsPlayerViewExpanded(currentId == R.id.playerView_expanded)
+                toggleSystemBars(isInLandscapeConfig)
+            }
         }
 
         override fun onTransitionTrigger(
@@ -149,6 +151,10 @@ class NavigationActivity : AppCompatActivity() {
         true
     }
 
+    private val onToggleFullscreenListener = OnClickListener {
+        viewModel.toggleScreenOrientation(isInLandscapeConfig)
+    }
+
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
@@ -180,6 +186,12 @@ class NavigationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         onBackPressedDispatcher.addCallback(onCollapsePlayerViewCallback)
 
+        object : OrientationEventListener(this) {
+            override fun onOrientationChanged(orientation: Int) {
+                viewModel.unlockScreenOrientation(isInLandscapeConfig, orientation)
+            }
+        }.apply { enable() }
+
         supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
             when (fragment) {
                 is MediaItemListFragment -> {
@@ -207,7 +219,12 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         super.onCreate(savedInstanceState)
-        binding = ActivityNavigationBinding.inflate(layoutInflater).also { setContentView(it.root) }
+        binding = ActivityNavigationBinding.inflate(layoutInflater).also {
+            setContentView(it.root)
+
+            buttonFullscreen =
+                it.playerView.findViewById(com.deathhit.core.ui.R.id.button_fullscreen)
+        }
 
         glideRequestManager = Glide.with(this)
 
@@ -279,11 +296,17 @@ class NavigationActivity : AppCompatActivity() {
                                         )
                                         prepare()
                                     }
+                                    is NavigationActivityViewModel.State.Action.SetScreenOrientation -> requestedOrientation =
+                                        if (action.isToLandscape)
+                                            ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+                                        else
+                                            ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
                                     NavigationActivityViewModel.State.Action.ShowPlayerViewControls -> binding.playerView.showController()
                                     NavigationActivityViewModel.State.Action.ShowSystemBars -> windowInsetsController.show(
                                         WindowInsetsCompat.Type.systemBars()
                                     )
                                     NavigationActivityViewModel.State.Action.StopPlayback -> player.stop()
+                                    NavigationActivityViewModel.State.Action.UnlockScreenOrientation -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                                 }
 
                                 viewModel.onAction(action)
@@ -296,6 +319,17 @@ class NavigationActivity : AppCompatActivity() {
                         .collect {
                             binding.imageViewThumbnail.isInvisible = it
                         }
+                }
+
+                launch {
+                    viewModel.stateFlow.map { it.isFullscreen }.distinctUntilChanged().collect {
+                        buttonFullscreen.setImageResource(
+                            if (it)
+                                com.google.android.exoplayer2.R.drawable.exo_controls_fullscreen_exit
+                            else
+                                com.google.android.exoplayer2.R.drawable.exo_controls_fullscreen_enter
+                        )
+                    }
                 }
 
                 launch {
@@ -432,8 +466,9 @@ class NavigationActivity : AppCompatActivity() {
             bottomNavigationView.setOnItemSelectedListener(onNavigationSelectedListener)
             buttonClear.setOnClickListener(onClearListener)
             motionLayout.addTransitionListener(motionTransitionListener)
-            playerView.setFullscreenButtonClickListener(fullscreenButtonClickListener)
         }
+
+        buttonFullscreen.setOnClickListener(onToggleFullscreenListener)
     }
 
     override fun onPause() {
@@ -442,8 +477,9 @@ class NavigationActivity : AppCompatActivity() {
             bottomNavigationView.setOnItemSelectedListener(null)
             buttonClear.setOnClickListener(null)
             motionLayout.removeTransitionListener(motionTransitionListener)
-            playerView.setFullscreenButtonClickListener(null)
         }
+
+        buttonFullscreen.setOnClickListener(null)
 
         if (!isChangingConfigurations)
             viewModel.pausePlayerViewPlayback()
@@ -485,10 +521,6 @@ class NavigationActivity : AppCompatActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        toggleSystemBars()
-    }
-
-    private fun toggleSystemBars() {
-        viewModel.toggleSystemBars(resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+        viewModel.toggleSystemBars(isInLandscapeConfig)
     }
 }

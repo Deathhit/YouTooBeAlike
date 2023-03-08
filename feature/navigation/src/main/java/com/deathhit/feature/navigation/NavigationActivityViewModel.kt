@@ -34,6 +34,7 @@ class NavigationActivityViewModel @Inject constructor(
         val attachedTabs: Set<Tab>,
         val isFirstFrameRendered: Boolean,
         val isForTabToPlay: Boolean,
+        val isFullscreen: Boolean,
         val isPlayerConnected: Boolean,
         val isPlayerViewExpanded: Boolean,
         val playItem: MediaItemVO?,
@@ -53,9 +54,11 @@ class NavigationActivityViewModel @Inject constructor(
                 val sourceUrl: String
             ) : Action
 
+            data class SetScreenOrientation(val isToLandscape: Boolean) : Action
             object ShowPlayerViewControls : Action
             object ShowSystemBars : Action
             object StopPlayback : Action
+            object UnlockScreenOrientation : Action
         }
 
         enum class Tab {
@@ -76,6 +79,7 @@ class NavigationActivityViewModel @Inject constructor(
                 attachedTabs = emptySet(),
                 isFirstFrameRendered = savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] ?: false,
                 isForTabToPlay = savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] ?: true,
+                isFullscreen = false,
                 isPlayerConnected = false,
                 isPlayerViewExpanded = savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] ?: false,
                 playItem = null,
@@ -100,6 +104,7 @@ class NavigationActivityViewModel @Inject constructor(
         }
 
     private var prepareItemJob: Job? = null
+    private var unlockScreenOrientationJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -230,13 +235,41 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
-    fun toggleSystemBars(isLandscape: Boolean) {
+    fun toggleScreenOrientation(isInLandscapeConfig: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(actions = state.actions + State.Action.SetScreenOrientation(!isInLandscapeConfig))
+        }
+    }
+
+    fun unlockScreenOrientation(isInLandscapeConfig: Boolean, orientation: Int) {
+        unlockScreenOrientationJob?.cancel()
+        unlockScreenOrientationJob = viewModelScope.launch {
+            delay(200)
+
+            val epsilon = 15
+            val isLandscapeOrientation =
+                (orientation >= 90 - epsilon && orientation <= 90 + epsilon)
+                        || (orientation >= 270 - epsilon && orientation <= 270 + epsilon)
+            val isPortraitOrientation = (orientation >= 360 - epsilon || orientation <= epsilon)
+                    || (orientation >= 180 - epsilon && orientation <= 180 + epsilon)
+
+            if ((isInLandscapeConfig && isLandscapeOrientation) || (!isInLandscapeConfig && isPortraitOrientation))
+                _stateFlow.update { state ->
+                    state.copy(actions = state.actions + State.Action.UnlockScreenOrientation)
+                }
+        }
+    }
+
+    fun toggleSystemBars(isInLandscapeConfig: Boolean) {
+        val isFullscreen = isInLandscapeConfig && isPlayerViewExpanded
+
         _stateFlow.update { state ->
             state.copy(
-                actions = state.actions + if (isLandscape && isPlayerViewExpanded)
+                actions = state.actions + if (isFullscreen)
                     State.Action.HideSystemBars
                 else
-                    State.Action.ShowSystemBars
+                    State.Action.ShowSystemBars,
+                isFullscreen = isFullscreen
             )
         }
     }
