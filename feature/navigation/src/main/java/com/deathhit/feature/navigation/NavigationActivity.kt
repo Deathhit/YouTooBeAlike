@@ -56,6 +56,8 @@ class NavigationActivity : AppCompatActivity() {
 
     private lateinit var glideRequestManager: RequestManager
 
+    private lateinit var orientationEventListener: OrientationEventListener
+
     private lateinit var windowInsetsController: WindowInsetsControllerCompat
 
     private val isInLandscapeConfig get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -114,7 +116,7 @@ class NavigationActivity : AppCompatActivity() {
         override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
             with(viewModel) {
                 setIsPlayerViewExpanded(currentId == R.id.playerView_expanded)
-                toggleSystemBars(isInLandscapeConfig)
+                updateIsFullscreen(isInLandscapeConfig)
             }
         }
 
@@ -138,6 +140,10 @@ class NavigationActivity : AppCompatActivity() {
         viewModel.clearPlayerViewPlayback()
     }
 
+    private val onFullscreenListener = OnClickListener {
+        viewModel.toggleScreenOrientation(isInLandscapeConfig)
+    }
+
     private val onNavigationSelectedListener = OnItemSelectedListener {
         viewModel.setTab(
             when (it.itemId) {
@@ -149,10 +155,6 @@ class NavigationActivity : AppCompatActivity() {
         )
 
         true
-    }
-
-    private val onToggleFullscreenListener = OnClickListener {
-        viewModel.toggleScreenOrientation(isInLandscapeConfig)
     }
 
     private val playerListener = object : Player.Listener {
@@ -185,12 +187,6 @@ class NavigationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         onBackPressedDispatcher.addCallback(onCollapsePlayerViewCallback)
-
-        object : OrientationEventListener(this) {
-            override fun onOrientationChanged(orientation: Int) {
-                viewModel.unlockScreenOrientation(isInLandscapeConfig, orientation)
-            }
-        }.apply { enable() }
 
         supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
             when (fragment) {
@@ -227,6 +223,12 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         glideRequestManager = Glide.with(this)
+
+        orientationEventListener = object : OrientationEventListener(this) {
+            override fun onOrientationChanged(orientation: Int) {
+                viewModel.unlockScreenOrientation(isInLandscapeConfig, orientation)
+            }
+        }
 
         windowInsetsController = WindowCompat.getInsetsController(window, window.decorView).apply {
             systemBarsBehavior =
@@ -282,9 +284,6 @@ class NavigationActivity : AppCompatActivity() {
                                         setTransition(R.id.hide)
                                         transitionToEnd()
                                     }
-                                    NavigationActivityViewModel.State.Action.HideSystemBars -> windowInsetsController.hide(
-                                        WindowInsetsCompat.Type.systemBars()
-                                    )
                                     NavigationActivityViewModel.State.Action.PausePlayback -> player.pause()
                                     NavigationActivityViewModel.State.Action.PlayPlayback -> player.play()
                                     is NavigationActivityViewModel.State.Action.PreparePlayback -> with(
@@ -296,17 +295,8 @@ class NavigationActivity : AppCompatActivity() {
                                         )
                                         prepare()
                                     }
-                                    is NavigationActivityViewModel.State.Action.SetScreenOrientation -> requestedOrientation =
-                                        if (action.isToLandscape)
-                                            ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
-                                        else
-                                            ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
                                     NavigationActivityViewModel.State.Action.ShowPlayerViewControls -> binding.playerView.showController()
-                                    NavigationActivityViewModel.State.Action.ShowSystemBars -> windowInsetsController.show(
-                                        WindowInsetsCompat.Type.systemBars()
-                                    )
                                     NavigationActivityViewModel.State.Action.StopPlayback -> player.stop()
-                                    NavigationActivityViewModel.State.Action.UnlockScreenOrientation -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                                 }
 
                                 viewModel.onAction(action)
@@ -329,6 +319,17 @@ class NavigationActivity : AppCompatActivity() {
                             else
                                 com.google.android.exoplayer2.R.drawable.exo_controls_fullscreen_enter
                         )
+
+                        binding.motionLayout.getTransition(R.id.dragUp).isEnabled = !it
+
+                        with(windowInsetsController) {
+                            val type = WindowInsetsCompat.Type.systemBars()
+
+                            if (it)
+                                hide(type)
+                            else
+                                show(type)
+                        }
                     }
                 }
 
@@ -419,6 +420,17 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
+                    viewModel.stateFlow.map { it.screenOrientation }.distinctUntilChanged()
+                        .collect { screenOrientation ->
+                            requestedOrientation = when (screenOrientation) {
+                                NavigationActivityViewModel.State.ScreenOrientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+                                NavigationActivityViewModel.State.ScreenOrientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+                                NavigationActivityViewModel.State.ScreenOrientation.UNSPECIFIED -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                            }
+                        }
+                }
+
+                launch {
                     viewModel.stateFlow.map { it.tab }.distinctUntilChanged().collect { tab ->
                         binding.bottomNavigationView.selectedItemId = when (tab) {
                             NavigationActivityViewModel.State.Tab.DASHBOARD -> R.id.dashboard
@@ -468,7 +480,9 @@ class NavigationActivity : AppCompatActivity() {
             motionLayout.addTransitionListener(motionTransitionListener)
         }
 
-        buttonFullscreen.setOnClickListener(onToggleFullscreenListener)
+        buttonFullscreen.setOnClickListener(onFullscreenListener)
+
+        orientationEventListener.enable()
     }
 
     override fun onPause() {
@@ -480,6 +494,8 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         buttonFullscreen.setOnClickListener(null)
+
+        orientationEventListener.disable()
 
         if (!isChangingConfigurations)
             viewModel.pausePlayerViewPlayback()
@@ -521,6 +537,6 @@ class NavigationActivity : AppCompatActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        viewModel.toggleSystemBars(isInLandscapeConfig)
+        viewModel.updateIsFullscreen(isInLandscapeConfig)
     }
 }
