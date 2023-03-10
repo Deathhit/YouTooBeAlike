@@ -42,6 +42,11 @@
         <item name="resize_mode">zoom</item>
     </style>
 
+    <style name="Widget.YouTooBeAlike.PlayerView.Fullscreen" parent="Widget.YouTooBeAlike.PlayerView.Collapsible">
+        <item name="controller_layout_id">@layout/block_player_control_fullscreen</item>
+        <item name="resize_mode">fit</item>
+    </style>
+
     <!--Toolbar-->
     <style name="Widget.YouTooBeAlike.Toolbar" parent="Widget.Material3.Toolbar">
         <item name="android:minHeight">48dp</item>

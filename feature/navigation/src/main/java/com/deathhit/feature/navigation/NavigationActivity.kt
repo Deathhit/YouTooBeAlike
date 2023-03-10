@@ -8,6 +8,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.view.OrientationEventListener
 import android.view.View.OnClickListener
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -52,6 +53,8 @@ class NavigationActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityNavigationBinding
     private lateinit var buttonFullscreen: ImageButton
+    private var textViewPlayerViewSubtitle: TextView? = null
+    private var textViewPlayerViewTitle: TextView? = null
 
     private val viewModel: NavigationActivityViewModel by viewModels()
 
@@ -218,6 +221,10 @@ class NavigationActivity : AppCompatActivity() {
 
             buttonFullscreen =
                 it.playerView.findViewById(com.deathhit.core.ui.R.id.button_fullscreen)
+
+            textViewPlayerViewSubtitle = it.playerView.findViewById(com.deathhit.core.ui.R.id.textView_subtitle)
+
+            textViewPlayerViewTitle = it.playerView.findViewById(com.deathhit.core.ui.R.id.textView_title)
         }
 
         glideRequestManager = Glide.with(this)
@@ -384,13 +391,13 @@ class NavigationActivity : AppCompatActivity() {
                                 })
                         }
 
-                        with(binding.textViewPlaybackSubtitle) {
-                            text = it?.subtitle
-                        }
+                        binding.textViewPlaybackSubtitle.text = it?.subtitle
 
-                        with(binding.textViewPlaybackTitle) {
-                            text = it?.title
-                        }
+                        binding.textViewPlaybackTitle.text = it?.title
+
+                        textViewPlayerViewSubtitle?.text = it?.subtitle
+
+                        textViewPlayerViewTitle?.text = it?.title
 
                         playbackDetailsFragment.setPlayItemId(it?.id)
                     }

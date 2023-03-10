@@ -39,7 +39,7 @@
 
     <com.google.android.exoplayer2.ui.StyledPlayerView
         android:id="@+id/playerView"
-        style="@style/Widget.YouTooBeAlike.PlayerView.Collapsible"
+        style="@style/Widget.YouTooBeAlike.PlayerView.Fullscreen"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="@id/view_playerViewRect"
