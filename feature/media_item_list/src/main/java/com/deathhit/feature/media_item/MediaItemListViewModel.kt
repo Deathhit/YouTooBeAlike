@@ -40,12 +40,16 @@ class MediaItemListViewModel @Inject constructor(
 
     data class State(
         val actions: List<Action>,
+        val firstCompletelyVisibleItemPosition: Int?,
         val isFirstFrameRendered: Boolean,
         val isFirstPageLoaded: Boolean,
-        val isRefreshing: Boolean,
+        val isPlayerSet: Boolean,
+        val isRefreshingList: Boolean,
+        val isViewActive: Boolean,
+        val isViewHidden: Boolean,
+        val isViewInLandscape: Boolean,
         val mediaItemLabel: MediaItemLabel,
-        val playItem: MediaItemVO?,
-        val playPosition: Int?
+        val playItem: MediaItemVO?
     ) {
         sealed interface Action {
             data class OpenItem(val item: MediaItemVO) : Action
@@ -55,6 +59,8 @@ class MediaItemListViewModel @Inject constructor(
                 val sourceUrl: String
             ) : Action
 
+            object RefreshList : Action
+            object RetryLoadingList : Action
             object ScrollToTop : Action
             object StopPlayback : Action
         }
@@ -64,6 +70,9 @@ class MediaItemListViewModel @Inject constructor(
             val playPosition: Int?
         )
 
+        val isReadyToPlay = isPlayerSet && !isViewInLandscape
+        val playPosition =
+            if (isPlayerSet && isViewActive && !isViewHidden) firstCompletelyVisibleItemPosition else null
         val listState = ListState(isFirstFrameRendered, playPosition)
     }
 
@@ -71,13 +80,17 @@ class MediaItemListViewModel @Inject constructor(
         MutableStateFlow(
             State(
                 actions = emptyList(),
+                firstCompletelyVisibleItemPosition = null,
                 isFirstFrameRendered = false,
                 isFirstPageLoaded = savedStateHandle[KEY_IS_FIRST_PAGE_LOADED] ?: false,
-                isRefreshing = false,
+                isPlayerSet = false,
+                isRefreshingList = false,
+                isViewActive = false,
+                isViewHidden = false,
+                isViewInLandscape = false,
                 mediaItemLabel = savedStateHandle[KEY_MEDIA_ITEM_LABEL]
                     ?: throw RuntimeException("mediaItemLabel can not be null!"),
-                playItem = null,
-                playPosition = null
+                playItem = null
             )
         )
     val stateFlow = _stateFlow.asStateFlow()
@@ -89,11 +102,31 @@ class MediaItemListViewModel @Inject constructor(
         }.cachedIn(viewModelScope)
 
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
+    private val isReadyToPlay get() = stateFlow.value.isReadyToPlay
     private val mediaItemLabel get() = stateFlow.value.mediaItemLabel
     private val playItem get() = stateFlow.value.playItem
-    private val playPosition get() = stateFlow.value.playPosition
 
     private var prepareItemJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            launch {
+                stateFlow.map { it.playPosition }.distinctUntilChanged().collectLatest {
+                    _stateFlow.update { state ->
+                        state.copy(isFirstFrameRendered = false)
+                    }
+
+                    if (isReadyToPlay)
+                        _stateFlow.update { state ->
+                            state.copy(actions = state.actions + State.Action.StopPlayback)
+                        }
+
+                    if (it == null)
+                        prepareItem(null)
+                }
+            }
+        }
+    }
 
     fun notifyFirstFrameRendered() {
         _stateFlow.update { state ->
@@ -127,7 +160,7 @@ class MediaItemListViewModel @Inject constructor(
 
             delay(MEDIA_SWITCHING_DELAY)
 
-            if (item != null)
+            if (isReadyToPlay && item != null)
                 _stateFlow.update { state ->
                     val progress =
                         mediaProgressRepository.getMediaProgressByMediaItemId(item.id)
@@ -143,7 +176,22 @@ class MediaItemListViewModel @Inject constructor(
         }
     }
 
-    fun savePlayItemPosition(isEnded: Boolean, mediaPosition: Long) {
+    fun refreshList() {
+        _stateFlow.update { state ->
+            state.copy(actions = state.actions + State.Action.RefreshList)
+        }
+    }
+
+    fun retryLoadingList() {
+        _stateFlow.update { state ->
+            state.copy(actions = state.actions + State.Action.RetryLoadingList)
+        }
+    }
+
+    fun savePlayItemPositionOnPlayerPaused(isEnded: Boolean, isPlayerPaused: Boolean, mediaPosition: Long) {
+        if (!isPlayerPaused)
+            return
+
         playItem?.let {
             viewModelScope.launch(NonCancellable) {
                 mediaProgressRepository.setMediaProgress(
@@ -162,8 +210,8 @@ class MediaItemListViewModel @Inject constructor(
         savedStateHandle[KEY_MEDIA_ITEM_LABEL] = mediaItemLabel
     }
 
-    fun scrollToTopOnFirstPageLoaded() {
-        if (isFirstPageLoaded)
+    fun scrollToTopOnFirstPageLoaded(itemCount: Int) {
+        if (isFirstPageLoaded || itemCount <= 0)
             return
 
         _stateFlow.update { state ->
@@ -171,25 +219,39 @@ class MediaItemListViewModel @Inject constructor(
         }
     }
 
-    fun setIsRefreshing(isRefreshing: Boolean) {
+    fun setFirstCompletelyVisibleItemPosition(firstCompletelyVisibleItemPosition: Int?) {
         _stateFlow.update { state ->
-            state.copy(isRefreshing = isRefreshing)
+            state.copy(firstCompletelyVisibleItemPosition = firstCompletelyVisibleItemPosition)
         }
     }
 
-    fun setPlayPosition(playPosition: Int?) {
-        if (playPosition == this.playPosition)
-            return
-
+    fun setIsPlayerSet(isPlayerSet: Boolean) {
         _stateFlow.update { state ->
-            state.copy(
-                actions = state.actions + State.Action.StopPlayback,
-                isFirstFrameRendered = false,
-                playPosition = playPosition
-            )
+            state.copy(isPlayerSet = isPlayerSet)
         }
+    }
 
-        if (playPosition == null)
-            prepareItem(null)
+    fun setIsRefreshingList(isRefreshingList: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isRefreshingList = isRefreshingList)
+        }
+    }
+
+    fun setIsViewActive(isViewActive: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isViewActive = isViewActive)
+        }
+    }
+
+    fun setIsViewHidden(isViewHidden: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isViewHidden = isViewHidden)
+        }
+    }
+
+    fun setIsViewInLandscape(isViewInLandscape: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isViewInLandscape = isViewInLandscape)
+        }
     }
 }

@@ -398,24 +398,23 @@ class NavigationActivity : AppCompatActivity() {
                 launch {
                     viewModel.stateFlow.map { it.playTab }.distinctUntilChanged()
                         .collect { playTab ->
-                            dashboardFragment?.setPlayer(
+                            dashboardFragment?.player =
                                 if (playTab == NavigationActivityViewModel.State.Tab.DASHBOARD)
                                     player
                                 else
                                     null
-                            )
-                            homeFragment?.setPlayer(
+
+                            homeFragment?.player =
                                 if (playTab == NavigationActivityViewModel.State.Tab.HOME)
                                     player
                                 else
                                     null
-                            )
-                            notificationsFragment?.setPlayer(
+
+                            notificationsFragment?.player =
                                 if (playTab == NavigationActivityViewModel.State.Tab.NOTIFICATIONS)
                                     player
                                 else
                                     null
-                            )
                         }
                 }
 

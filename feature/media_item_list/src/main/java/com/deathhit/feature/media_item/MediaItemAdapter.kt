@@ -113,7 +113,7 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
 
         holder.binding.styledPlayerView?.apply {
             //Set the player to the player view first to render the first frame.
-            player = if (isAtPlayPosition) this@MediaItemAdapter.player else null   //todo setting player cause isFirstFrameRendered being updated
+            player = if (isAtPlayPosition) this@MediaItemAdapter.player else null
 
             if (isFirstFrameRendered)
                 showController()
