@@ -32,6 +32,7 @@ import com.deathhit.feature.playback_details.PlaybackDetailsFragment
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -321,6 +322,9 @@ class NavigationActivity : AppCompatActivity() {
                         )
 
                         binding.motionLayout.getTransition(R.id.dragUp).isEnabled = !it
+
+                        binding.playerView.resizeMode =
+                            if (it) AspectRatioFrameLayout.RESIZE_MODE_FIT else AspectRatioFrameLayout.RESIZE_MODE_ZOOM
 
                         with(windowInsetsController) {
                             val type = WindowInsetsCompat.Type.systemBars()
