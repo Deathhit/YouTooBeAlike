@@ -42,11 +42,11 @@ class PlaybackDetailsFragment : Fragment() {
     private val glideRequestManager get() = _glideRequestManager!!
     private var _glideRequestManager: RequestManager? = null
 
-    private val playableItemAdapter get() = _playableItemAdapter!!
-    private var _playableItemAdapter: MediaItemAdapter? = null
-
     private val playbackDetailsAdapter get() = _playbackDetailsAdapter!!
     private var _playbackDetailsAdapter: PlaybackDetailsAdapter? = null
+
+    private val recommendedItemAdapter get() = _recommendedItemAdapter!!
+    private var _recommendedItemAdapter: MediaItemAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,10 +59,8 @@ class PlaybackDetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         _glideRequestManager = Glide.with(this)
 
-        _playableItemAdapter = object : MediaItemAdapter(glideRequestManager) {
-            override fun onBindPlayPosition(item: MediaItemVO) {
-
-            }
+        _recommendedItemAdapter = object : MediaItemAdapter(glideRequestManager) {
+            override fun onBindPlayPosition(item: MediaItemVO) {}
 
             override fun onClickItem(item: MediaItemVO) {
                 viewModel.openItem(item)
@@ -74,10 +72,10 @@ class PlaybackDetailsFragment : Fragment() {
         with(binding.recyclerView) {
             adapter = ConcatAdapter(
                 playbackDetailsAdapter,
-                playableItemAdapter.withLoadStateFooter(object :
+                recommendedItemAdapter.withLoadStateFooter(object :
                     AppLoadStateAdapter() {
                     override fun onRetryLoading() {
-                        playableItemAdapter.retry()
+                        viewModel.retryLoadingRecommendedList()
                     }
                 })
             )
@@ -95,6 +93,7 @@ class PlaybackDetailsFragment : Fragment() {
                                     is PlaybackDetailsViewModel.State.Action.OpenItem -> callback?.onOpenItem(
                                         action.itemId
                                     )
+                                    PlaybackDetailsViewModel.State.Action.RetryLoadingRecommendedList -> recommendedItemAdapter.retry()
                                 }
 
                                 viewModel.onAction(action)
@@ -112,7 +111,7 @@ class PlaybackDetailsFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.recommendedItemPagingDataFlow.collectLatest {
-                playableItemAdapter.submitData(lifecycle, it)
+                recommendedItemAdapter.submitData(lifecycle, it)
             }
         }
     }
@@ -125,9 +124,14 @@ class PlaybackDetailsFragment : Fragment() {
 
         _glideRequestManager = null
 
-        _playableItemAdapter = null
-
         _playbackDetailsAdapter = null
+
+        _recommendedItemAdapter = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        callback = null
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

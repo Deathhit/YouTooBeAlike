@@ -11,7 +11,7 @@ class PlaybackDetailsAdapter : ListAdapter<PlaybackDetailsVO, PlaybackDetailsVie
     companion object {
         private val COMPARATOR = object : DiffUtil.ItemCallback<PlaybackDetailsVO>() {
             override fun areItemsTheSame(oldItem: PlaybackDetailsVO, newItem: PlaybackDetailsVO): Boolean =
-                oldItem == newItem
+                oldItem.mediaItemId == newItem.mediaItemId
 
             override fun areContentsTheSame(oldItem: PlaybackDetailsVO, newItem: PlaybackDetailsVO): Boolean =
                 oldItem == newItem
