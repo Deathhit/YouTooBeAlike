@@ -61,13 +61,9 @@ class NavigationActivity : AppCompatActivity() {
 
     private lateinit var windowInsetsController: WindowInsetsControllerCompat
 
-    private val isInLandscapeConfig get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    private var mediaSession: MediaSessionCompat? = null
 
-    private val mediaSession get() = _mediaSession!!
-    private var _mediaSession: MediaSessionCompat? = null
-
-    private val player get() = _player!!
-    private var _player: Player? = null
+    private var player: Player? = null
 
     private var thumbnailGlideTarget: Target<Drawable>? = null
 
@@ -80,23 +76,29 @@ class NavigationActivity : AppCompatActivity() {
     private val playbackDetailsFragment
         get() = supportFragmentManager.findFragmentByTag(
             TAG_PLAYBACK_DETAILS
-        ) as PlaybackDetailsFragment?
+        ) as PlaybackDetailsFragment
 
     private val mediaPlayerServiceConnection: MediaPlayerService.ServiceConnection =
         object : MediaPlayerService.ServiceConnection() {
             override fun onServiceConnected(binder: MediaPlayerService.ServiceBinder) {
                 with(binder.service) {
-                    this@NavigationActivity._mediaSession = mediaSession
+                    this@NavigationActivity.mediaSession = mediaSession
 
-                    this@NavigationActivity._player = player.apply {
+                    this@NavigationActivity.player = player.apply {
                         addListener(playerListener)
                     }
                 }
 
-                viewModel.setIsPlayerConnected(true)
+                lifecycleScope.launchWhenStarted {
+                    mediaSession!!.isActive = true
+                }
 
-                if (player.playbackState == Player.STATE_IDLE)
-                    viewModel.resumePlayerViewPlayback()
+                with(viewModel) {
+                    setIsPlayerConnected(true)
+
+                    if (player!!.playbackState == Player.STATE_IDLE)
+                        resumePlayerViewPlayback()
+                }
             }
         }
 
@@ -115,10 +117,7 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-            with(viewModel) {
-                setIsPlayerViewExpanded(currentId == R.id.playerView_expanded)
-                updateIsFullscreen(isInLandscapeConfig)
-            }
+            viewModel.setIsPlayerViewExpanded(currentId == R.id.playerView_expanded)
         }
 
         override fun onTransitionTrigger(
@@ -142,7 +141,7 @@ class NavigationActivity : AppCompatActivity() {
     }
 
     private val onFullscreenListener = OnClickListener {
-        viewModel.toggleScreenOrientation(isInLandscapeConfig)
+        viewModel.toggleScreenOrientation()
     }
 
     private val onNavigationSelectedListener = OnItemSelectedListener {
@@ -161,10 +160,8 @@ class NavigationActivity : AppCompatActivity() {
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
-            mediaSession.isActive = isPlaying
-
             if (!isPlaying)
-                with(player) {
+                with(player!!) {
                     viewModel.savePlayItemPosition(
                         playbackState == Player.STATE_ENDED,
                         currentPosition
@@ -227,7 +224,7 @@ class NavigationActivity : AppCompatActivity() {
 
         orientationEventListener = object : OrientationEventListener(this) {
             override fun onOrientationChanged(orientation: Int) {
-                viewModel.unlockScreenOrientation(isInLandscapeConfig, orientation)
+                viewModel.unlockScreenOrientation(orientation)
             }
         }
 
@@ -285,10 +282,10 @@ class NavigationActivity : AppCompatActivity() {
                                         setTransition(R.id.hide)
                                         transitionToEnd()
                                     }
-                                    NavigationActivityViewModel.State.Action.PausePlayback -> player.pause()
-                                    NavigationActivityViewModel.State.Action.PlayPlayback -> player.play()
+                                    NavigationActivityViewModel.State.Action.PausePlayback -> player!!.pause()
+                                    NavigationActivityViewModel.State.Action.PlayPlayback -> player!!.play()
                                     is NavigationActivityViewModel.State.Action.PreparePlayback -> with(
-                                        player
+                                        player!!
                                     ) {
                                         setMediaItem(
                                             MediaItem.fromUri(action.sourceUrl),
@@ -297,7 +294,7 @@ class NavigationActivity : AppCompatActivity() {
                                         prepare()
                                     }
                                     NavigationActivityViewModel.State.Action.ShowPlayerViewControls -> binding.playerView.showController()
-                                    NavigationActivityViewModel.State.Action.StopPlayback -> player.stop()
+                                    NavigationActivityViewModel.State.Action.StopPlayback -> player!!.stop()
                                 }
 
                                 viewModel.onAction(action)
@@ -395,7 +392,7 @@ class NavigationActivity : AppCompatActivity() {
                             text = it?.title
                         }
 
-                        playbackDetailsFragment?.setPlayItemId(it?.id)
+                        playbackDetailsFragment.setPlayItemId(it?.id)
                     }
                 }
 
@@ -423,7 +420,7 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.screenOrientation }.distinctUntilChanged()
+                    viewModel.stateFlow.map { it.requestedScreenOrientation }.distinctUntilChanged()
                         .collect { screenOrientation ->
                             requestedOrientation = when (screenOrientation) {
                                 NavigationActivityViewModel.State.ScreenOrientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
@@ -473,6 +470,13 @@ class NavigationActivity : AppCompatActivity() {
                 }
             }
         }
+
+        viewModel.setIsViewInLandscape(resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mediaSession?.isActive = true
     }
 
     override fun onResume() {
@@ -504,16 +508,21 @@ class NavigationActivity : AppCompatActivity() {
             viewModel.pausePlayerViewPlayback()
     }
 
+    override fun onStop() {
+        super.onStop()
+        mediaSession?.isActive = false
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         //Releases the internal listeners from the player.
         binding.playerControlViewPlayPause.player = null
         binding.playerView.player = null
 
-        _mediaSession = null
+        mediaSession = null
 
-        _player?.removeListener(playerListener)
-        _player = null
+        player?.removeListener(playerListener)
+        player = null
 
         MediaPlayerService.unbindService(this, mediaPlayerServiceConnection)
         if (isFinishing)
@@ -524,22 +533,14 @@ class NavigationActivity : AppCompatActivity() {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        with(binding.motionLayout) {
-            transitionState = savedInstanceState.getBundle(KEY_MOTION_TRANSITION_STATE)
-        }
+        binding.motionLayout.transitionState =
+            savedInstanceState.getBundle(KEY_MOTION_TRANSITION_STATE)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        with(binding.motionLayout) {
-            outState.putBundle(KEY_MOTION_TRANSITION_STATE, transitionState)
-        }
+        outState.putBundle(KEY_MOTION_TRANSITION_STATE, binding.motionLayout.transitionState)
 
         viewModel.saveState()
         super.onSaveInstanceState(outState)
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        viewModel.updateIsFullscreen(isInLandscapeConfig)
     }
 }

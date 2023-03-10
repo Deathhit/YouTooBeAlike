@@ -38,7 +38,7 @@ class MediaPlayerService : Service() {
 
     class ServiceBinder(service: MediaPlayerService) : Binder() {
         private val serviceWeakRef = WeakReference(service)
-        val service = serviceWeakRef.get()!!
+        val service get() = serviceWeakRef.get()!!
     }
 
     abstract class ServiceConnection : android.content.ServiceConnection {

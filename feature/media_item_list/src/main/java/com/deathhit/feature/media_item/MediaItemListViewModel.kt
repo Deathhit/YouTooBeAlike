@@ -188,10 +188,7 @@ class MediaItemListViewModel @Inject constructor(
         }
     }
 
-    fun savePlayItemPositionOnPlayerPaused(isEnded: Boolean, isPlayerPaused: Boolean, mediaPosition: Long) {
-        if (!isPlayerPaused)
-            return
-
+    fun savePlayItemPosition(isEnded: Boolean, mediaPosition: Long) {
         playItem?.let {
             viewModelScope.launch(NonCancellable) {
                 mediaProgressRepository.setMediaProgress(
@@ -210,8 +207,8 @@ class MediaItemListViewModel @Inject constructor(
         savedStateHandle[KEY_MEDIA_ITEM_LABEL] = mediaItemLabel
     }
 
-    fun scrollToTopOnFirstPageLoaded(itemCount: Int) {
-        if (isFirstPageLoaded || itemCount <= 0)
+    fun scrollToTopOnFirstPageLoaded() {
+        if (isFirstPageLoaded)
             return
 
         _stateFlow.update { state ->

@@ -91,13 +91,13 @@ class MediaItemListFragment : Fragment() {
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
-            player!!.run {
-                viewModel.savePlayItemPositionOnPlayerPaused(
-                    playbackState == Player.STATE_ENDED,
-                    !isPlaying,
-                    currentPosition
-                )
-            }
+            if (!isPlaying)
+                with(player!!) {
+                    viewModel.savePlayItemPosition(
+                        playbackState == Player.STATE_ENDED,
+                        currentPosition
+                    )
+                }
         }
 
         override fun onRenderedFirstFrame() {
@@ -139,7 +139,8 @@ class MediaItemListFragment : Fragment() {
                 adapter =
                     it.apply {
                         addOnPagesUpdatedListener {
-                            viewModel.scrollToTopOnFirstPageLoaded(itemCount)
+                            if (itemCount > 0)
+                                viewModel.scrollToTopOnFirstPageLoaded()
                         }
 
                         addLoadStateListener { loadStates ->

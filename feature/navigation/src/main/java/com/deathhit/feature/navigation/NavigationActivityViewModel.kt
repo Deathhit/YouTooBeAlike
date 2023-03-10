@@ -34,12 +34,12 @@ class NavigationActivityViewModel @Inject constructor(
         val attachedTabs: Set<Tab>,
         val isFirstFrameRendered: Boolean,
         val isForTabToPlay: Boolean,
-        val isFullscreen: Boolean,
         val isPlayerConnected: Boolean,
         val isPlayerViewExpanded: Boolean,
+        val isViewInLandscape: Boolean,
         val playItem: MediaItemVO?,
         val playItemId: String?,
-        val screenOrientation: ScreenOrientation,
+        val requestedScreenOrientation: ScreenOrientation,
         val tab: Tab
     ) {
         sealed interface Action {
@@ -70,6 +70,7 @@ class NavigationActivityViewModel @Inject constructor(
             NOTIFICATIONS
         }
 
+        val isFullscreen = isPlayerViewExpanded && isViewInLandscape
         val isPlayingByPlayerView = !isForTabToPlay && isPlayerConnected
         val playTab =
             if (attachedTabs.contains(tab) && isForTabToPlay && isPlayerConnected) tab else null
@@ -82,12 +83,12 @@ class NavigationActivityViewModel @Inject constructor(
                 attachedTabs = emptySet(),
                 isFirstFrameRendered = savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] ?: false,
                 isForTabToPlay = savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] ?: true,
-                isFullscreen = false,
                 isPlayerConnected = false,
                 isPlayerViewExpanded = savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] ?: false,
+                isViewInLandscape = false,
                 playItem = null,
                 playItemId = savedStateHandle[KEY_PLAY_ITEM_ID],
-                screenOrientation = State.ScreenOrientation.UNSPECIFIED,
+                requestedScreenOrientation = State.ScreenOrientation.UNSPECIFIED,
                 tab = savedStateHandle[KEY_TAB] ?: State.Tab.HOME
             )
         )
@@ -98,8 +99,9 @@ class NavigationActivityViewModel @Inject constructor(
     private val isFullscreen get() = stateFlow.value.isFullscreen
     private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded
     private val isPlayingByPlayerView get() = stateFlow.value.isPlayingByPlayerView
+    private val isViewInLandscape get() = stateFlow.value.isViewInLandscape
     private val playItemId get() = stateFlow.value.playItemId
-    private val screenOrientation get() = stateFlow.value.screenOrientation
+    private val requestedScreenOrientation get() = stateFlow.value.requestedScreenOrientation
     private val tab get() = stateFlow.value.tab
 
     private val playItemFlow: Flow<MediaItemVO?> =
@@ -143,7 +145,7 @@ class NavigationActivityViewModel @Inject constructor(
 
     fun collapsePlayerView() {
         if (isFullscreen)
-            toggleScreenOrientation(true)
+            toggleScreenOrientation()
         else
             _stateFlow.update { state ->
                 state.copy(
@@ -226,10 +228,13 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
-    fun setTab(tab: State.Tab) {
-        if (tab == this.tab)
-            return
+    fun setIsViewInLandscape(isViewInLandscape: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isViewInLandscape = isViewInLandscape)
+        }
+    }
 
+    fun setTab(tab: State.Tab) {
         _stateFlow.update { state ->
             state.copy(tab = tab)
         }
@@ -244,14 +249,14 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
-    fun toggleScreenOrientation(isInLandscapeConfig: Boolean) {
+    fun toggleScreenOrientation() {
         _stateFlow.update { state ->
-            state.copy(screenOrientation = if (isInLandscapeConfig) State.ScreenOrientation.PORTRAIT else State.ScreenOrientation.LANDSCAPE)
+            state.copy(requestedScreenOrientation = if (isViewInLandscape) State.ScreenOrientation.PORTRAIT else State.ScreenOrientation.LANDSCAPE)
         }
     }
 
-    fun unlockScreenOrientation(isInLandscapeConfig: Boolean, orientation: Int) {
-        if (screenOrientation == State.ScreenOrientation.LANDSCAPE || screenOrientation == State.ScreenOrientation.UNSPECIFIED)
+    fun unlockScreenOrientation(orientation: Int) {
+        if (requestedScreenOrientation == State.ScreenOrientation.LANDSCAPE || requestedScreenOrientation == State.ScreenOrientation.UNSPECIFIED)
             return
 
         unlockScreenOrientationJob?.cancel()
@@ -261,18 +266,10 @@ class NavigationActivityViewModel @Inject constructor(
             val epsilon = 15
             val isPortraitOrientation = (orientation >= 360 - epsilon || orientation <= epsilon)
 
-            if (!isInLandscapeConfig && isPortraitOrientation && screenOrientation == State.ScreenOrientation.PORTRAIT)
+            if (!isViewInLandscape && isPortraitOrientation && requestedScreenOrientation == State.ScreenOrientation.PORTRAIT)
                 _stateFlow.update { state ->
-                    state.copy(screenOrientation = State.ScreenOrientation.UNSPECIFIED)
+                    state.copy(requestedScreenOrientation = State.ScreenOrientation.UNSPECIFIED)
                 }
-        }
-    }
-
-    fun updateIsFullscreen(isInLandscapeConfig: Boolean) {
-        val isFullscreen = isInLandscapeConfig && isPlayerViewExpanded
-
-        _stateFlow.update { state ->
-            state.copy(isFullscreen = isFullscreen)
         }
     }
 
