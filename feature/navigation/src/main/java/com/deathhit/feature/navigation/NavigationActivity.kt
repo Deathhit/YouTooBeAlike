@@ -92,10 +92,6 @@ class NavigationActivity : AppCompatActivity() {
                     }
                 }
 
-                lifecycleScope.launchWhenStarted {
-                    mediaSession!!.isActive = true
-                }
-
                 with(viewModel) {
                     setIsPlayerConnected(true)
 
@@ -222,9 +218,11 @@ class NavigationActivity : AppCompatActivity() {
             buttonFullscreen =
                 it.playerView.findViewById(com.deathhit.core.ui.R.id.button_fullscreen)
 
-            textViewPlayerViewSubtitle = it.playerView.findViewById(com.deathhit.core.ui.R.id.textView_subtitle)
+            textViewPlayerViewSubtitle =
+                it.playerView.findViewById(com.deathhit.core.ui.R.id.textView_subtitle)
 
-            textViewPlayerViewTitle = it.playerView.findViewById(com.deathhit.core.ui.R.id.textView_title)
+            textViewPlayerViewTitle =
+                it.playerView.findViewById(com.deathhit.core.ui.R.id.textView_title)
         }
 
         glideRequestManager = Glide.with(this)
@@ -250,6 +248,20 @@ class NavigationActivity : AppCompatActivity() {
                 PlaybackDetailsFragment.create(),
                 TAG_PLAYBACK_DETAILS
             )
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                launch {
+                    viewModel.stateFlow.map { it.isMediaSessionActive }.distinctUntilChanged()
+                        .collect {
+                            if (isChangingConfigurations)
+                                return@collect
+
+                            it?.let { mediaSession!!.isActive = it }
+                        }
+                }
+            }
         }
 
         lifecycleScope.launch {
@@ -483,7 +495,7 @@ class NavigationActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        mediaSession?.isActive = true
+        viewModel.setIsViewInForeground(true)
     }
 
     override fun onResume() {
@@ -517,7 +529,7 @@ class NavigationActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        mediaSession?.isActive = false
+        viewModel.setIsViewInForeground(false)
     }
 
     override fun onDestroy() {

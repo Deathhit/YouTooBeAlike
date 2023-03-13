@@ -36,6 +36,7 @@ class NavigationActivityViewModel @Inject constructor(
         val isForTabToPlay: Boolean,
         val isPlayerConnected: Boolean,
         val isPlayerViewExpanded: Boolean,
+        val isViewInForeground: Boolean,
         val isViewInLandscape: Boolean,
         val playItem: MediaItemVO?,
         val playItemId: String?,
@@ -71,6 +72,7 @@ class NavigationActivityViewModel @Inject constructor(
         }
 
         val isFullscreen = isPlayerViewExpanded && isViewInLandscape
+        val isMediaSessionActive = if(isPlayerConnected) isViewInForeground else null
         val isPlayingByPlayerView = !isForTabToPlay && isPlayerConnected
         val playTab =
             if (attachedTabs.contains(tab) && isForTabToPlay && isPlayerConnected) tab else null
@@ -85,6 +87,7 @@ class NavigationActivityViewModel @Inject constructor(
                 isForTabToPlay = savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] ?: true,
                 isPlayerConnected = false,
                 isPlayerViewExpanded = savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] ?: false,
+                isViewInForeground = false,
                 isViewInLandscape = false,
                 playItem = null,
                 playItemId = savedStateHandle[KEY_PLAY_ITEM_ID],
@@ -225,6 +228,12 @@ class NavigationActivityViewModel @Inject constructor(
     fun setIsPlayerViewExpanded(isPlayerViewExpanded: Boolean) {
         _stateFlow.update { state ->
             state.copy(isPlayerViewExpanded = isPlayerViewExpanded)
+        }
+    }
+
+    fun setIsViewInForeground(isViewInForeground: Boolean) {
+        _stateFlow.update { state ->
+            state.copy(isViewInForeground = isViewInForeground)
         }
     }
 
