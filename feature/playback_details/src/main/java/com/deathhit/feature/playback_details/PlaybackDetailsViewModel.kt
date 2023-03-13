@@ -55,7 +55,7 @@ class PlaybackDetailsViewModel @Inject constructor(
         stateFlow.map { it.playbackDetails }.distinctUntilChanged().flatMapLatest { playbackDetails ->
             val mediaItemLabel = MediaItemLabel.RECOMMENDED
 
-            mediaItemRepository.clearAll(mediaItemLabel)   //Clear data when query changes.
+            mediaItemRepository.clearByLabel(mediaItemLabel)   //Clear data when query changes.
 
             if (playbackDetails != null)
                 mediaItemRepository.getMediaItemPagingDataFlow(

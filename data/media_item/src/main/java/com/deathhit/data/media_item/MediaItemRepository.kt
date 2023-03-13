@@ -6,7 +6,7 @@ import com.deathhit.data.media_item.model.MediaItemLabel
 import kotlinx.coroutines.flow.Flow
 
 interface MediaItemRepository {
-    suspend fun clearAll(mediaItemLabel: MediaItemLabel)
+    suspend fun clearByLabel(mediaItemLabel: MediaItemLabel)
 
     fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemDO?>
 
