@@ -21,7 +21,7 @@ internal class MediaItemRepositoryImp(
         mediaItemLocalDataSource.clearAll(mediaItemLabel)
 
     override fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemDO?> =
-        mediaItemLocalDataSource.getMediaItemFlowById(mediaItemId).map { it?.toDO() }
+        mediaItemLocalDataSource.getMediaItemFlowById(mediaItemId).map { it?.toMediaItemDO() }
 
     override fun getMediaItemPagingDataFlow(
         exclusiveId: String?,
@@ -39,5 +39,5 @@ internal class MediaItemRepositoryImp(
         )
     ) {
         mediaItemLocalDataSource.getMediaItemPagingSource(mediaItemLabel)
-    }.flow.map { pagingData -> pagingData.map { it.toDO() } }
+    }.flow.map { pagingData -> pagingData.map { it.toMediaItemDO() } }
 }

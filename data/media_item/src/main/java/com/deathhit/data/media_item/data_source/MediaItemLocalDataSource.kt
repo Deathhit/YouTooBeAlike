@@ -6,7 +6,7 @@ import com.deathhit.core.database.AppDatabase
 import com.deathhit.core.database.entity.MediaItemEntity
 import com.deathhit.core.database.entity.RemoteKeyEntity
 import com.deathhit.data.media_item.model.MediaItemLabel
-import com.deathhit.data.media_item.toLabel
+import com.deathhit.data.media_item.toLabelString
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,17 +16,17 @@ internal class MediaItemLocalDataSource @Inject constructor(private val appDatab
     private val remoteKeyDao = appDatabase.remoteKeyDao()
 
     suspend fun clearAll(mediaItemLabel: MediaItemLabel) =
-        mediaItemDao.clearAll(mediaItemLabel.toLabel())
+        mediaItemDao.clearAll(mediaItemLabel.toLabelString())
 
     fun getMediaItemPagingSource(mediaItemLabel: MediaItemLabel): PagingSource<Int, MediaItemEntity> =
-        mediaItemDao.getPagingSource(mediaItemLabel.toLabel())
+        mediaItemDao.getPagingSource(mediaItemLabel.toLabelString())
 
     fun getMediaItemFlowById(mediaItemId: String) = mediaItemDao.getFlowById(mediaItemId)
 
     suspend fun getNextMediaItemPageKey(mediaItemLabel: MediaItemLabel) =
         with(appDatabase) {
             withTransaction {
-                remoteKeyDao.getByLabel(mediaItemLabel.toLabel())?.nextKey
+                remoteKeyDao.getByLabel(mediaItemLabel.toLabelString())?.nextKey
             }
         }
 
@@ -37,7 +37,7 @@ internal class MediaItemLocalDataSource @Inject constructor(private val appDatab
         pageIndex: Int,
     ) = with(appDatabase) {
         withTransaction {
-            val label = mediaItemLabel.toLabel()
+            val label = mediaItemLabel.toLabelString()
 
             if (isRefreshing) {
                 mediaItemDao.clearAll(label)

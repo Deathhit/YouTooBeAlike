@@ -58,7 +58,7 @@ internal class MediaItemRemoteMediator(
             )
 
             mediaItemLocalDataSource.insertMediaItemPage(
-                itemList.map { it.toEntity(mediaItemLabel.toLabel()) },
+                itemList.map { it.toMediaItemEntity(mediaItemLabel.toLabelString()) },
                 mediaItemLabel,
                 loadType == LoadType.REFRESH,
                 loadKey
