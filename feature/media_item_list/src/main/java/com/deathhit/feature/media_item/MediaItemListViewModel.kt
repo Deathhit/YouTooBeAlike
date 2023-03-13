@@ -11,7 +11,7 @@ import com.deathhit.data.media_progress.MediaProgressRepository
 import com.deathhit.data.media_progress.model.MediaProgressDO
 import com.deathhit.feature.media_item.model.MediaItemLabel
 import com.deathhit.feature.media_item.model.MediaItemVO
-import com.deathhit.feature.media_item.model.toDO
+import com.deathhit.feature.media_item.model.toMediaItemLabelDO
 import com.deathhit.feature.media_item.model.toMediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -97,7 +97,7 @@ class MediaItemListViewModel @Inject constructor(
 
     val mediaItemPagingDataFlow =
         stateFlow.map { it.mediaItemLabel }.distinctUntilChanged().flatMapLatest {
-            mediaItemRepository.getMediaItemPagingDataFlow(mediaItemLabel = mediaItemLabel.toDO())
+            mediaItemRepository.getMediaItemPagingDataFlow(mediaItemLabel = mediaItemLabel.toMediaItemLabelDO())
                 .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
         }.cachedIn(viewModelScope)
 
