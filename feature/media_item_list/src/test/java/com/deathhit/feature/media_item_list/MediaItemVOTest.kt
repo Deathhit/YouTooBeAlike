@@ -1,7 +1,7 @@
-package com.deathhit.feature.media_item
+package com.deathhit.feature.media_item_list
 
 import com.deathhit.data.media_item.model.MediaItemDO
-import com.deathhit.feature.media_item.model.toMediaItemVO
+import com.deathhit.feature.media_item_list.model.toMediaItemVO
 import org.junit.Test
 
 class MediaItemVOTest {

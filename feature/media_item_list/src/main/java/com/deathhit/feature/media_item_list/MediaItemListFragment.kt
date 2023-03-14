@@ -1,4 +1,4 @@
-package com.deathhit.feature.media_item
+package com.deathhit.feature.media_item_list
 
 import android.content.res.Configuration
 import android.os.Bundle
@@ -16,8 +16,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.deathhit.core.ui.AppLoadStateAdapter
-import com.deathhit.feature.media_item.model.MediaItemLabel
-import com.deathhit.feature.media_item.model.MediaItemVO
+import com.deathhit.feature.media_item_list.model.MediaItemLabel
+import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.FragmentMediaItemListBinding
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem

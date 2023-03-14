@@ -8,8 +8,8 @@ import androidx.paging.cachedIn
 import androidx.paging.map
 import com.deathhit.data.media_item.model.MediaItemLabel
 import com.deathhit.data.media_item.MediaItemRepository
-import com.deathhit.feature.media_item.model.MediaItemVO
-import com.deathhit.feature.media_item.model.toMediaItemVO
+import com.deathhit.feature.media_item_list.model.MediaItemVO
+import com.deathhit.feature.media_item_list.model.toMediaItemVO
 import com.deathhit.feature.playback_details.model.PlaybackDetailsVO
 import com.deathhit.feature.playback_details.model.toPlaybackDetailsVO
 import dagger.hilt.android.lifecycle.HiltViewModel

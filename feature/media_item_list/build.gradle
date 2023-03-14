@@ -14,7 +14,7 @@ android {
         minSdk 24
         targetSdk 33
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.deathhit.feature.media_item_list.config.HiltTestRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 

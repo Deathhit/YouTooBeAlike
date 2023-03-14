@@ -1,4 +1,4 @@
-package com.deathhit.feature.media_item
+package com.deathhit.feature.media_item_list
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -6,7 +6,7 @@ import androidx.core.view.isInvisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.bumptech.glide.RequestManager
-import com.deathhit.feature.media_item.model.MediaItemVO
+import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.ItemMediaItemBinding
 import com.google.android.exoplayer2.Player
 

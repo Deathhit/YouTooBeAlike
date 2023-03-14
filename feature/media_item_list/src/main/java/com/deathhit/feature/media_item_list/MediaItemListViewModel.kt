@@ -1,4 +1,4 @@
-package com.deathhit.feature.media_item
+package com.deathhit.feature.media_item_list
 
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
@@ -9,10 +9,10 @@ import androidx.paging.map
 import com.deathhit.data.media_item.MediaItemRepository
 import com.deathhit.data.media_progress.MediaProgressRepository
 import com.deathhit.data.media_progress.model.MediaProgressDO
-import com.deathhit.feature.media_item.model.MediaItemLabel
-import com.deathhit.feature.media_item.model.MediaItemVO
-import com.deathhit.feature.media_item.model.toMediaItemLabelDO
-import com.deathhit.feature.media_item.model.toMediaItemVO
+import com.deathhit.feature.media_item_list.model.MediaItemLabel
+import com.deathhit.feature.media_item_list.model.MediaItemVO
+import com.deathhit.feature.media_item_list.model.toMediaItemLabelDO
+import com.deathhit.feature.media_item_list.model.toMediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -158,21 +158,23 @@ class MediaItemListViewModel @Inject constructor(
                 state.copy(playItem = item)
             }
 
+            if (!isReadyToPlay || item == null)
+                return@launch
+
             delay(MEDIA_SWITCHING_DELAY)
 
-            if (isReadyToPlay && item != null)
-                _stateFlow.update { state ->
-                    val progress =
-                        mediaProgressRepository.getMediaProgressByMediaItemId(item.id)
+            _stateFlow.update { state ->
+                val progress =
+                    mediaProgressRepository.getMediaProgressByMediaItemId(item.id)
 
-                    state.copy(
-                        actions = state.actions + State.Action.PrepareAndPlayPlayback(
-                            progress?.isEnded ?: false,
-                            progress?.position ?: 0L,
-                            item.sourceUrl
-                        )
+                state.copy(
+                    actions = state.actions + State.Action.PrepareAndPlayPlayback(
+                        progress?.isEnded ?: false,
+                        progress?.position ?: 0L,
+                        item.sourceUrl
                     )
-                }
+                )
+            }
         }
     }
 

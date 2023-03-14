@@ -1,7 +1,7 @@
-package com.deathhit.feature.media_item
+package com.deathhit.feature.media_item_list
 
 import androidx.recyclerview.widget.RecyclerView
-import com.deathhit.feature.media_item.model.MediaItemVO
+import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.ItemMediaItemBinding
 
 class MediaItemViewHolder(

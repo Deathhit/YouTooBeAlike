@@ -13,8 +13,8 @@ import androidx.recyclerview.widget.ConcatAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.deathhit.core.ui.AppLoadStateAdapter
-import com.deathhit.feature.media_item.MediaItemAdapter
-import com.deathhit.feature.media_item.model.MediaItemVO
+import com.deathhit.feature.media_item_list.MediaItemAdapter
+import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.playback_details.databinding.FragmentPlaybackDetailsBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest

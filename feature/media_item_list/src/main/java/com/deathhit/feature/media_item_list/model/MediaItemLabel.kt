@@ -1,4 +1,4 @@
-package com.deathhit.feature.media_item.model
+package com.deathhit.feature.media_item_list.model
 
 enum class MediaItemLabel {
     DASHBOARD,

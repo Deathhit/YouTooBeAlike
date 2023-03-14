@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.deathhit.data.media_item.MediaItemRepository
 import com.deathhit.data.media_progress.model.MediaProgressDO
 import com.deathhit.data.media_progress.MediaProgressRepository
-import com.deathhit.feature.media_item.model.MediaItemVO
-import com.deathhit.feature.media_item.model.toMediaItemVO
+import com.deathhit.feature.media_item_list.model.MediaItemVO
+import com.deathhit.feature.media_item_list.model.toMediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
