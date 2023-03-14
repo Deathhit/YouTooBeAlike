@@ -35,7 +35,7 @@ class PlaybackDetailsViewModel @Inject constructor(
         val playItemId: String?
     ) {
         sealed interface Action {
-            data class OpenItem(val itemId: String) : Action
+            data class OpenItem(val item: MediaItemVO) : Action
             object RetryLoadingRecommendedList : Action
         }
     }
@@ -93,7 +93,7 @@ class PlaybackDetailsViewModel @Inject constructor(
 
     fun openItem(item: MediaItemVO) {
         _stateFlow.update { state ->
-            state.copy(actions = state.actions + State.Action.OpenItem(item.id))
+            state.copy(actions = state.actions + State.Action.OpenItem(item))
         }
     }
 

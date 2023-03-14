@@ -91,7 +91,7 @@ class PlaybackDetailsFragment : Fragment() {
                             actions.forEach { action ->
                                 when (action) {
                                     is PlaybackDetailsViewModel.State.Action.OpenItem -> callback?.onOpenItem(
-                                        action.itemId
+                                        action.item.id
                                     )
                                     PlaybackDetailsViewModel.State.Action.RetryLoadingRecommendedList -> recommendedItemAdapter.retry()
                                 }
