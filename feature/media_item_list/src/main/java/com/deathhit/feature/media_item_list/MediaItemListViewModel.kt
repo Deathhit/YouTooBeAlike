@@ -55,6 +55,7 @@ class MediaItemListViewModel @Inject constructor(
             data class OpenItem(val item: MediaItemVO) : Action
             data class PrepareAndPlayPlayback(
                 val isEnded: Boolean,
+                val mediaItemId: String,
                 val position: Long,
                 val sourceUrl: String
             ) : Action
@@ -70,9 +71,9 @@ class MediaItemListViewModel @Inject constructor(
             val playPosition: Int?
         )
 
-        val isReadyToPlay = isPlayerSet && !isViewInLandscape
         val playPosition =
-            if (isPlayerSet && isViewActive && !isViewHidden) firstCompletelyVisibleItemPosition else null
+            if (isPlayerSet && isViewActive && !isViewHidden && !isViewInLandscape) firstCompletelyVisibleItemPosition else null
+        val isReadyToPlay = playPosition != null
         val listState = ListState(isFirstFrameRendered, playPosition)
     }
 
@@ -102,6 +103,7 @@ class MediaItemListViewModel @Inject constructor(
         }.cachedIn(viewModelScope)
 
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
+    private val isPlayerSet get() = stateFlow.value.isPlayerSet
     private val isReadyToPlay get() = stateFlow.value.isReadyToPlay
     private val mediaItemLabel get() = stateFlow.value.mediaItemLabel
     private val playItem get() = stateFlow.value.playItem
@@ -113,22 +115,27 @@ class MediaItemListViewModel @Inject constructor(
             launch {
                 stateFlow.map { it.playPosition }.distinctUntilChanged().collectLatest {
                     _stateFlow.update { state ->
-                        state.copy(isFirstFrameRendered = false)
+                        state.copy(
+                            isFirstFrameRendered = false,
+                            playItem = null
+                        )
                     }
 
-                    if (isReadyToPlay)
+                    if (isPlayerSet)
                         _stateFlow.update { state ->
                             state.copy(actions = state.actions + State.Action.StopPlayback)
                         }
 
-                    if (it == null)
-                        prepareItem(null)
+                    prepareItemJob?.cancel()
                 }
             }
         }
     }
 
     fun notifyFirstFrameRendered() {
+        if (!isReadyToPlay)
+            return
+
         _stateFlow.update { state ->
             state.copy(isFirstFrameRendered = true)
         }
@@ -146,21 +153,12 @@ class MediaItemListViewModel @Inject constructor(
         }
     }
 
-    fun prepareItem(item: MediaItemVO?) {
-        if (item == playItem)
+    fun prepareItemIfNotPrepared(item: MediaItemVO) {
+        if (!isReadyToPlay || item == playItem)
             return
 
         prepareItemJob?.cancel()
         prepareItemJob = viewModelScope.launch {
-            yield() //Allow the assignment of playItem to be canceled.
-
-            _stateFlow.update { state ->
-                state.copy(playItem = item)
-            }
-
-            if (!isReadyToPlay || item == null)
-                return@launch
-
             delay(MEDIA_SWITCHING_DELAY)
 
             _stateFlow.update { state ->
@@ -170,9 +168,11 @@ class MediaItemListViewModel @Inject constructor(
                 state.copy(
                     actions = state.actions + State.Action.PrepareAndPlayPlayback(
                         progress?.isEnded ?: false,
+                        item.id,
                         progress?.position ?: 0L,
                         item.sourceUrl
-                    )
+                    ),
+                    playItem = item
                 )
             }
         }
@@ -190,17 +190,15 @@ class MediaItemListViewModel @Inject constructor(
         }
     }
 
-    fun savePlayItemPosition(isEnded: Boolean, mediaPosition: Long) {
-        playItem?.let {
-            viewModelScope.launch(NonCancellable) {
-                mediaProgressRepository.setMediaProgress(
-                    MediaProgressDO(
-                        isEnded,
-                        it.id,
-                        mediaPosition
-                    )
+    fun saveMediaProgress(isEnded: Boolean, mediaItemId: String, mediaPosition: Long) {
+        viewModelScope.launch(NonCancellable) {
+            mediaProgressRepository.setMediaProgress(
+                MediaProgressDO(
+                    isEnded,
+                    mediaItemId,
+                    mediaPosition
                 )
-            }
+            )
         }
     }
 

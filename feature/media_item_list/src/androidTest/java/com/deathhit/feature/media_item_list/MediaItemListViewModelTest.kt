@@ -211,23 +211,22 @@ class MediaItemListViewModelTest {
         ).also { mediaProgressRepository.savedMediaProgressDO = it }
 
         //When
-        viewModel.prepareItem(mediaItem0)
-        viewModel.prepareItem(mediaItem1)   //The call should cancel the previous one.
+        viewModel.prepareItemIfNotPrepared(mediaItem0)
+        viewModel.prepareItemIfNotPrepared(mediaItem1)   //The call should cancel the previous one.
 
         advanceUntilIdle()
 
         //Then
         collectedState!!.run {
-            assert(actions.filterIsInstance<MediaItemListViewModel.State.Action.PrepareAndPlayPlayback>().size == 1)
+            val prepareActions =
+                actions.filterIsInstance<MediaItemListViewModel.State.Action.PrepareAndPlayPlayback>()
 
-            val action = actions.last()
-
-            assert(
-                action is MediaItemListViewModel.State.Action.PrepareAndPlayPlayback
-                        && action.isEnded == mediaProgress1.isEnded
-                        && action.sourceUrl == mediaItem1.sourceUrl
-                        && action.position == mediaProgress1.position
-            )
+            assert(prepareActions.size == 1)
+            assert(prepareActions.last().let {
+                it.isEnded == mediaProgress1.isEnded
+                        && it.position == mediaProgress1.position
+                        && it.sourceUrl == mediaItem1.sourceUrl
+            })
             assert(playItem == mediaItem1)
         }
 
@@ -289,7 +288,7 @@ class MediaItemListViewModelTest {
         //Given
         val playItem = MediaItemVO("0", "sourceUrl0", "subtitle", "thumbUrl", "title")
 
-        viewModel.prepareItem(playItem)
+        viewModel.prepareItemIfNotPrepared(playItem)
 
         advanceUntilIdle()
 
@@ -297,7 +296,7 @@ class MediaItemListViewModelTest {
         val isEnded = Random.nextBoolean()
         val position = Random.nextLong()
 
-        viewModel.savePlayItemPosition(isEnded, position)
+        viewModel.savePlayItemProgress(isEnded, position)
 
         advanceUntilIdle()
 

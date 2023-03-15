@@ -51,6 +51,7 @@ class NavigationActivityViewModel @Inject constructor(
             object PlayPlayback : Action
             data class PreparePlayback(
                 val isEnded: Boolean,
+                val mediaItemId: String,
                 val position: Long,
                 val sourceUrl: String
             ) : Action
@@ -72,7 +73,7 @@ class NavigationActivityViewModel @Inject constructor(
         }
 
         val isFullscreen = isPlayerViewExpanded && isViewInLandscape
-        val isMediaSessionActive = if(isPlayerConnected) isViewInForeground else null
+        val isMediaSessionActive = if (isPlayerConnected) isViewInForeground else null
         val isPlayingByPlayerView = !isForTabToPlay && isPlayerConnected
         val playTab =
             if (attachedTabs.contains(tab) && isForTabToPlay && isPlayerConnected) tab else null
@@ -100,6 +101,7 @@ class NavigationActivityViewModel @Inject constructor(
     private val isFirstFrameRendered get() = stateFlow.value.isFirstFrameRendered
     private val isForTabToPlay get() = stateFlow.value.isForTabToPlay
     private val isFullscreen get() = stateFlow.value.isFullscreen
+    private val isPlayerConnected get() = stateFlow.value.isPlayerConnected
     private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded
     private val isPlayingByPlayerView get() = stateFlow.value.isPlayingByPlayerView
     private val isViewInLandscape get() = stateFlow.value.isViewInLandscape
@@ -138,12 +140,14 @@ class NavigationActivityViewModel @Inject constructor(
     fun clearPlayerViewPlayback() {
         _stateFlow.update { state ->
             state.copy(
-                actions = state.actions + State.Action.HidePlayerView,
-                isForTabToPlay = true
+                actions = state.actions + State.Action.HidePlayerView + State.Action.StopPlayback,
+                isFirstFrameRendered = false,
+                isForTabToPlay = true,
+                playItemId = null
             )
         }
 
-        prepareItem(null)
+        prepareItemJob?.cancel()
     }
 
     fun collapsePlayerView() {
@@ -170,11 +174,14 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun openItem(itemId: String) {
+        if (!isPlayerConnected)
+            return
+
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.ExpandPlayerView + State.Action.PlayPlayback,
                 isForTabToPlay = false,
-                playItemId = null   //Clear previous content to prevent seeing it
+                playItemId = null   //Clear previous value first to prevent UI glitching.
             )
         }
 
@@ -194,20 +201,18 @@ class NavigationActivityViewModel @Inject constructor(
         if (!isPlayingByPlayerView)
             return
 
-        prepareItem(playItemId)
+        playItemId?.let { prepareItem(it) }
     }
 
-    fun savePlayItemPosition(isEnded: Boolean, mediaPosition: Long) {
-        playItemId?.let {
-            viewModelScope.launch(NonCancellable) {
-                mediaProgressRepository.setMediaProgress(
-                    MediaProgressDO(
-                        isEnded,
-                        it,
-                        mediaPosition
-                    )
+    fun saveMediaProgress(isEnded: Boolean, mediaItemId: String, mediaPosition: Long) {
+        viewModelScope.launch(NonCancellable) {
+            mediaProgressRepository.setMediaProgress(
+                MediaProgressDO(
+                    isEnded,
+                    mediaItemId,
+                    mediaPosition
                 )
-            }
+            )
         }
     }
 
@@ -282,7 +287,7 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
-    private fun prepareItem(itemId: String?) {
+    private fun prepareItem(itemId: String) {
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.StopPlayback, isFirstFrameRendered = false
@@ -291,8 +296,6 @@ class NavigationActivityViewModel @Inject constructor(
 
         prepareItemJob?.cancel()
         prepareItemJob = viewModelScope.launch {
-            yield() //Allow the assignment of playItemId to be canceled.
-
             _stateFlow.update { state ->
                 state.copy(playItemId = itemId)
             }
@@ -307,6 +310,7 @@ class NavigationActivityViewModel @Inject constructor(
                     state.copy(
                         actions = state.actions + State.Action.PreparePlayback(
                             progress?.isEnded ?: false,
+                            playItem.id,
                             progress?.position ?: 0L,
                             playItem.sourceUrl
                         )

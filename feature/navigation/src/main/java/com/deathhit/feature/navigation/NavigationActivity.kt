@@ -161,8 +161,9 @@ class NavigationActivity : AppCompatActivity() {
             super.onIsPlayingChanged(isPlaying)
             if (!isPlaying)
                 with(player!!) {
-                    viewModel.savePlayItemPosition(
+                    viewModel.saveMediaProgress(
                         playbackState == Player.STATE_ENDED,
+                        currentMediaItem!!.mediaId,
                         currentPosition
                     )
                 }
@@ -307,7 +308,8 @@ class NavigationActivity : AppCompatActivity() {
                                         player!!
                                     ) {
                                         setMediaItem(
-                                            MediaItem.fromUri(action.sourceUrl),
+                                            MediaItem.Builder().setMediaId(action.mediaItemId)
+                                                .setUri(action.sourceUrl).build(),
                                             if (action.isEnded) C.TIME_UNSET else action.position
                                         )
                                         prepare()
