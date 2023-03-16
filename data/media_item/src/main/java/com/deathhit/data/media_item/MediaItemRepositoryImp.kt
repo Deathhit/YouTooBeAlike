@@ -18,7 +18,7 @@ internal class MediaItemRepositoryImp(
     }
 
     override suspend fun clearByLabel(mediaItemLabel: MediaItemLabel) =
-        mediaItemLocalDataSource.clearAll(mediaItemLabel)
+        mediaItemLocalDataSource.clearByLabel(mediaItemLabel.toLabelString())
 
     override fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemDO?> =
         mediaItemLocalDataSource.getMediaItemFlowById(mediaItemId).map { it?.toMediaItemDO() }
@@ -38,6 +38,6 @@ internal class MediaItemRepositoryImp(
             subtitle
         )
     ) {
-        mediaItemLocalDataSource.getMediaItemPagingSource(mediaItemLabel)
+        mediaItemLocalDataSource.getMediaItemPagingSource(mediaItemLabel.toLabelString())
     }.flow.map { pagingData -> pagingData.map { it.toMediaItemDO() } }
 }

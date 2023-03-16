@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MediaItemDao {
     @Query("DELETE FROM MediaItemEntity WHERE :label IS NULL OR ${Column.LABEL} == :label")
-    suspend fun clearAll(label: String?)
+    suspend fun clearByLabel(label: String?)
 
     @Query("SELECT * FROM MediaItemEntity WHERE ${Column.MEDIA_ITEM_ID} == :mediaItemId")
     fun getFlowById(mediaItemId: String): Flow<MediaItemEntity?>
