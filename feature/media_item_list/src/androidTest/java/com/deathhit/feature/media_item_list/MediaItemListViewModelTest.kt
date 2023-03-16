@@ -30,33 +30,36 @@ class MediaItemListViewModelTest {
         private val mediaItemRepository: MediaItemRepository,
         private val mediaProgressRepository: MediaProgressRepository
     ) {
-        var isFirstPageLoaded = false
-        var isReadyToPlay = false
+        sealed interface TestCase {
+            object InitialState : TestCase
+            object FirstPageLoaded : TestCase
+            object ReadyToPlay : TestCase
+        }
+
+        var testCase: TestCase = TestCase.InitialState
 
         fun build() = MediaItemListViewModel(
             mediaItemRepository,
             mediaProgressRepository,
             SavedStateHandle.createHandle(null, MediaItemListViewModel.createArgs(mediaItemLabel))
         ).apply {
-            if (isFirstPageLoaded)
-                scrollToTopOnFirstPageLoaded()
-
-            if (isReadyToPlay) {
-                setFirstCompletelyVisibleItemPosition(Random.nextInt())
-                setIsPlayerSet(true)
-                setIsViewActive(true)
-                setIsViewHidden(false)
-                setIsViewInLandscape(false)
+            when(testCase) {
+                TestCase.FirstPageLoaded -> scrollToTopOnFirstPageLoaded()
+                TestCase.ReadyToPlay -> {
+                    setFirstCompletelyVisibleItemPosition(Random.nextInt())
+                    setIsPlayerSet(true)
+                    setIsViewActive(true)
+                    setIsViewHidden(false)
+                    setIsViewInLandscape(false)
+                }
+                else -> {}
             }
 
             runTest { advanceUntilIdle() }
-
-            assert(isFirstPageLoaded == stateFlow.value.isFirstPageLoaded)
-            assert(isReadyToPlay == stateFlow.value.isReadyToPlay)
         }
     }
 
-    private class ViewModelStateVerifier(private val viewModel: MediaItemListViewModel) {
+    private class ViewModelStateAsserter(private val viewModel: MediaItemListViewModel) {
         private val currentState get() = viewModel.stateFlow.value
         private val startState = viewModel.stateFlow.value
 
@@ -74,7 +77,7 @@ class MediaItemListViewModelTest {
             assert(playItem == null)
         }
 
-        fun assertActionListIsEmpty() {
+        fun assertActionsIsEmpty() {
             assert(currentState.actions.isEmpty())
         }
 
@@ -86,8 +89,16 @@ class MediaItemListViewModelTest {
             assert(currentState.isFirstFrameRendered)
         }
 
+        fun assertIsFirstPageLoaded() {
+            assert(currentState.isFirstPageLoaded)
+        }
+
         fun assertIsPlayerSet() {
             assert(currentState.isPlayerSet)
+        }
+
+        fun assertIsReadyToPlay() {
+            assert(currentState.isReadyToPlay)
         }
 
         fun assertIsRefreshingList() {
@@ -106,7 +117,7 @@ class MediaItemListViewModelTest {
             assert(currentState.isViewInLandscape)
         }
 
-        fun assertLastActionIsOpenItemWithGivenItem(item: MediaItemVO) =
+        fun assertLastActionIsOpenItem(item: MediaItemVO) =
             currentState.actions.last().let {
                 assert(it is MediaItemListViewModel.State.Action.OpenItem && it.item == item)
             }
@@ -201,19 +212,19 @@ class MediaItemListViewModelTest {
     fun initialState() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
 
         //Then
-        viewModelStateVerifier.assertInitialState()
+        viewModelStateAsserter.assertInitialState()
     }
 
     @Test
     fun notifyFirstFrameRendered_initialState_doNothing() = runTest {
         //Given
-        val viewModel = viewModelBuilder.apply { isReadyToPlay = false }.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.notifyFirstFrameRendered()
@@ -221,14 +232,14 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertStateUnchanged()
+        viewModelStateAsserter.assertStateUnchanged()
     }
 
     @Test
-    fun notifyFirstFrameRendered_isReadyToPlay_setValueToTrue() = runTest {
+    fun notifyFirstFrameRendered_readyToPlay_setValueToTrue() = runTest {
         //Given
-        val viewModel = viewModelBuilder.apply { isReadyToPlay = true }.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModel = viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.ReadyToPlay }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.notifyFirstFrameRendered()
@@ -236,14 +247,17 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertIsFirstFrameRendered()
+        with(viewModelStateAsserter) {
+            assertIsFirstFrameRendered()
+            assertIsReadyToPlay()
+        }
     }
 
     @Test
     fun onAction_initialState_clearGivenAction() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         viewModel.refreshList()
 
@@ -257,16 +271,16 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertActionListIsEmpty()
+        viewModelStateAsserter.assertActionsIsEmpty()
     }
 
     @Test
     fun openItem_initialState_addAction() = runTest {
         //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
-
         val mediaItem = MediaItemVO("id", "sourceUrl", "subtitle", "thumbUrl", "title")
+
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.openItem(mediaItem)
@@ -274,16 +288,16 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertLastActionIsOpenItemWithGivenItem(mediaItem)
+        viewModelStateAsserter.assertLastActionIsOpenItem(mediaItem)
     }
 
     @Test
     fun prepareItemIfNotePrepared_initialState_doNothing() = runTest {
         //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
-
         val mediaItem = MediaItemVO("id", "sourceUrl", "subtitle", "thumbUrl", "title")
+
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.prepareItemIfNotPrepared(mediaItem)
@@ -291,15 +305,12 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertStateUnchanged()
+        viewModelStateAsserter.assertStateUnchanged()
     }
 
     @Test
-    fun prepareItemIfNotePrepared_isReadyToPlay_addAction() = runTest {
+    fun prepareItemIfNotePrepared_readyToPlay_addAction() = runTest {
         //Given
-        val viewModel = viewModelBuilder.apply { isReadyToPlay = true }.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
-
         val mediaItem = MediaItemVO("id", "sourceUrl", "subtitle", "thumbUrl", "title")
 
         val mediaProgress = MediaProgressDO(
@@ -308,13 +319,17 @@ class MediaItemListViewModelTest {
             Random.nextLong()
         ).also { mediaProgressRepository.mediaProgressDO = it }
 
+        val viewModel = viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.ReadyToPlay }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
         //When
         viewModel.prepareItemIfNotPrepared(mediaItem)
 
         advanceUntilIdle()
 
         //Then
-        with(viewModelStateVerifier) {
+        with(viewModelStateAsserter) {
+            assertIsReadyToPlay()
             assertLastActionIsPrepareAndPlayPlaybackWithGivenParameters(
                 mediaProgress.isEnded,
                 mediaItem.id,
@@ -329,7 +344,7 @@ class MediaItemListViewModelTest {
     fun refreshList_initialState_addAction() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.refreshList()
@@ -337,14 +352,14 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertLastActionIsRefreshList()
+        viewModelStateAsserter.assertLastActionIsRefreshList()
     }
 
     @Test
     fun retryLoadingList_initialState_addAction() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.retryLoadingList()
@@ -352,21 +367,19 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertLastActionIsRetryLoadingList()
+        viewModelStateAsserter.assertLastActionIsRetryLoadingList()
     }
 
     @Test
     fun saveMediaProgress_initialState_saveParameters() = runTest {
         //Given
-        val viewModel = viewModelBuilder.build()
-
-        advanceUntilIdle()
-
-        //When
         val isEnded = Random.nextBoolean()
         val mediaItemId = "mediaItemId"
         val position = Random.nextLong()
 
+        val viewModel = viewModelBuilder.build()
+
+        //When
         viewModel.saveMediaProgress(isEnded, mediaItemId, position)
 
         advanceUntilIdle()
@@ -386,7 +399,7 @@ class MediaItemListViewModelTest {
     fun scrollToTopOnFirstPageLoaded_initialState_addAction() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.scrollToTopOnFirstPageLoaded()
@@ -394,14 +407,14 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertLastActionIsScrollToTop()
+        viewModelStateAsserter.assertLastActionIsScrollToTop()
     }
 
     @Test
-    fun scrollToTopOnFirstPageLoaded_isFirstPageLoaded_doNothing() = runTest {
+    fun scrollToTopOnFirstPageLoaded_firstPageLoaded_doNothing() = runTest {
         //Given
-        val viewModel = viewModelBuilder.apply { isFirstPageLoaded = true }.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModel = viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.FirstPageLoaded }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.scrollToTopOnFirstPageLoaded()
@@ -409,16 +422,19 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertStateUnchanged()
+        with(viewModelStateAsserter) {
+            assertIsFirstPageLoaded()
+            assertStateUnchanged()
+        }
     }
 
     @Test
     fun setFirstCompletelyVisibleItemPosition_initialState_setValue() = runTest {
         //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
-
         val position = Random.nextInt()
+
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.setFirstCompletelyVisibleItemPosition(position)
@@ -426,14 +442,14 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertFirstCompletelyVisiblePositionIsValue(position)
+        viewModelStateAsserter.assertFirstCompletelyVisiblePositionIsValue(position)
     }
 
     @Test
     fun setIsPlayerSet_initialState_setValue() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.setIsPlayerSet(true)
@@ -441,14 +457,14 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertIsPlayerSet()
+        viewModelStateAsserter.assertIsPlayerSet()
     }
 
     @Test
     fun setIsRefreshingList_initialState_setValue() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.setIsRefreshingList(true)
@@ -456,14 +472,14 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertIsRefreshingList()
+        viewModelStateAsserter.assertIsRefreshingList()
     }
 
     @Test
     fun setIsViewActive_initialState_setValue() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.setIsViewActive(true)
@@ -471,14 +487,14 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertIsViewActive()
+        viewModelStateAsserter.assertIsViewActive()
     }
 
     @Test
     fun setIsViewHidden_initialState_setValue() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.setIsViewHidden(true)
@@ -486,14 +502,14 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertIsViewHidden()
+        viewModelStateAsserter.assertIsViewHidden()
     }
 
     @Test
     fun setIsViewInLandscape_initialState_setValue() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateVerifier = ViewModelStateVerifier(viewModel)
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.setIsViewInLandscape(true)
@@ -501,6 +517,6 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateVerifier.assertIsViewInLandscape()
+        viewModelStateAsserter.assertIsViewInLandscape()
     }
 }
