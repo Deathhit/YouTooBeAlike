@@ -68,6 +68,14 @@ class PlaybackDetailsViewModelTest {
         fun assertLastActionIsRetryLoadingRecommendedList() {
             assert(currentState.actions.last() is PlaybackDetailsViewModel.State.Action.RetryLoadingRecommendedList)
         }
+
+        fun assertPlaybackDetails(playbackDetails: PlaybackDetailsVO?) {
+            assert(currentState.playbackDetails == playbackDetails)
+        }
+
+        fun assertPlayItemId(playItemId: String?) {
+            assert(currentState.playItemId == playItemId)
+        }
     }
 
     @get:Rule
@@ -117,28 +125,6 @@ class PlaybackDetailsViewModelTest {
 
         //Then
         viewModelStateAsserter.assertInitialState()
-    }
-
-    @Test
-    fun initialState_playItemIdSet() = runTest {
-        //Given
-        val mediaItemDO =
-            MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
-
-        mediaItemRepository.mediaItemDO = mediaItemDO
-
-        val viewModel = viewModelBuilder.apply {
-            testCase = ViewModelBuilder.TestCase.PlayItemIdSet(mediaItemDO.mediaItemId)
-        }.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-
-        //Then
-        viewModelStateAsserter.assertInitialState(
-            mediaItemDO.toPlaybackDetailsVO(),
-            mediaItemDO.mediaItemId
-        )
     }
 
     @Test
@@ -192,5 +178,28 @@ class PlaybackDetailsViewModelTest {
 
         //Then
         viewModelStateAsserter.assertLastActionIsRetryLoadingRecommendedList()
+    }
+
+    @Test
+    fun setPlayItemId_initialState_setValueAndUpdatePlaybackDetails() = runTest {
+        //Given
+        val mediaItemDO =
+            MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
+
+        mediaItemRepository.mediaItemDO = mediaItemDO
+
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.setPlayItemId(mediaItemDO.mediaItemId)
+
+        advanceUntilIdle()
+
+        //Then
+        with(viewModelStateAsserter) {
+            assertPlaybackDetails(mediaItemDO.toPlaybackDetailsVO())
+            assertPlayItemId(mediaItemDO.mediaItemId)
+        }
     }
 }

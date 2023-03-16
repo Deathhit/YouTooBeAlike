@@ -162,6 +162,9 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun notifyFirstFrameRendered() {
+        if (!isPlayingByPlayerView)
+            return
+
         _stateFlow.update { state ->
             state.copy(isFirstFrameRendered = true)
         }

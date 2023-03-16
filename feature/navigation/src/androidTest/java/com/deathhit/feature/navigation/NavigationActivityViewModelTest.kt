@@ -7,6 +7,7 @@ import com.deathhit.data.media_item.MediaItemRepository
 import com.deathhit.data.media_item.model.MediaItemDO
 import com.deathhit.data.media_progress.MediaProgressRepository
 import com.deathhit.data.media_progress.model.MediaProgressDO
+import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.media_item_list.model.toMediaItemVO
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -14,7 +15,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
@@ -25,6 +25,144 @@ import kotlin.random.Random
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltAndroidTest
 class NavigationActivityViewModelTest {
+    private class ViewModelBuilder(
+        private val mediaItemRepository: MediaItemRepository,
+        private val mediaProgressRepository: MediaProgressRepository
+    ) {
+        sealed interface TestCase {
+            object InitialState : TestCase
+            object Fullscreen : TestCase
+            object PlayerConnected : TestCase
+            data class PlayingByPlayerView(val mediaItemId: String) : TestCase
+            object RequestedScreenOrientationLandscape : TestCase
+            object RequestedScreenOrientationPortrait : TestCase
+            object ViewInLandscape : TestCase
+        }
+
+        var testCase: TestCase = TestCase.InitialState
+
+        fun build() = NavigationActivityViewModel(
+            mediaItemRepository,
+            mediaProgressRepository,
+            SavedStateHandle.createHandle(null, Bundle.EMPTY)
+        ).apply {
+            when (val testCase = testCase) {
+                TestCase.Fullscreen -> {
+                    setIsPlayerViewExpanded(true)
+                    setIsViewInLandscape(true)
+                }
+                TestCase.PlayerConnected -> setIsPlayerConnected(true)
+                is TestCase.PlayingByPlayerView -> {
+                    setIsPlayerConnected(true)
+                    openItem(testCase.mediaItemId)
+                }
+                TestCase.RequestedScreenOrientationLandscape -> toggleScreenOrientation()
+                TestCase.RequestedScreenOrientationPortrait -> {
+                    setIsViewInLandscape(true)
+                    toggleScreenOrientation()
+                    setIsViewInLandscape(false)
+                }
+                TestCase.ViewInLandscape -> setIsViewInLandscape(true)
+                else -> {}
+            }
+
+            runTest { advanceUntilIdle() }
+        }
+    }
+
+    private class ViewModelStateAsserter(private val viewModel: NavigationActivityViewModel) {
+        private val currentState get() = viewModel.stateFlow.value
+        private val startState = viewModel.stateFlow.value
+
+        fun assertInitialState() = with(currentState) {
+            assert(actions.isEmpty())
+            assert(attachedTabs.isEmpty())
+            assert(!isFirstFrameRendered)
+            assert(isForTabToPlay)
+            assert(!isPlayerConnected)
+            assert(!isPlayerViewExpanded)
+            assert(!isViewInForeground)
+            assert(!isViewInLandscape)
+            assert(playItem == null)
+            assert(playItemId == null)
+            assert(requestedScreenOrientation == NavigationActivityViewModel.State.ScreenOrientation.UNSPECIFIED)
+            assert(tab == NavigationActivityViewModel.State.Tab.HOME)
+        }
+
+        fun assertActionsIsEmpty() {
+            assert(currentState.actions.isEmpty())
+        }
+
+        fun assertAttachedTabs(vararg tabs: NavigationActivityViewModel.State.Tab) {
+            tabs.forEach {
+                assert(currentState.attachedTabs.contains(it))
+            }
+        }
+
+        fun assertIsFirstFrameRendered(isFirstFrameRendered: Boolean) {
+            assert(currentState.isFirstFrameRendered == isFirstFrameRendered)
+        }
+
+        fun assertIsPlayerConnected(isPlayerConnected: Boolean) {
+            assert(currentState.isPlayerConnected == isPlayerConnected)
+        }
+
+        fun assertIsPlayerViewExpanded(isPlayerViewExpanded: Boolean) {
+            assert(currentState.isPlayerViewExpanded == isPlayerViewExpanded)
+        }
+
+        fun assertIsPlayingByPlayerView(isPlayingByPlayerView: Boolean) {
+            assert(currentState.isPlayingByPlayerView == isPlayingByPlayerView)
+        }
+
+        fun assertIsViewInForeground(isViewInForeground: Boolean) {
+            assert(currentState.isViewInForeground == isViewInForeground)
+        }
+
+        fun assertIsViewInLandscape(isViewInLandscape: Boolean) {
+            assert(currentState.isViewInLandscape == isViewInLandscape)
+        }
+
+        fun assertLastActionCollapsePlayerView() {
+            assert(currentState.actions.last() is NavigationActivityViewModel.State.Action.CollapsePlayerView)
+        }
+
+        fun assertLastActionPausePlayback() {
+            assert(currentState.actions.last() is NavigationActivityViewModel.State.Action.PausePlayback)
+        }
+
+        fun assertLastActionShowPlayerViewControls() {
+            assert(currentState.actions.last() is NavigationActivityViewModel.State.Action.ShowPlayerViewControls)
+        }
+
+        fun assertPlayItemPrepared(mediaItemVO: MediaItemVO, mediaProgressDO: MediaProgressDO) =
+            with(currentState) {
+                val lastAction = actions.last()
+                assert(
+                    lastAction is NavigationActivityViewModel.State.Action.PreparePlayback
+                            && lastAction.isEnded == mediaProgressDO.isEnded
+                            && lastAction.mediaItemId == mediaItemVO.id
+                            && lastAction.position == mediaProgressDO.position
+                            && lastAction.sourceUrl == mediaItemVO.sourceUrl
+                )
+
+                assert(playItem == mediaItemVO)
+                assert(playItemId == mediaItemVO.id)
+            }
+
+        fun assertRequestedScreenOrientation(screenOrientation: NavigationActivityViewModel.State.ScreenOrientation) {
+            assert(currentState.requestedScreenOrientation == screenOrientation)
+        }
+
+        fun assertStateUnchanged() {
+            assert(currentState == startState)
+        }
+
+        fun assertTab(tab: NavigationActivityViewModel.State.Tab) {
+            assert(currentState.tab == tab)
+        }
+    }
+
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
 
@@ -46,17 +184,17 @@ class NavigationActivityViewModelTest {
     }
 
     private val mediaProgressRepository = object : MediaProgressRepository {
-        var savedMediaProgressDO: MediaProgressDO? = null
+        var mediaProgressDO: MediaProgressDO? = null
 
         override suspend fun getMediaProgressByMediaItemId(mediaItemId: String): MediaProgressDO? =
-            savedMediaProgressDO
+            mediaProgressDO
 
         override suspend fun setMediaProgress(mediaProgressDO: MediaProgressDO) {
-            this.savedMediaProgressDO = mediaProgressDO
+            this.mediaProgressDO = mediaProgressDO
         }
     }
 
-    private lateinit var viewModel: NavigationActivityViewModel
+    private lateinit var viewModelBuilder: ViewModelBuilder
 
     @Before
     fun before() {
@@ -64,13 +202,10 @@ class NavigationActivityViewModelTest {
 
         hiltRule.inject()
 
-        viewModel = NavigationActivityViewModel(
+        viewModelBuilder = ViewModelBuilder(
             mediaItemRepository,
-            mediaProgressRepository,
-            SavedStateHandle.createHandle(null, Bundle.EMPTY)
+            mediaProgressRepository
         )
-
-        runTest { advanceUntilIdle() }
     }
 
     @After
@@ -81,85 +216,44 @@ class NavigationActivityViewModelTest {
     @Test
     fun initialState() = runTest {
         //Given
-        var collectedState: NavigationActivityViewModel.State? = null
-        val collectJob = launch {
-            viewModel.stateFlow.collect {
-                collectedState = it
-            }
-        }
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
 
         //Then
-        collectedState?.run {
-            assert(actions.isEmpty())
-            assert(attachedTabs.isEmpty())
-            assert(!isFirstFrameRendered)
-            assert(isForTabToPlay)
-            assert(!isPlayerConnected)
-            assert(!isPlayerViewExpanded)
-            assert(!isViewInForeground)
-            assert(!isViewInLandscape)
-            assert(playItem == null)
-            assert(playItemId == null)
-            assert(requestedScreenOrientation == NavigationActivityViewModel.State.ScreenOrientation.UNSPECIFIED)
-            assert(tab == NavigationActivityViewModel.State.Tab.HOME)
-        }
-
-        collectJob.cancel()
+        viewModelStateAsserter.assertInitialState()
     }
 
     @Test
-    fun addAttachedTabShouldAddValueToAttachedTabs() = runTest {
+    fun addAttachedTab_initialState_addValue() = runTest {
         //Given
-        var collectedState: NavigationActivityViewModel.State? = null
-        val collectJob = launch {
-            viewModel.stateFlow.collect {
-                collectedState = it
-            }
-        }
+        val tab = NavigationActivityViewModel.State.Tab.values().run { get(Random.nextInt(size)) }
 
-        val tab0 = NavigationActivityViewModel.State.Tab.values().run { get(Random.nextInt(size)) }
-        val tab1 = NavigationActivityViewModel.State.Tab.values().filter { it != tab0 }
-            .run { get(Random.nextInt(size)) }
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
-        with(viewModel) {
-            addAttachedTab(tab0)
-            addAttachedTab(tab0)    //Test adding duplicate.
-            addAttachedTab(tab1)
-        }
+        viewModel.addAttachedTab(tab)
 
         advanceUntilIdle()
 
         //Then
-        collectedState?.run {
-            assert(attachedTabs.size == 2)
-            assert(attachedTabs.contains(tab0))
-            assert(attachedTabs.contains(tab1))
-        }
-
-        collectJob.cancel()
+        viewModelStateAsserter.assertAttachedTabs(tab)
     }
 
     @Test
-    fun clearPlayerViewPlaybackShouldStopPlaybackAndClearRelatedStatus() = runTest {
+    fun clearPlayerViewPlayback_playingByPlayerView_notPlayingByPlayerView() = runTest {
         //Given
-        var collectedState: NavigationActivityViewModel.State? = null
-        val collectJob = launch {
-            viewModel.stateFlow.collect {
-                collectedState = it
-            }
-        }
-
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
         mediaItemRepository.mediaItemDO = mediaItemDO
 
-        viewModel.openItem(mediaItemDO.mediaItemId)
-
-        advanceUntilIdle()
+        val viewModel = viewModelBuilder.apply {
+            testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
+        }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.clearPlayerViewPlayback()
@@ -167,30 +261,17 @@ class NavigationActivityViewModelTest {
         advanceUntilIdle()
 
         //Then
-        collectedState!!.run {
-            assert(actions.last() is NavigationActivityViewModel.State.Action.StopPlayback)
-            assert(
-                actions.dropLast(1)
-                    .last() is NavigationActivityViewModel.State.Action.HidePlayerView
-            )
-            assert(!isFirstFrameRendered)
-            assert(isForTabToPlay)
-            assert(playItem == null)
-            assert(playItemId == null)
+        with(viewModelStateAsserter) {
+            assertIsFirstFrameRendered(false)
+            assertIsPlayingByPlayerView(false)
         }
-
-        collectJob.cancel()
     }
 
     @Test
-    fun collapsePlayerViewShouldAddCorrespondingAction() = runTest {
+    fun collapsePlayerView_initialState_addAction() = runTest {
         //Given
-        var collectedState: NavigationActivityViewModel.State? = null
-        val collectJob = launch {
-            viewModel.stateFlow.collect {
-                collectedState = it
-            }
-        }
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.collapsePlayerView()
@@ -198,27 +279,15 @@ class NavigationActivityViewModelTest {
         advanceUntilIdle()
 
         //Then
-        collectedState!!.run {
-            assert(actions.last() is NavigationActivityViewModel.State.Action.CollapsePlayerView)
-        }
-
-        collectJob.cancel()
+        viewModelStateAsserter.assertLastActionCollapsePlayerView()
     }
 
     @Test
-    fun collapsePlayerViewShouldSetScreenOrientationToPortraitIfIsFullscreen() = runTest {
+    fun collapsePlayerView_fullscreen_setOrientationToPortrait() = runTest {
         //Given
-        var collectedState: NavigationActivityViewModel.State? = null
-        val collectJob = launch {
-            viewModel.stateFlow.collect {
-                collectedState = it
-            }
-        }
-
-        viewModel.setIsViewInLandscape(true)
-        viewModel.setIsPlayerViewExpanded(true)
-
-        advanceUntilIdle()
+        val viewModel =
+            viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.Fullscreen }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.collapsePlayerView()
@@ -226,22 +295,14 @@ class NavigationActivityViewModelTest {
         advanceUntilIdle()
 
         //Then
-        collectedState!!.run {
-            assert(requestedScreenOrientation == NavigationActivityViewModel.State.ScreenOrientation.PORTRAIT)
-        }
-
-        collectJob.cancel()
+        viewModelStateAsserter.assertRequestedScreenOrientation(NavigationActivityViewModel.State.ScreenOrientation.PORTRAIT)
     }
 
     @Test
-    fun notifyFirstFrameRenderedShouldSetValueTrue() = runTest {
+    fun notifyFirstFrameRendered_initialState_doNothing() = runTest {
         //Given
-        var collectedState: NavigationActivityViewModel.State? = null
-        val collectJob = launch {
-            viewModel.stateFlow.collect {
-                collectedState = it
-            }
-        }
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.notifyFirstFrameRendered()
@@ -249,28 +310,42 @@ class NavigationActivityViewModelTest {
         advanceUntilIdle()
 
         //Then
-        collectedState!!.run {
-            assert(isFirstFrameRendered)
-        }
-
-        collectJob.cancel()
+        viewModelStateAsserter.assertStateUnchanged()
     }
 
     @Test
-    fun onActionShouldReduceGivenAction() = runTest {
+    fun notifyFirstFrameRendered_playingByPlayerView_setValueToTrue() = runTest {
         //Given
-        var collectedState: NavigationActivityViewModel.State? = null
-        val collectJob = launch {
-            viewModel.stateFlow.collect {
-                collectedState = it
-            }
-        }
+        val mediaItemDO =
+            MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
+
+        mediaItemRepository.mediaItemDO = mediaItemDO
+
+        val viewModel = viewModelBuilder.apply {
+            testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
+        }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.notifyFirstFrameRendered()
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertIsFirstFrameRendered(true)
+    }
+
+    @Test
+    fun onAction_initialState_clearGivenAction() = runTest {
+        //Given
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         viewModel.collapsePlayerView()
 
         advanceUntilIdle()
 
-        val action = collectedState!!.actions.last()
+        val action = viewModel.stateFlow.value.actions.last()
 
         //When
         viewModel.onAction(action)
@@ -278,23 +353,32 @@ class NavigationActivityViewModelTest {
         advanceUntilIdle()
 
         //Then
-        collectedState!!.run {
-            assert(!actions.contains(action))
-        }
-
-        collectJob.cancel()
+        viewModelStateAsserter.assertActionsIsEmpty()
     }
 
     @Test
-    fun openItemShouldPrepareAndPlayGivenItem() = runTest {
+    fun openItem_initialState_doNothing() = runTest {
         //Given
-        var collectedState: NavigationActivityViewModel.State? = null
-        val collectJob = launch {
-            viewModel.stateFlow.collect {
-                collectedState = it
-            }
-        }
+        val mediaItemDO =
+            MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
+        mediaItemRepository.mediaItemDO = mediaItemDO
+
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.openItem(mediaItemDO.mediaItemId)
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertStateUnchanged()
+    }
+
+    @Test
+    fun openItem_playerConnected_preparePlayItem() = runTest {
+        //Given
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
@@ -303,67 +387,26 @@ class NavigationActivityViewModelTest {
         val mediaProgressDO =
             MediaProgressDO(Random.nextBoolean(), mediaItemDO.mediaItemId, Random.nextLong())
 
-        mediaProgressRepository.savedMediaProgressDO = mediaProgressDO
+        mediaProgressRepository.mediaProgressDO = mediaProgressDO
+
+        val viewModel =
+            viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.PlayerConnected }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
-        with(viewModel) {
-            setIsPlayerConnected(true)
-            openItem(mediaItemDO.mediaItemId)
-        }
+        viewModel.openItem(mediaItemDO.mediaItemId)
 
         advanceUntilIdle()
 
         //Then
-        collectedState!!.run {
-            var action = actions.run { get(lastIndex) }
-
-            assert(
-                action is NavigationActivityViewModel.State.Action.PreparePlayback
-                        && action.isEnded == mediaProgressDO.isEnded
-                        && action.position == mediaProgressDO.position
-                        && action.sourceUrl == mediaItemDO.sourceUrl
-            )
-
-            action = actions.run { get(lastIndex - 1) }
-
-            assert(action is NavigationActivityViewModel.State.Action.StopPlayback)
-
-            action = actions.run { get(lastIndex - 2) }
-
-            assert(action is NavigationActivityViewModel.State.Action.PlayPlayback)
-
-            action = actions.run { get(lastIndex - 3) }
-
-            assert(action is NavigationActivityViewModel.State.Action.ExpandPlayerView)
-            assert(!isForTabToPlay)
-            assert(playItem == mediaItemDO.toMediaItemVO())
-            assert(playItemId == mediaItemDO.mediaItemId)
-        }
-
-        collectJob.cancel()
+        viewModelStateAsserter.assertPlayItemPrepared(mediaItemDO.toMediaItemVO(), mediaProgressDO)
     }
 
     @Test
-    fun pausePlayerViewPlaybackShouldAddCorrespondingAction() = runTest {
+    fun pausePlayerViewPlayback_initialState_doNothing() = runTest {
         //Given
-        var collectedState: NavigationActivityViewModel.State? = null
-        val collectJob = launch {
-            viewModel.stateFlow.collect {
-                collectedState = it
-            }
-        }
-
-        val mediaItemDO =
-            MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
-
-        mediaItemRepository.mediaItemDO = mediaItemDO
-
-        with(viewModel) {
-            setIsPlayerConnected(true)
-            openItem(mediaItemDO.mediaItemId)
-        }
-
-        advanceUntilIdle()
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
         viewModel.pausePlayerViewPlayback()
@@ -371,31 +414,67 @@ class NavigationActivityViewModelTest {
         advanceUntilIdle()
 
         //Then
-        collectedState!!.run {
-            assert(actions.last() is NavigationActivityViewModel.State.Action.PausePlayback)
-        }
-
-        collectJob.cancel()
+        viewModelStateAsserter.assertStateUnchanged()
     }
 
     @Test
-    fun resumePlayerViewPlaybackShouldAddCorrespondingAction() = runTest {
+    fun pausePlayerViewPlayback_playingByPlayerView_addAction() = runTest {
         //Given
-        var collectedState: NavigationActivityViewModel.State? = null
-        val collectJob = launch {
-            viewModel.stateFlow.collect {
-                collectedState = it
-            }
-        }
-
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
         mediaItemRepository.mediaItemDO = mediaItemDO
 
-        with(viewModel) {
-            setIsPlayerConnected(true)
-            openItem(mediaItemDO.mediaItemId)
+        val viewModel = viewModelBuilder.apply {
+            testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
+        }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.pausePlayerViewPlayback()
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertLastActionPausePlayback()
+    }
+
+    @Test
+    fun resumePlayerViewPlayback_initialState_doNothing() = runTest {
+        //Given
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.resumePlayerViewPlayback()
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertStateUnchanged()
+    }
+
+    @Test
+    fun resumePlayerViewPlayback_playingByPlayerView_preparePlayItem() = runTest {
+        //Given
+        val mediaItemDO =
+            MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
+
+        mediaItemRepository.mediaItemDO = mediaItemDO
+
+        val mediaProgressDO =
+            MediaProgressDO(Random.nextBoolean(), mediaItemDO.mediaItemId, Random.nextLong())
+
+        mediaProgressRepository.mediaProgressDO = mediaProgressDO
+
+        val viewModel =
+            viewModelBuilder.apply {
+                testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
+            }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        viewModel.stateFlow.value.actions.forEach {
+            viewModel.onAction(it)
         }
 
         advanceUntilIdle()
@@ -406,49 +485,252 @@ class NavigationActivityViewModelTest {
         advanceUntilIdle()
 
         //Then
-        collectedState!!.run {
-            val preparePlaybackActions =
-                actions.filterIsInstance<NavigationActivityViewModel.State.Action.PreparePlayback>()
-
-            assert(preparePlaybackActions.size == 2)
-            assert(preparePlaybackActions.last() == preparePlaybackActions.run { get(lastIndex - 1) })
-        }
-
-        collectJob.cancel()
+        viewModelStateAsserter.assertPlayItemPrepared(mediaItemDO.toMediaItemVO(), mediaProgressDO)
     }
 
     @Test
-    fun savePlayItemPositionShouldSaveGivenPositionForPlayItem() = runTest {
+    fun saveMediaProgress_initialState_saveParameters() = runTest {
+        //Given
+        val isEnded = Random.nextBoolean()
+        val mediaItemId = "mediaItemId"
+        val position = Random.nextLong()
+
+        val viewModel = viewModelBuilder.build()
+
+        //When
+        viewModel.saveMediaProgress(isEnded, mediaItemId, position)
+
+        advanceUntilIdle()
+
+        //Then
+        val savedMediaProgress = mediaProgressRepository.mediaProgressDO
+
+        assert(
+            savedMediaProgress != null
+                    && savedMediaProgress.isEnded == isEnded
+                    && savedMediaProgress.mediaItemId == mediaItemId
+                    && savedMediaProgress.position == position
+        )
+    }
+
+    @Test
+    fun setIsPlayerConnected_initialState_setValue() = runTest {
+        //Given
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.setIsPlayerConnected(true)
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertIsPlayerConnected(true)
+    }
+
+    @Test
+    fun setIsPlayerViewExpanded_initialState_setValue() = runTest {
+        //Given
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.setIsPlayerViewExpanded(true)
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertIsPlayerViewExpanded(true)
+    }
+
+    @Test
+    fun setIsViewInForeground_initialState_setValue() = runTest {
+        //Given
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.setIsViewInForeground(true)
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertIsViewInForeground(true)
+    }
+
+    @Test
+    fun setIsViewInLandscape_initialState_setValue() = runTest {
+        //Given
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.setIsViewInLandscape(true)
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertIsViewInLandscape(true)
+    }
+
+    @Test
+    fun setTab_initialState_setValue() = runTest {
+        //Given
+        val tab = NavigationActivityViewModel.State.Tab.DASHBOARD
+
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.setTab(tab)
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertTab(tab)
+    }
+
+    @Test
+    fun showPlayerViewControls_initialState_doNothing() = runTest {
+        //Given
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.showPlayerViewControls()
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertStateUnchanged()
+    }
+
+    @Test
+    fun showPlayerViewControls_playingByPlayerView_addAction() = runTest {
         //Given
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
         mediaItemRepository.mediaItemDO = mediaItemDO
 
-        with(viewModel) {
-            setIsPlayerConnected(true)
-            openItem(mediaItemDO.mediaItemId)
-        }
-
-        advanceUntilIdle()
+        val viewModel = viewModelBuilder.apply {
+            testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
+        }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
-        val isEnded = Random.nextBoolean()
-        val position = Random.nextLong()
-
-        viewModel.saveMediaProgress(isEnded, position)
+        viewModel.showPlayerViewControls()
 
         advanceUntilIdle()
 
         //Then
-        val savedMediaProgress = mediaProgressRepository.savedMediaProgressDO
-
-        assert(
-            savedMediaProgress != null
-                    && savedMediaProgress.isEnded == isEnded
-                    && savedMediaProgress.mediaItemId == mediaItemDO.mediaItemId
-                    && savedMediaProgress.position == position
-        )
+        viewModelStateAsserter.assertLastActionShowPlayerViewControls()
     }
-    //todo finish implementation
+
+    @Test
+    fun toggleScreenOrientation_initialState_setToLandscape() = runTest {
+        //Given
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.toggleScreenOrientation()
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertRequestedScreenOrientation(NavigationActivityViewModel.State.ScreenOrientation.LANDSCAPE)
+    }
+
+    @Test
+    fun toggleScreenOrientation_viewInLandscape_setToPortrait() = runTest {
+        //Given
+        val viewModel =
+            viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.ViewInLandscape }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.toggleScreenOrientation()
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertRequestedScreenOrientation(NavigationActivityViewModel.State.ScreenOrientation.PORTRAIT)
+    }
+
+    @Test
+    fun unlockScreenOrientation_initialState_doNothing() = runTest {
+        //Given
+        val deviceOrientation = Random.nextInt()
+
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.unlockScreenOrientation(deviceOrientation)
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertStateUnchanged()
+    }
+
+    @Test
+    fun unlockScreenOrientation_requestedScreenOrientationLandscape_doNothing() = runTest {
+        //Given
+        val deviceOrientation = Random.nextInt()
+
+        val viewModel = viewModelBuilder.apply {
+            testCase = ViewModelBuilder.TestCase.RequestedScreenOrientationLandscape
+        }.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.unlockScreenOrientation(deviceOrientation)
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertStateUnchanged()
+    }
+
+    @Test
+    fun unlockScreenOrientationWithLandscapeDeviceOrientation_requestedScreenOrientationPortrait_doNothing() =
+        runTest {
+            //Given
+            val deviceOrientation = 90
+
+            val viewModel = viewModelBuilder.apply {
+                testCase = ViewModelBuilder.TestCase.RequestedScreenOrientationPortrait
+            }.build()
+            val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+            //When
+            viewModel.unlockScreenOrientation(deviceOrientation)
+
+            advanceUntilIdle()
+
+            //Then
+            viewModelStateAsserter.assertStateUnchanged()
+        }
+
+    @Test
+    fun unlockScreenOrientationWithPortraitDeviceOrientation_requestedScreenOrientationPortrait_setToUnspecified() =
+        runTest {
+            //Given
+            val deviceOrientation = 0
+
+            val viewModel = viewModelBuilder.apply {
+                testCase = ViewModelBuilder.TestCase.RequestedScreenOrientationPortrait
+            }.build()
+            val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+            //When
+            viewModel.unlockScreenOrientation(deviceOrientation)
+
+            advanceUntilIdle()
+
+            //Then
+            viewModelStateAsserter.assertRequestedScreenOrientation(NavigationActivityViewModel.State.ScreenOrientation.UNSPECIFIED)
+        }
 }
