@@ -4,19 +4,18 @@ import com.deathhit.core.app_database.entity.MediaItemEntity
 import com.deathhit.core.media_api.model.Media
 import com.deathhit.data.media_item.model.MediaItemLabel
 import org.junit.Test
+import kotlin.random.Random
 
 class MapperExtTest {
     @Test
     fun mediaToMediaItemEntityShouldReturnExpectedResult() {
         //Given
-        val label = "label"
         val media = Media("id", "description", "sourceUrl", "subtitle", "thumbUrl", "title")
 
         //When
-        val mediaItemEntity = media.toMediaItemEntity(label)
+        val mediaItemEntity = media.toMediaItemEntity()
 
         //Then
-        assert(label == mediaItemEntity.label)
         assert(media.id == mediaItemEntity.mediaItemId)
         assert(media.description == mediaItemEntity.description)
         assert(media.sourceUrl == mediaItemEntity.sourceUrl)
@@ -29,13 +28,14 @@ class MapperExtTest {
     fun mediaItemEntityToMediaItemDOShouldReturnExpectedResult() {
         //Given
         val mediaItemEntity = MediaItemEntity(
-            "description",
-            "label",
-            "mediaItemId",
-            "sourceUrl",
-            "subtitle",
-            "thumbUrl",
-            "title"
+            description = "description",
+            label = "label",
+            mediaItemId = "mediaItemId",
+            remoteOrder = Random.nextInt(),
+            sourceUrl = "sourceUrl",
+            subtitle = "subtitle",
+            thumbUrl = "thumbUrl",
+            title = "title"
         )
 
         //When

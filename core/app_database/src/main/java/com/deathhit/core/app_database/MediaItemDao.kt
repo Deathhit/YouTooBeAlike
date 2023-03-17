@@ -13,7 +13,7 @@ interface MediaItemDao {
     @Query("SELECT * FROM MediaItemEntity WHERE ${Column.MEDIA_ITEM_ID} == :mediaItemId")
     fun getFlowById(mediaItemId: String): Flow<MediaItemEntity?>
 
-    @Query("SELECT * FROM MediaItemEntity WHERE :label IS NULL OR ${Column.LABEL} == :label")
+    @Query("SELECT * FROM MediaItemEntity WHERE :label IS NULL OR ${Column.LABEL} == :label ORDER BY ${Column.REMOTE_ORDER} ASC")
     fun getPagingSource(label: String?): PagingSource<Int, MediaItemEntity>
 
     @Upsert

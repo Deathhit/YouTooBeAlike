@@ -5,11 +5,12 @@ import com.deathhit.core.media_api.model.Media
 import com.deathhit.data.media_item.model.MediaItemDO
 import com.deathhit.data.media_item.model.MediaItemLabel
 
-internal fun Media.toMediaItemEntity(label: String) =
+internal fun Media.toMediaItemEntity() =
     MediaItemEntity(
         description = description,
         mediaItemId = id,
-        label = label,
+        label = "", //Value needs to be updated from other sources.
+        remoteOrder = -1, //Value needs to be updated from other sources.
         sourceUrl = sourceUrl,
         subtitle = subtitle,
         thumbUrl = thumbUrl,

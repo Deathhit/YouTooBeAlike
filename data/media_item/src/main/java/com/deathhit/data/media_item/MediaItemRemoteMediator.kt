@@ -21,7 +21,8 @@ internal class MediaItemRemoteMediator(
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, MediaItemEntity>
-    ): MediatorResult = mediaItemLocalDataSource.loadPage(label, loadType) { loadKey ->
+    ): MediatorResult = mediaItemLocalDataSource.loadPage(label, loadType, state) { loadKey ->
+        state.firstItemOrNull()
         // Suspending network load via Retrofit. This doesn't need to
         // be wrapped in a withContext(Dispatcher.IO) { ... } block
         // since Retrofit's Coroutine CallAdapter dispatches on a
@@ -31,6 +32,6 @@ internal class MediaItemRemoteMediator(
             loadKey,
             state.config.pageSize,
             subtitle
-        ).map { it.toMediaItemEntity(label) }
+        ).map { it.toMediaItemEntity() }
     }
 }

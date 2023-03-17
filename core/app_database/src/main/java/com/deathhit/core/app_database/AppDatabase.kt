@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.deathhit.core.app_database.entity.*
 
 @Database(
-    entities = [MediaItemEntity::class, MediaProgressEntity::class, RemoteKeyEntity::class],
+    entities = [MediaItemEntity::class, MediaProgressEntity::class, RemoteKeysEntity::class],
     version = 1
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -23,5 +23,5 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun mediaItemDao(): MediaItemDao
     abstract fun mediaProgressDao(): MediaProgressDao
-    abstract fun remoteKeyDao(): RemoteKeyDao
+    abstract fun remoteKeysDao(): RemoteKeysDao
 }

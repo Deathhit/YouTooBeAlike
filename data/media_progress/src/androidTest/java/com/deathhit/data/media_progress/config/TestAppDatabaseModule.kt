@@ -15,7 +15,7 @@ import javax.inject.Singleton
     components = [SingletonComponent::class],
     replaces = [AppDatabaseModule::class]
 )
-object TestDatabaseModule {
+object TestAppDatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context) = AppDatabase.createInMemory(context)

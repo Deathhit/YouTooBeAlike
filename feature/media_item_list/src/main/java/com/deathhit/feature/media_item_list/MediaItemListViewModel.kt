@@ -27,7 +27,6 @@ class MediaItemListViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private const val TAG = "MediaItemListViewModel"
-        private const val KEY_IS_FIRST_PAGE_LOADED = "$TAG.KEY_IS_FIRST_PAGE_LOADED"
         private const val KEY_MEDIA_ITEM_LABEL = "$TAG.KEY_MEDIA_ITEM_LABEL"
 
         private const val MEDIA_SWITCHING_DELAY = 500L
@@ -83,7 +82,7 @@ class MediaItemListViewModel @Inject constructor(
                 actions = emptyList(),
                 firstCompletelyVisibleItemPosition = null,
                 isFirstFrameRendered = false,
-                isFirstPageLoaded = savedStateHandle[KEY_IS_FIRST_PAGE_LOADED] ?: false,
+                isFirstPageLoaded = false,
                 isPlayerSet = false,
                 isRefreshingList = false,
                 isViewActive = false,
@@ -203,7 +202,6 @@ class MediaItemListViewModel @Inject constructor(
     }
 
     fun saveState() {
-        savedStateHandle[KEY_IS_FIRST_PAGE_LOADED] = isFirstPageLoaded
         savedStateHandle[KEY_MEDIA_ITEM_LABEL] = mediaItemLabel
     }
 
