@@ -14,8 +14,8 @@ object MediaItemRepositoryModule {
     @Provides
     @Singleton
     internal fun provideMediaItemRepository(
-        thumbnailLocalDataSource: MediaItemLocalDataSource,
-        thumbnailRemoteDataSource: MediaItemRemoteDataSource
+        mediaItemLocalDataSource: MediaItemLocalDataSource,
+        mediaItemRemoteDataSource: MediaItemRemoteDataSource
     ): MediaItemRepository =
-        MediaItemRepositoryImp(thumbnailLocalDataSource, thumbnailRemoteDataSource)
+        MediaItemRepositoryImp(mediaItemLocalDataSource, mediaItemRemoteDataSource)
 }
