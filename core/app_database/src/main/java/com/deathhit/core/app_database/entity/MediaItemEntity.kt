@@ -1,8 +1,8 @@
-package com.deathhit.core.database.entity
+package com.deathhit.core.app_database.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import com.deathhit.core.database.Column
+import com.deathhit.core.app_database.Column
 
 @Entity(primaryKeys = [Column.LABEL, Column.MEDIA_ITEM_ID])
 data class MediaItemEntity(

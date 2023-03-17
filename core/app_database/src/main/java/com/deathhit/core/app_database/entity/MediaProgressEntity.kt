@@ -1,7 +1,7 @@
-package com.deathhit.core.database.entity
+package com.deathhit.core.app_database.entity
 
 import androidx.room.*
-import com.deathhit.core.database.Column
+import com.deathhit.core.app_database.Column
 
 @Entity(primaryKeys = [Column.MEDIA_ITEM_ID])
 data class MediaProgressEntity(

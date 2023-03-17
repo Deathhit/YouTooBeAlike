@@ -1,8 +1,8 @@
 package com.deathhit.data.media_item
 
 import androidx.paging.*
-import com.deathhit.core.database.AppDatabase
-import com.deathhit.core.database.entity.MediaItemEntity
+import com.deathhit.core.app_database.AppDatabase
+import com.deathhit.core.app_database.entity.MediaItemEntity
 import com.deathhit.core.media_api.model.Media
 import com.deathhit.data.media_item.config.FakeMediaApiService
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource

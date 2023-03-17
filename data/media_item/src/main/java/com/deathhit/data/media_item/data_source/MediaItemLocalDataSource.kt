@@ -4,7 +4,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingSource
 import androidx.paging.RemoteMediator
-import com.deathhit.core.database.entity.MediaItemEntity
+import com.deathhit.core.app_database.entity.MediaItemEntity
 import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalPagingApi::class)

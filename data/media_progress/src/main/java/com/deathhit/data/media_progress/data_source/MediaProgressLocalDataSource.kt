@@ -1,7 +1,7 @@
 package com.deathhit.data.media_progress.data_source
 
-import com.deathhit.core.database.AppDatabase
-import com.deathhit.core.database.entity.MediaProgressEntity
+import com.deathhit.core.app_database.AppDatabase
+import com.deathhit.core.app_database.entity.MediaProgressEntity
 import javax.inject.Inject
 import javax.inject.Singleton
 

@@ -35,7 +35,7 @@ android {
 }
 
 dependencies {
-    implementation project(':core:database')
+    implementation project(':core:app_database')
     implementation project(':core:media_api')
 
     //Coroutine

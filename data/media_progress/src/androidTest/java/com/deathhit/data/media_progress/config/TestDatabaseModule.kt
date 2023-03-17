@@ -1,8 +1,8 @@
 package com.deathhit.data.media_progress.config
 
 import android.content.Context
-import com.deathhit.core.database.AppDatabase
-import com.deathhit.core.database.DatabaseModule
+import com.deathhit.core.app_database.AppDatabase
+import com.deathhit.core.app_database.AppDatabaseModule
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -13,7 +13,7 @@ import javax.inject.Singleton
 @Module
 @TestInstallIn(
     components = [SingletonComponent::class],
-    replaces = [DatabaseModule::class]
+    replaces = [AppDatabaseModule::class]
 )
 object TestDatabaseModule {
     @Provides

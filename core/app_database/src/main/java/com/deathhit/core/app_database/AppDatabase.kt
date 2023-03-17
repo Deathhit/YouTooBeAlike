@@ -1,10 +1,10 @@
-package com.deathhit.core.database
+package com.deathhit.core.app_database
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.deathhit.core.database.entity.*
+import com.deathhit.core.app_database.entity.*
 
 @Database(
     entities = [MediaItemEntity::class, MediaProgressEntity::class, RemoteKeyEntity::class],
@@ -12,7 +12,7 @@ import com.deathhit.core.database.entity.*
 )
 abstract class AppDatabase : RoomDatabase() {
     companion object {
-        private const val FILE_NAME = "database_c41c06dbd21355aaa41fd4a8565bbd4c"
+        private const val FILE_NAME = "app_database_c41c06dbd21355aaa41fd4a8565bbd4c"
 
         fun create(context: Context) =
             Room.databaseBuilder(context, AppDatabase::class.java, FILE_NAME).build()

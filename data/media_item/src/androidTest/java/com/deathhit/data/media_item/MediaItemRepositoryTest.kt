@@ -1,8 +1,8 @@
 package com.deathhit.data.media_item
 
-import com.deathhit.core.database.AppDatabase
-import com.deathhit.core.database.MediaItemDao
-import com.deathhit.core.database.entity.MediaItemEntity
+import com.deathhit.core.app_database.AppDatabase
+import com.deathhit.core.app_database.MediaItemDao
+import com.deathhit.core.app_database.entity.MediaItemEntity
 import com.deathhit.data.media_item.model.MediaItemLabel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest

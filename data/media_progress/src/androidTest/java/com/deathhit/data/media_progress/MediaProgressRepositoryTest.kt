@@ -1,8 +1,8 @@
 package com.deathhit.data.media_progress
 
-import com.deathhit.core.database.AppDatabase
-import com.deathhit.core.database.MediaProgressDao
-import com.deathhit.core.database.entity.MediaProgressEntity
+import com.deathhit.core.app_database.AppDatabase
+import com.deathhit.core.app_database.MediaProgressDao
+import com.deathhit.core.app_database.entity.MediaProgressEntity
 import com.deathhit.data.media_progress.model.MediaProgressDO
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest

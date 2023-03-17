@@ -15,7 +15,7 @@
             "notNull": true
           },
           {
-            "fieldPath": "mediaItemSourceType",
+            "fieldPath": "label",
             "columnName": "label",
             "affinity": "TEXT",
             "notNull": true

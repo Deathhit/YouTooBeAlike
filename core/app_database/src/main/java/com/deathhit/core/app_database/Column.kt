@@ -1,4 +1,4 @@
-package com.deathhit.core.database
+package com.deathhit.core.app_database
 
 internal object Column {
     const val DESCRIPTION = "description"

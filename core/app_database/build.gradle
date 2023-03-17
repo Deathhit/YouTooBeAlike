@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace 'com.deathhit.core.database'
+    namespace 'com.deathhit.core.app_database'
     compileSdk 33
 
     defaultConfig {

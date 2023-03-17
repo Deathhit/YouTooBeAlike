@@ -1,6 +1,6 @@
 package com.deathhit.data.media_item.data_source
 
-import com.deathhit.core.database.AppDatabase
+import com.deathhit.core.app_database.AppDatabase
 import com.deathhit.core.media_api.MediaApiService
 import dagger.Module
 import dagger.Provides

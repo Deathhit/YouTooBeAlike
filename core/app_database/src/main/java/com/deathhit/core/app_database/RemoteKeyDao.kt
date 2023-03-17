@@ -1,7 +1,7 @@
-package com.deathhit.core.database
+package com.deathhit.core.app_database
 
 import androidx.room.*
-import com.deathhit.core.database.entity.RemoteKeyEntity
+import com.deathhit.core.app_database.entity.RemoteKeyEntity
 
 @Dao
 interface RemoteKeyDao {

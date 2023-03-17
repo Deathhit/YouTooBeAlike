@@ -1,9 +1,9 @@
 package com.deathhit.data.media_item
 
 import androidx.paging.ExperimentalPagingApi
-import com.deathhit.core.database.AppDatabase
-import com.deathhit.core.database.MediaItemDao
-import com.deathhit.core.database.entity.MediaItemEntity
+import com.deathhit.core.app_database.AppDatabase
+import com.deathhit.core.app_database.MediaItemDao
+import com.deathhit.core.app_database.entity.MediaItemEntity
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
