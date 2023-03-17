@@ -114,13 +114,13 @@ internal class MediaApiServiceImp : MediaApiService {
 
     override suspend fun getMediaList(
         exclusiveId: String?,
-        page: Int?,
+        page: Int,
         pageSize: Int,
         subtitle: String?
     ): List<Media> {
         delay(Random.nextLong(2000))
 
-        val offset = (page ?: MediaApiService.DEFAULT_PAGE) * pageSize
+        val offset = page * pageSize
         val limit = offset + pageSize
 
         return with(mediaList.filter { (exclusiveId == null || it.id != exclusiveId)

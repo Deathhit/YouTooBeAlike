@@ -10,13 +10,13 @@ class FakeMediaApiService : MediaApiService {
 
     override suspend fun getMediaList(
         exclusiveId: String?,
-        page: Int?,
+        page: Int,
         pageSize: Int,
         subtitle: String?
     ): List<Media> {
         if (isThrowingError) throw RuntimeException("isThrowingError == true")
 
-        val offset = (page ?: MediaApiService.DEFAULT_PAGE) * pageSize
+        val offset = (page ?: MediaApiService.FIRST_PAGE) * pageSize
         val limit = offset + pageSize
 
         return with(mutableMediaList.filter {

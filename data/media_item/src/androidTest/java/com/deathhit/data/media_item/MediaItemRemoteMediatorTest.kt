@@ -58,7 +58,7 @@ class MediaItemRemoteMediatorTest {
     }
 
     @Test
-    fun refreshLoadReturnsErrorResultWhenErrorOccurs() = runTest {
+    fun refreshLoad_errorOccurs_returnsErrorResult() = runTest {
         //Given
         fakeMediaApiService.isThrowingError = true
 
@@ -77,7 +77,7 @@ class MediaItemRemoteMediatorTest {
     }
 
     @Test
-    fun refreshLoadReturnsSuccessResultWhenMoreDataIsPresent() = runTest {
+    fun refreshLoad_moreDataIsPresent_returnsSuccessResult() = runTest {
         //Given
         fakeMediaApiService.mutableMediaList.addAll(
             listOf(
@@ -107,7 +107,7 @@ class MediaItemRemoteMediatorTest {
     }
 
     @Test
-    fun refreshLoadSuccessAndEndOfPaginationWhenNoMoreData() = runTest {
+    fun refreshLoad_noMoreData_returnSuccessAndEndOfPagination() = runTest {
         //Given
 
         //When
