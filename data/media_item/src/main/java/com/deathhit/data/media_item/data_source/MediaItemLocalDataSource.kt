@@ -5,7 +5,6 @@ import com.deathhit.core.app_database.entity.MediaItemEntity
 import com.deathhit.core.app_database.entity.RemoteKeysEntity
 import kotlinx.coroutines.flow.Flow
 
-@OptIn(ExperimentalPagingApi::class)
 internal interface MediaItemLocalDataSource {
     suspend fun clearByLabel(label: String)
 

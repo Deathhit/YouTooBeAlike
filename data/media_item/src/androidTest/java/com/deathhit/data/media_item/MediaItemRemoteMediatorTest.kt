@@ -6,7 +6,9 @@ import com.deathhit.core.app_database.entity.MediaItemEntity
 import com.deathhit.core.media_api.model.Media
 import com.deathhit.data.media_item.config.FakeMediaApiService
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
+import com.deathhit.data.media_item.data_source.MediaItemLocalDataSourceImp
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
+import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSourceImp
 import com.deathhit.data.media_item.model.MediaItemLabel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -14,6 +16,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.*
 import javax.inject.Inject
+import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalPagingApi::class)
 @HiltAndroidTest
@@ -43,11 +46,14 @@ class MediaItemRemoteMediatorTest {
     fun before() {
         hiltRule.inject()
 
+        mediaItemLocalDataSource = MediaItemLocalDataSourceImp(appDatabase)
+        mediaItemRemoteDataSource = MediaItemRemoteDataSourceImp(fakeMediaApiService)
+
         remoteMediator = MediaItemRemoteMediator(
             null,
             mediaItemLocalDataSource,
             mediaItemRemoteDataSource,
-            MediaItemLabel.DASHBOARD,
+            MediaItemLabel.values().run { get(Random.nextInt(0, size)) },
             null
         )
     }
@@ -79,16 +85,14 @@ class MediaItemRemoteMediatorTest {
     @Test
     fun refreshLoad_moreDataIsPresent_returnsSuccessResult() = runTest {
         //Given
-        fakeMediaApiService.mutableMediaList.addAll(
-            listOf(
-                Media(
-                    "0",
-                    "description",
-                    "sourceUrl",
-                    "subtitle",
-                    "thumbUrl",
-                    "title"
-                )
+        fakeMediaApiService.mediaList = listOf(
+            Media(
+                "0",
+                "description",
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
             )
         )
 

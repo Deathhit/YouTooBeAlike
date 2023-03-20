@@ -205,54 +205,11 @@ class MediaItemLocalDataSourceTest {
     }
 
     @Test
-    fun insertMediaItemPage_refresh_clearOldDataAndInsertNewData() = runTest {
+    fun insertMediaItemPage_isFirsPageFalse_remoteKeysPreviousKeyIsPageMinusOne() = runTest {
         //Given
         val label = "label"
 
-        val oldMediaItemEntityList = listOf(
-            MediaItemEntity(
-                "description",
-                label,
-                "0",
-                -1,
-                "sourceUrl",
-                "subtitle",
-                "thumbUrl",
-                "title"
-            ),
-            MediaItemEntity(
-                "description",
-                label,
-                "1",
-                -1,
-                "sourceUrl",
-                "subtitle",
-                "thumbUrl",
-                "title"
-            ),
-            MediaItemEntity(
-                "description",
-                label,
-                "2",
-                -1,
-                "sourceUrl",
-                "subtitle",
-                "thumbUrl",
-                "title"
-            ),
-            MediaItemEntity(
-                "description",
-                label,
-                "3",
-                -1,
-                "sourceUrl",
-                "subtitle",
-                "thumbUrl",
-                "title"
-            )
-        )
-
-        val newMediaItemEntityList = listOf(
+        val mediaItemList = listOf(
             MediaItemEntity(
                 "description",
                 "",
@@ -295,32 +252,343 @@ class MediaItemLocalDataSourceTest {
             )
         )
 
-        mediaItemDao.upsert(oldMediaItemEntityList)
+        val isFirstPage = false
+        val isRefresh = Random.nextBoolean()
+        val page = Random.nextInt()
+        val pageSize = Random.nextInt()
 
         //When
         mediaItemLocalDataSource.insertMediaItemPage(
-            isFirstPage = true,
-            isRefresh = true,
+            isFirstPage = isFirstPage,
+            isRefresh = isRefresh,
             label = label,
-            mediaItems = newMediaItemEntityList,
-            page = 0,
-            pageSize = newMediaItemEntityList.size
+            mediaItems = mediaItemList,
+            page = page,
+            pageSize = pageSize
         )
 
         //Then
-        oldMediaItemEntityList.forEach {
+        mediaItemList.assertMediaItemsAreCorrectlyAdded(label, isFirstPage, page, pageSize)
+    }
+
+    @Test
+    fun insertMediaItemPage_isFirsPageTrue_remoteKeysPreviousKeyIsNull() = runTest {
+        //Given
+        val label = "label"
+
+        val mediaItemList = listOf(
+            MediaItemEntity(
+                "description",
+                "",
+                "4",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                "",
+                "5",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                "",
+                "6",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                "",
+                "7",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            )
+        )
+
+        val isFirstPage = true
+        val isRefresh = Random.nextBoolean()
+        val page = Random.nextInt()
+        val pageSize = Random.nextInt()
+
+        //When
+        mediaItemLocalDataSource.insertMediaItemPage(
+            isFirstPage = isFirstPage,
+            isRefresh = isRefresh,
+            label = label,
+            mediaItems = mediaItemList,
+            page = page,
+            pageSize = pageSize
+        )
+
+        //Then
+        mediaItemList.assertMediaItemsAreCorrectlyAdded(label, isFirstPage, page, pageSize)
+    }
+
+    @Test
+    fun insertMediaItemPage_isRefreshFalse_insertNewDataOnly() = runTest {
+        //Given
+        val label = "label"
+
+        val oldMediaItemList = listOf(
+            MediaItemEntity(
+                "description",
+                label,
+                "0",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                label,
+                "1",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                label,
+                "2",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                label,
+                "3",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            )
+        )
+
+        val newMediaItemList = listOf(
+            MediaItemEntity(
+                "description",
+                "",
+                "4",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                "",
+                "5",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                "",
+                "6",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                "",
+                "7",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            )
+        )
+
+        val isFirstPage = Random.nextBoolean()
+        val isRefresh = false
+        val page = Random.nextInt()
+        val pageSize = Random.nextInt()
+
+        mediaItemDao.upsert(oldMediaItemList)
+
+        //When
+        mediaItemLocalDataSource.insertMediaItemPage(
+            isFirstPage = isFirstPage,
+            isRefresh = isRefresh,
+            label = label,
+            mediaItems = newMediaItemList,
+            page = page,
+            pageSize = pageSize
+        )
+
+        //Then
+        oldMediaItemList.forEach {
+            assert(mediaItemDao.getFlowById(it.mediaItemId).first() != null)
+        }
+
+        newMediaItemList.assertMediaItemsAreCorrectlyAdded(label, isFirstPage, page, pageSize)
+    }
+
+    @Test
+    fun insertMediaItemPage_isRefreshTrue_clearOldDataAndInsertNewData() = runTest {
+        //Given
+        val label = "label"
+
+        val oldMediaItemList = listOf(
+            MediaItemEntity(
+                "description",
+                label,
+                "0",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                label,
+                "1",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                label,
+                "2",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                label,
+                "3",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            )
+        )
+
+        val newMediaItemList = listOf(
+            MediaItemEntity(
+                "description",
+                "",
+                "4",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                "",
+                "5",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                "",
+                "6",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            ),
+            MediaItemEntity(
+                "description",
+                "",
+                "7",
+                -1,
+                "sourceUrl",
+                "subtitle",
+                "thumbUrl",
+                "title"
+            )
+        )
+
+        val isFirstPage = Random.nextBoolean()
+        val isRefresh = true
+        val page = Random.nextInt()
+        val pageSize = Random.nextInt()
+
+        mediaItemDao.upsert(oldMediaItemList)
+
+        //When
+        mediaItemLocalDataSource.insertMediaItemPage(
+            isFirstPage = isFirstPage,
+            isRefresh = isRefresh,
+            label = label,
+            mediaItems = newMediaItemList,
+            page = page,
+            pageSize = pageSize
+        )
+
+        //Then
+        oldMediaItemList.forEach {
             assert(mediaItemDao.getFlowById(it.mediaItemId).first() == null)
         }
 
-        newMediaItemEntityList.forEach {
-            val insertedMediaItem = mediaItemDao.getFlowById(it.mediaItemId).first()
+        newMediaItemList.assertMediaItemsAreCorrectlyAdded(label, isFirstPage, page, pageSize)
+    }
 
-            assert(
-                insertedMediaItem != null && it.copy(
-                    label = insertedMediaItem.label,
-                    remoteOrder = insertedMediaItem.remoteOrder
-                ) == insertedMediaItem
-            )
+    private suspend fun List<MediaItemEntity>.assertMediaItemsAreCorrectlyAdded(
+        label: String,
+        isFirstPage: Boolean,
+        page: Int,
+        pageSize: Int
+    ) {
+        forEachIndexed { index, mediaItemEntity ->
+            mediaItemDao.getFlowById(mediaItemEntity.mediaItemId).first().let {
+                assert(
+                    it != null && mediaItemEntity.copy(
+                        label = it.label,
+                        remoteOrder = it.remoteOrder
+                    ) == it && it.remoteOrder == index + page * pageSize
+                )
+            }
+
+            remoteKeysDao.getByLabelAndMediaItemId(label, mediaItemEntity.mediaItemId).let {
+                assert(it != null && it.nextKey == page + 1 && it.previousKey == if (isFirstPage) null else page - 1)
+            }
         }
     }
 }

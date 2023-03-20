@@ -10,6 +10,5 @@ internal class MediaItemRemoteDataSourceImp(private val mediaApiService: MediaAp
         page: Int,
         pageSize: Int,
         subtitle: String?
-    ): List<Media> =
-        mediaApiService.getMediaList(exclusiveId, page, pageSize, subtitle)
+    ): List<Media> = mediaApiService.getMediaList(exclusiveId, page, pageSize, subtitle)
 }

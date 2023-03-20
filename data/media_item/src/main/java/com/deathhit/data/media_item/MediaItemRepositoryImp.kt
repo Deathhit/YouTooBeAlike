@@ -14,7 +14,7 @@ internal class MediaItemRepositoryImp(
     private val mediaItemRemoteDataSource: MediaItemRemoteDataSource,
 ) : MediaItemRepository {
     companion object {
-        private const val PAGE_SIZE = 5 //PAGE_SIZE should be much larger. This is for demo purpose.
+        private const val PAGE_SIZE = 25
     }
 
     override suspend fun clearByLabel(mediaItemLabel: MediaItemLabel) =

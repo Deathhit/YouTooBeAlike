@@ -4,9 +4,13 @@ import com.deathhit.core.media_api.MediaApiService
 import com.deathhit.core.media_api.model.Media
 
 class FakeMediaApiService : MediaApiService {
-    val mutableMediaList = mutableListOf<Media>()
+    data class GetMediaList(val exclusiveId: String?, val page: Int, val pageSize: Int, val subtitle: String?)
+
+    private var _getMediaList: GetMediaList? = null
+    val getMediaList get() = _getMediaList
 
     var isThrowingError = false
+    var mediaList: List<Media> = mutableListOf()
 
     override suspend fun getMediaList(
         exclusiveId: String?,
@@ -14,12 +18,14 @@ class FakeMediaApiService : MediaApiService {
         pageSize: Int,
         subtitle: String?
     ): List<Media> {
+        _getMediaList = GetMediaList(exclusiveId, page, pageSize, subtitle)
+
         if (isThrowingError) throw RuntimeException("isThrowingError == true")
 
-        val offset = (page ?: MediaApiService.FIRST_PAGE) * pageSize
+        val offset = page * pageSize
         val limit = offset + pageSize
 
-        return with(mutableMediaList.filter {
+        return with(mediaList.filter {
             (exclusiveId == null || it.id != exclusiveId)
                     && (subtitle == null || it.subtitle == subtitle)
         }) {

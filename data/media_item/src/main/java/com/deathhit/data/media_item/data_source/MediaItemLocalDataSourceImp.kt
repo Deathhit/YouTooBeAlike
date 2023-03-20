@@ -34,33 +34,33 @@ internal class MediaItemLocalDataSourceImp(private val appDatabase: AppDatabase)
         page: Int,
         pageSize: Int
     ) = appDatabase.withTransaction {
-            //Clear tables on refresh
-            if (isRefresh) {
-                mediaItemDao.clearByLabel(label)
-                remoteKeysDao.clearByLabel(label)
-            }
-
-            val previousKey = if (isFirstPage) null else page - 1
-            val nextKey = if (mediaItems.isEmpty()) null else page + 1
-
-            // Update RemoteKeys for the label.
-            remoteKeysDao.upsert(mediaItems.map {
-                RemoteKeysEntity(
-                    label = label,
-                    mediaItemId = it.mediaItemId,
-                    nextKey = nextKey,
-                    previousKey = previousKey
-                )
-            })
-
-            // Insert the new data into database, which invalidates the
-            // current PagingData, allowing Paging to present the updates
-            // in the DB.
-            mediaItemDao.upsert(mediaItems.mapIndexed { index, mediaItemEntity ->
-                mediaItemEntity.copy(
-                    label = label,
-                    remoteOrder = page * pageSize + index
-                )
-            })
+        //Clear tables on refresh
+        if (isRefresh) {
+            mediaItemDao.clearByLabel(label)
+            remoteKeysDao.clearByLabel(label)
         }
+
+        val nextKey = page + 1
+        val previousKey = if (isFirstPage) null else page - 1
+
+        // Update RemoteKeys for the label.
+        remoteKeysDao.upsert(mediaItems.map {
+            RemoteKeysEntity(
+                label = label,
+                mediaItemId = it.mediaItemId,
+                nextKey = nextKey,
+                previousKey = previousKey
+            )
+        })
+
+        // Insert the new data into database, which invalidates the
+        // current PagingData, allowing Paging to present the updates
+        // in the DB.
+        mediaItemDao.upsert(mediaItems.mapIndexed { index, mediaItemEntity ->
+            mediaItemEntity.copy(
+                label = label,
+                remoteOrder = page * pageSize + index
+            )
+        })
+    }
 }

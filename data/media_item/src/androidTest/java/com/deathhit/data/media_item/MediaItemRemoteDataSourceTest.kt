@@ -1,7 +1,6 @@
 package com.deathhit.data.media_item
 
-import com.deathhit.core.media_api.MediaApiService
-import com.deathhit.core.media_api.model.Media
+import com.deathhit.data.media_item.config.FakeMediaApiService
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -19,25 +18,8 @@ class MediaItemRemoteDataSourceTest {
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
 
-    private val mediaApiService = object : MediaApiService {
-        var exclusiveId: String? = null
-        var page: Int? = null
-        var pageSize: Int? = null
-        var subtitle: String? = null
-
-        override suspend fun getMediaList(
-            exclusiveId: String?,
-            page: Int,
-            pageSize: Int,
-            subtitle: String?
-        ): List<Media> = emptyList<Media>().also {
-            this.exclusiveId = exclusiveId
-            this.page = page
-            this.pageSize = pageSize
-            this.subtitle = subtitle
-        }
-
-    }
+    @Inject
+    internal lateinit var fakeMediaApiService: FakeMediaApiService
 
     @Inject
     internal lateinit var mediaRemoteDataSource: MediaItemRemoteDataSource
@@ -59,9 +41,13 @@ class MediaItemRemoteDataSourceTest {
         mediaRemoteDataSource.getMediaList(exclusiveId, page, pageSize, subtitle)
 
         //Then
-        assert(mediaApiService.exclusiveId == exclusiveId)
-        assert(mediaApiService.page == page)
-        assert(mediaApiService.pageSize == pageSize)
-        assert(mediaApiService.subtitle == subtitle)
+        assert(
+            fakeMediaApiService.getMediaList == FakeMediaApiService.GetMediaList(
+                exclusiveId,
+                page,
+                pageSize,
+                subtitle
+            )
+        )
     }
 }
