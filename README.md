@@ -2,6 +2,12 @@
 Android application architecture sample.
 # Goal
 Create a code structure which has the benefits described in [Guide to app architecture](https://developer.android.com/topic/architecture) and [Guide to Android app modularization](https://developer.android.com/topic/modularization).
+# Screenshots
+<img src="docs/images/screenshot_portrait_1.png" width=411 height=731> &emsp; 
+<img src="docs/images/screenshot_portrait_2.png" width=411 height=731> &emsp;
+<img src="docs/images/screenshot_landscape_1.png" width=731 height=411> &emsp;
+<img src="docs/images/screenshot_landscape_3.png" width=731 height=411> &emsp;
+
 # License
 ```
 Copyright 2022 Deathhit
