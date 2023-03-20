@@ -1,8 +1,7 @@
-# VideoListExample
-Template Android application of UDF structure. 
-It is also an example of how to play video in recyclerview while scrolling.
+# YouTooBeAlike
+Android application architecture sample.
 # Goal
-Follow the UI layer structure in [Google's guidelines](https://developer.android.com/jetpack/guide/ui-layer), handle single-use events and avoid duplicate view state setting.
+Create a code structure which has the benefits described in [Guide to app architecture](https://developer.android.com/topic/architecture) and [Guide to Android app modularization](https://developer.android.com/topic/modularization).
 # License
 ```
 Copyright 2022 Deathhit
