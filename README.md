@@ -1,5 +1,5 @@
 # YouTooBeAlike
-Android application architecture sample.
+Android application architecture sample. This project demonstrates how to achieve a YouTube-like UX and how to handle media playbacks in this case.
 # Goal
 Create a code structure which has the benefits described in [Guide to app architecture](https://developer.android.com/topic/architecture) and [Guide to Android app modularization](https://developer.android.com/topic/modularization).
 # Screenshots
