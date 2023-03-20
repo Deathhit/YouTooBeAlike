@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Video List Example"
+rootProject.name = "YouTooBeAlike"
 include ':app'
 include ':core:app_database'
 include ':core:ui'
