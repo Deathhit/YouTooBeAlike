@@ -22,7 +22,6 @@ class NavigationActivityViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private const val TAG = "NavigationActivityViewModel"
-        private const val KEY_IS_FIRST_FRAME_RENDERED = "$TAG.KEY_IS_FIRST_FRAME_RENDERED"
         private const val KEY_IS_FOR_TAB_TO_PLAY = "$TAG.KEY_IS_FOR_TAB_TO_PLAY"
         private const val KEY_IS_PLAYER_VIEW_EXPANDED = "$TAG.KEY_IS_PLAYER_VIEW_EXPANDED"
         private const val KEY_PLAY_ITEM_ID = "$TAG.KEY_PLAY_ITEM_ID"
@@ -84,7 +83,7 @@ class NavigationActivityViewModel @Inject constructor(
             State(
                 actions = emptyList(),
                 attachedTabs = emptySet(),
-                isFirstFrameRendered = savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] ?: false,
+                isFirstFrameRendered = false,
                 isForTabToPlay = savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] ?: true,
                 isPlayerConnected = false,
                 isPlayerViewExpanded = savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] ?: false,
@@ -98,7 +97,6 @@ class NavigationActivityViewModel @Inject constructor(
         )
     val stateFlow = _stateFlow.asStateFlow()
 
-    private val isFirstFrameRendered get() = stateFlow.value.isFirstFrameRendered
     private val isForTabToPlay get() = stateFlow.value.isForTabToPlay
     private val isFullscreen get() = stateFlow.value.isFullscreen
     private val isPlayerConnected get() = stateFlow.value.isPlayerConnected
@@ -220,7 +218,6 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun saveState() {
-        savedStateHandle[KEY_IS_FIRST_FRAME_RENDERED] = isFirstFrameRendered
         savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] = isForTabToPlay
         savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] = isPlayerViewExpanded
         savedStateHandle[KEY_PLAY_ITEM_ID] = playItemId
