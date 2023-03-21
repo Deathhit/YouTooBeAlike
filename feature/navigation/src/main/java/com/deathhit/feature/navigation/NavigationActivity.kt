@@ -256,6 +256,7 @@ class NavigationActivity : AppCompatActivity() {
                 launch {
                     viewModel.stateFlow.map { it.isMediaSessionActive }.distinctUntilChanged()
                         .collect {
+                            //Skip in case of isChangingConfigurations to prevent toggling media sessions on rotation.
                             if (isChangingConfigurations)
                                 return@collect
 

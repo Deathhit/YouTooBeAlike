@@ -17,6 +17,7 @@ import com.deathhit.feature.media_item_list.MediaItemAdapter
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.playback_details.databinding.FragmentPlaybackDetailsBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -47,6 +48,8 @@ class PlaybackDetailsFragment : Fragment() {
 
     private val recommendedItemAdapter get() = _recommendedItemAdapter!!
     private var _recommendedItemAdapter: MediaItemAdapter? = null
+
+    private var setPlayItemIdJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -140,8 +143,11 @@ class PlaybackDetailsFragment : Fragment() {
     }
 
     fun setPlayItemId(playItemId: String?) {
-        lifecycleScope.launchWhenCreated {
-            viewModel.setPlayItemId(playItemId)
+        setPlayItemIdJob?.cancel()
+        setPlayItemIdJob = lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                viewModel.setPlayItemId(playItemId)
+            }
         }
     }
 }

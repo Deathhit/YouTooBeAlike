@@ -23,6 +23,7 @@ import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -55,8 +56,11 @@ class MediaItemListFragment : Fragment() {
 
             field = value?.apply { addListener(playerListener) }
 
-            lifecycleScope.launchWhenCreated {
-                viewModel.setIsPlayerSet(player != null)
+            setPlayerJob?.cancel()
+            setPlayerJob = lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.CREATED) {
+                    viewModel.setIsPlayerSet(player != null)
+                }
             }
         }
 
@@ -77,6 +81,8 @@ class MediaItemListFragment : Fragment() {
 
     private val mediaItemAdapter get() = _mediaItemAdapter!!
     private var _mediaItemAdapter: MediaItemAdapter? = null
+
+    private var setPlayerJob: Job? = null
 
     private val onRefreshListener =
         SwipeRefreshLayout.OnRefreshListener { viewModel.refreshList() }
@@ -261,9 +267,7 @@ class MediaItemListFragment : Fragment() {
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        lifecycleScope.launchWhenCreated {
-            viewModel.setIsViewHidden(hidden)
-        }
+        viewModel.setIsViewHidden(hidden)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
