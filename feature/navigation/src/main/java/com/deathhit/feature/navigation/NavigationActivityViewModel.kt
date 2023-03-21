@@ -159,8 +159,8 @@ class NavigationActivityViewModel @Inject constructor(
             }
     }
 
-    fun notifyFirstFrameRendered() {
-        if (!isPlayingByPlayerView)
+    fun notifyFirstFrameRendered(mediaItemId: String) {
+        if (!isPlayingByPlayerView || mediaItemId != playItemId)
             return
 
         _stateFlow.update { state ->

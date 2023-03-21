@@ -171,7 +171,7 @@ class NavigationActivity : AppCompatActivity() {
 
         override fun onRenderedFirstFrame() {
             super.onRenderedFirstFrame()
-            viewModel.notifyFirstFrameRendered()
+            viewModel.notifyFirstFrameRendered(player!!.currentMediaItem!!.mediaId)
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {

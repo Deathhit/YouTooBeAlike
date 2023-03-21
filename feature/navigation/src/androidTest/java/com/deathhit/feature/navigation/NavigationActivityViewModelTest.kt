@@ -307,7 +307,7 @@ class NavigationActivityViewModelTest {
         val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
-        viewModel.notifyFirstFrameRendered()
+        viewModel.notifyFirstFrameRendered("mediaItemId")
 
         advanceUntilIdle()
 
@@ -329,7 +329,7 @@ class NavigationActivityViewModelTest {
         val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
-        viewModel.notifyFirstFrameRendered()
+        viewModel.notifyFirstFrameRendered(mediaItemDO.mediaItemId)
 
         advanceUntilIdle()
 
