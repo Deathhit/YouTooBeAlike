@@ -46,27 +46,29 @@ class NavigationActivityViewModelTest {
             mediaProgressRepository,
             SavedStateHandle.createHandle(null, Bundle.EMPTY)
         ).apply {
-            when (val testCase = testCase) {
-                TestCase.Fullscreen -> {
-                    setIsPlayerViewExpanded(true)
-                    setIsViewInLandscape(true)
+            runTest {
+                when (val testCase = testCase) {
+                    TestCase.Fullscreen -> {
+                        setIsPlayerViewExpanded(true)
+                        setIsViewInLandscape(true)
+                    }
+                    TestCase.PlayerConnected -> setIsPlayerConnected(true)
+                    is TestCase.PlayingByPlayerView -> {
+                        setIsPlayerConnected(true)
+                        openItem(testCase.mediaItemId)
+                    }
+                    TestCase.RequestedScreenOrientationLandscape -> toggleScreenOrientation()
+                    TestCase.RequestedScreenOrientationPortrait -> {
+                        setIsViewInLandscape(true)
+                        toggleScreenOrientation()
+                        setIsViewInLandscape(false)
+                    }
+                    TestCase.ViewInLandscape -> setIsViewInLandscape(true)
+                    else -> {}
                 }
-                TestCase.PlayerConnected -> setIsPlayerConnected(true)
-                is TestCase.PlayingByPlayerView -> {
-                    setIsPlayerConnected(true)
-                    openItem(testCase.mediaItemId)
-                }
-                TestCase.RequestedScreenOrientationLandscape -> toggleScreenOrientation()
-                TestCase.RequestedScreenOrientationPortrait -> {
-                    setIsViewInLandscape(true)
-                    toggleScreenOrientation()
-                    setIsViewInLandscape(false)
-                }
-                TestCase.ViewInLandscape -> setIsViewInLandscape(true)
-                else -> {}
-            }
 
-            runTest { advanceUntilIdle() }
+                advanceUntilIdle()
+            }
         }
     }
 

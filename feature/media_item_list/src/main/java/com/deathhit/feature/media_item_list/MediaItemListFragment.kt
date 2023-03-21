@@ -109,7 +109,7 @@ class MediaItemListFragment : Fragment() {
 
         override fun onRenderedFirstFrame() {
             super.onRenderedFirstFrame()
-            viewModel.notifyFirstFrameRendered()
+            viewModel.notifyFirstFrameRendered(player!!.currentMediaItem!!.mediaId)
         }
     }
 

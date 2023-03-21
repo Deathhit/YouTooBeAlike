@@ -35,12 +35,14 @@ class PlaybackDetailsViewModelTest {
             mediaItemRepository,
             SavedStateHandle.createHandle(null, Bundle.EMPTY)
         ).apply {
-            when (val testCase = testCase) {
-                is TestCase.PlayItemIdSet -> setPlayItemId(testCase.playItemId)
-                else -> {}
-            }
+            runTest {
+                when (val testCase = testCase) {
+                    is TestCase.PlayItemIdSet -> setPlayItemId(testCase.playItemId)
+                    else -> {}
+                }
 
-            runTest { advanceUntilIdle() }
+                advanceUntilIdle()
+            }
         }
     }
 

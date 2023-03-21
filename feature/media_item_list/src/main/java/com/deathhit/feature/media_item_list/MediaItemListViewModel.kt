@@ -131,8 +131,8 @@ class MediaItemListViewModel @Inject constructor(
         }
     }
 
-    fun notifyFirstFrameRendered() {
-        if (!isReadyToPlay)
+    fun notifyFirstFrameRendered(mediaItemId: String) {
+        if (!isReadyToPlay || mediaItemId != playItem?.id)
             return
 
         _stateFlow.update { state ->

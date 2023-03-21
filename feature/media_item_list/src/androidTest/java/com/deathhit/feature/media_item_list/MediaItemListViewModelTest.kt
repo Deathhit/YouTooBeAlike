@@ -33,6 +33,7 @@ class MediaItemListViewModelTest {
         sealed interface TestCase {
             object InitialState : TestCase
             object FirstPageLoaded : TestCase
+            data class PlayItemPrepared(val mediaItem: MediaItemVO) : TestCase
             object ReadyToPlay : TestCase
         }
 
@@ -43,19 +44,32 @@ class MediaItemListViewModelTest {
             mediaProgressRepository,
             SavedStateHandle.createHandle(null, MediaItemListViewModel.createArgs(mediaItemLabel))
         ).apply {
-            when(testCase) {
-                TestCase.FirstPageLoaded -> scrollToTopOnFirstPageLoaded()
-                TestCase.ReadyToPlay -> {
-                    setFirstCompletelyVisibleItemPosition(Random.nextInt())
-                    setIsPlayerSet(true)
-                    setIsViewActive(true)
-                    setIsViewHidden(false)
-                    setIsViewInLandscape(false)
-                }
-                else -> {}
-            }
+            runTest {
+                when(val testCase = testCase) {
+                    TestCase.FirstPageLoaded -> scrollToTopOnFirstPageLoaded()
+                    is TestCase.PlayItemPrepared -> {
+                        setFirstCompletelyVisibleItemPosition(Random.nextInt())
+                        setIsPlayerSet(true)
+                        setIsViewActive(true)
+                        setIsViewHidden(false)
+                        setIsViewInLandscape(false)
 
-            runTest { advanceUntilIdle() }
+                        advanceUntilIdle()
+
+                        prepareItemIfNotPrepared(testCase.mediaItem)
+                    }
+                    TestCase.ReadyToPlay -> {
+                        setFirstCompletelyVisibleItemPosition(Random.nextInt())
+                        setIsPlayerSet(true)
+                        setIsViewActive(true)
+                        setIsViewHidden(false)
+                        setIsViewInLandscape(false)
+                    }
+                    else -> {}
+                }
+
+                advanceUntilIdle()
+            }
         }
     }
 
@@ -227,7 +241,7 @@ class MediaItemListViewModelTest {
         val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
-        viewModel.notifyFirstFrameRendered()
+        viewModel.notifyFirstFrameRendered("mediaItemId")
 
         advanceUntilIdle()
 
@@ -236,13 +250,15 @@ class MediaItemListViewModelTest {
     }
 
     @Test
-    fun notifyFirstFrameRendered_readyToPlay_setValueToTrue() = runTest {
+    fun notifyFirstFrameRendered_playItemPrepared_setValueToTrue() = runTest {
         //Given
-        val viewModel = viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.ReadyToPlay }.build()
+        val mediaItem = MediaItemVO("id", "sourceUrl", "subtitle", "thumbUrl", "title")
+
+        val viewModel = viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.PlayItemPrepared(mediaItem) }.build()
         val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
-        viewModel.notifyFirstFrameRendered()
+        viewModel.notifyFirstFrameRendered(mediaItem.id)
 
         advanceUntilIdle()
 
@@ -250,6 +266,7 @@ class MediaItemListViewModelTest {
         with(viewModelStateAsserter) {
             assertIsFirstFrameRendered()
             assertIsReadyToPlay()
+            assertPlayItemIsItem(mediaItem)
         }
     }
 
