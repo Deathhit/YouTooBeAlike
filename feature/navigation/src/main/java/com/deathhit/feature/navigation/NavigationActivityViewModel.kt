@@ -181,8 +181,7 @@ class NavigationActivityViewModel @Inject constructor(
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.ExpandPlayerView + State.Action.PlayPlayback,
-                isForTabToPlay = false,
-                playItemId = null   //Clear previous value first to prevent UI glitching.
+                isForTabToPlay = false
             )
         }
 

@@ -71,9 +71,7 @@ class PlaybackDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             launch {
                 stateFlow.map { it.playItemId }.flatMapLatest { playableItemId ->
-                    playableItemId?.let { mediaItemRepository.getMediaItemFlowById(it) } ?: flowOf(
-                        null
-                    )
+                    playableItemId?.let { mediaItemRepository.getMediaItemFlowById(it) } ?: emptyFlow()
                 }.collectLatest {
                     _stateFlow.update { state ->
                         state.copy(
