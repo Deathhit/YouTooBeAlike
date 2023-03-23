@@ -1,7 +1,7 @@
 package com.deathhit.feature.media_item_list
 
-import com.deathhit.feature.media_item_list.model.MediaItemLabel
-import com.deathhit.feature.media_item_list.model.toMediaItemLabelDO
+import com.deathhit.feature.media_item_list.enum_type.MediaItemLabel
+import com.deathhit.feature.media_item_list.enum_type.toMediaItemLabelDO
 import org.junit.Test
 
 class MediaItemLabelTest {

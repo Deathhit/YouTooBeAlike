@@ -27,7 +27,7 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
 import com.deathhit.feature.media_item_list.MediaItemListFragment
-import com.deathhit.feature.media_item_list.model.MediaItemLabel
+import com.deathhit.feature.media_item_list.enum_type.MediaItemLabel
 import com.deathhit.feature.navigation.databinding.ActivityNavigationBinding
 import com.deathhit.feature.playback_details.PlaybackDetailsFragment
 import com.google.android.exoplayer2.C

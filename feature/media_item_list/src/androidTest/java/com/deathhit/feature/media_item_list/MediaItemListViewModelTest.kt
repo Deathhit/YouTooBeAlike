@@ -1,25 +1,23 @@
 package com.deathhit.feature.media_item_list
 
 import androidx.lifecycle.SavedStateHandle
-import androidx.paging.PagingData
 import com.deathhit.domain.MediaItemRepository
-import com.deathhit.domain.model.MediaItemDO
 import com.deathhit.domain.MediaProgressRepository
 import com.deathhit.domain.model.MediaProgressDO
-import com.deathhit.feature.media_item_list.model.MediaItemLabel
+import com.deathhit.feature.media_item_list.config.FakeMediaItemRepository
+import com.deathhit.feature.media_item_list.config.FakeMediaProgressRepository
+import com.deathhit.feature.media_item_list.enum_type.MediaItemLabel
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import javax.inject.Inject
 import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -175,32 +173,13 @@ class MediaItemListViewModelTest {
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
 
+    @Inject
+    lateinit var fakeMediaItemRepository: FakeMediaItemRepository
+
+    @Inject
+    lateinit var fakeMediaProgressRepository: FakeMediaProgressRepository
+
     private val mediaItemLabel = MediaItemLabel.values().run { get(Random.nextInt(size)) }
-
-    private val mediaItemRepository = object : MediaItemRepository {
-        override suspend fun clearByLabel(mediaItemLabel: com.deathhit.domain.enum_type.MediaItemLabel) {
-
-        }
-
-        override fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemDO?> = emptyFlow()
-
-        override fun getMediaItemPagingDataFlow(
-            exclusiveId: String?,
-            mediaItemLabel: com.deathhit.domain.enum_type.MediaItemLabel,
-            subtitle: String?
-        ): Flow<PagingData<MediaItemDO>> = flowOf(PagingData.empty())
-    }
-
-    private val mediaProgressRepository = object : MediaProgressRepository {
-        var mediaProgressDO: MediaProgressDO? = null
-
-        override suspend fun getMediaProgressByMediaItemId(mediaItemId: String): MediaProgressDO? =
-            mediaProgressDO
-
-        override suspend fun setMediaProgress(mediaProgressDO: MediaProgressDO) {
-            this.mediaProgressDO = mediaProgressDO
-        }
-    }
 
     private lateinit var viewModelBuilder: ViewModelBuilder
 
@@ -212,8 +191,8 @@ class MediaItemListViewModelTest {
 
         viewModelBuilder = ViewModelBuilder(
             mediaItemLabel,
-            mediaItemRepository,
-            mediaProgressRepository
+            fakeMediaItemRepository,
+            fakeMediaProgressRepository
         )
     }
 
@@ -334,7 +313,7 @@ class MediaItemListViewModelTest {
             Random.nextBoolean(),
             mediaItem.id,
             Random.nextLong()
-        ).also { mediaProgressRepository.mediaProgressDO = it }
+        ).also { fakeMediaProgressRepository.mediaProgressDO = it }
 
         val viewModel = viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.ReadyToPlay }.build()
         val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
@@ -402,7 +381,7 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        val savedMediaProgress = mediaProgressRepository.mediaProgressDO
+        val savedMediaProgress = fakeMediaProgressRepository.mediaProgressDO
 
         assert(
             savedMediaProgress != null

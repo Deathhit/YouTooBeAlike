@@ -2,24 +2,22 @@ package com.deathhit.feature.playback_details
 
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
-import androidx.paging.PagingData
 import com.deathhit.domain.MediaItemRepository
 import com.deathhit.domain.model.MediaItemDO
-import com.deathhit.domain.enum_type.MediaItemLabel
 import com.deathhit.feature.media_item_list.model.MediaItemVO
+import com.deathhit.feature.playback_details.config.FakeMediaItemRepository
 import com.deathhit.feature.playback_details.model.PlaybackDetailsVO
 import com.deathhit.feature.playback_details.model.toPlaybackDetailsVO
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltAndroidTest
@@ -84,23 +82,8 @@ class PlaybackDetailsViewModelTest {
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
 
-    private val mediaItemRepository = object : MediaItemRepository {
-        var isClearByLabelCalled = false
-        var mediaItemDO: MediaItemDO? = null
-
-        override suspend fun clearByLabel(mediaItemLabel: MediaItemLabel) {
-            isClearByLabelCalled = true
-        }
-
-        override fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemDO?> =
-            flowOf(mediaItemDO)
-
-        override fun getMediaItemPagingDataFlow(
-            exclusiveId: String?,
-            mediaItemLabel: MediaItemLabel,
-            subtitle: String?
-        ): Flow<PagingData<MediaItemDO>> = flowOf(PagingData.empty())
-    }
+    @Inject
+    lateinit var mediaItemRepository: FakeMediaItemRepository
 
     private lateinit var viewModelBuilder: ViewModelBuilder
 

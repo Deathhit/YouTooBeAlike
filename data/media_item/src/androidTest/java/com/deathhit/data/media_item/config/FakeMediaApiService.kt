@@ -22,6 +22,9 @@ class FakeMediaApiService : MediaApiService {
 
         if (isThrowingError) throw RuntimeException("isThrowingError == true")
 
+        if (page < 0 || pageSize <= 0)
+            return emptyList()
+
         val offset = page * pageSize
         val limit = offset + pageSize
 

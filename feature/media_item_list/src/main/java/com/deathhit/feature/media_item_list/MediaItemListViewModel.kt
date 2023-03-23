@@ -9,9 +9,9 @@ import androidx.paging.map
 import com.deathhit.domain.MediaItemRepository
 import com.deathhit.domain.MediaProgressRepository
 import com.deathhit.domain.model.MediaProgressDO
-import com.deathhit.feature.media_item_list.model.MediaItemLabel
+import com.deathhit.feature.media_item_list.enum_type.MediaItemLabel
+import com.deathhit.feature.media_item_list.enum_type.toMediaItemLabelDO
 import com.deathhit.feature.media_item_list.model.MediaItemVO
-import com.deathhit.feature.media_item_list.model.toMediaItemLabelDO
 import com.deathhit.feature.media_item_list.model.toMediaItemVO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*

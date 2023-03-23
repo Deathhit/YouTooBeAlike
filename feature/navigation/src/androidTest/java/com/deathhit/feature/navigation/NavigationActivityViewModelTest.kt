@@ -2,25 +2,24 @@ package com.deathhit.feature.navigation
 
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
-import androidx.paging.PagingData
 import com.deathhit.domain.MediaItemRepository
 import com.deathhit.domain.model.MediaItemDO
 import com.deathhit.domain.MediaProgressRepository
 import com.deathhit.domain.model.MediaProgressDO
-import com.deathhit.domain.enum_type.MediaItemLabel
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.media_item_list.model.toMediaItemVO
+import com.deathhit.feature.navigation.config.FakeMediaItemRepository
+import com.deathhit.feature.navigation.config.FakeMediaProgressRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import javax.inject.Inject
 import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -169,33 +168,11 @@ class NavigationActivityViewModelTest {
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
 
-    private val mediaItemRepository = object : MediaItemRepository {
-        var mediaItemDO: MediaItemDO? = null
+    @Inject
+    lateinit var fakeMediaItemRepository: FakeMediaItemRepository
 
-        override suspend fun clearByLabel(mediaItemLabel: MediaItemLabel) {
-
-        }
-
-        override fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemDO?> =
-            flowOf(mediaItemDO)
-
-        override fun getMediaItemPagingDataFlow(
-            exclusiveId: String?,
-            mediaItemLabel: MediaItemLabel,
-            subtitle: String?
-        ): Flow<PagingData<MediaItemDO>> = flowOf(PagingData.empty())
-    }
-
-    private val mediaProgressRepository = object : MediaProgressRepository {
-        var mediaProgressDO: MediaProgressDO? = null
-
-        override suspend fun getMediaProgressByMediaItemId(mediaItemId: String): MediaProgressDO? =
-            mediaProgressDO
-
-        override suspend fun setMediaProgress(mediaProgressDO: MediaProgressDO) {
-            this.mediaProgressDO = mediaProgressDO
-        }
-    }
+    @Inject
+    lateinit var fakeMediaProgressRepository: FakeMediaProgressRepository
 
     private lateinit var viewModelBuilder: ViewModelBuilder
 
@@ -206,8 +183,8 @@ class NavigationActivityViewModelTest {
         hiltRule.inject()
 
         viewModelBuilder = ViewModelBuilder(
-            mediaItemRepository,
-            mediaProgressRepository
+            fakeMediaItemRepository,
+            fakeMediaProgressRepository
         )
     }
 
@@ -251,7 +228,7 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        mediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.mediaItemDO = mediaItemDO
 
         val viewModel = viewModelBuilder.apply {
             testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
@@ -322,7 +299,7 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        mediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.mediaItemDO = mediaItemDO
 
         val viewModel = viewModelBuilder.apply {
             testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
@@ -365,7 +342,7 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        mediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.mediaItemDO = mediaItemDO
 
         val viewModel = viewModelBuilder.build()
         val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
@@ -385,12 +362,12 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        mediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.mediaItemDO = mediaItemDO
 
         val mediaProgressDO =
             MediaProgressDO(Random.nextBoolean(), mediaItemDO.mediaItemId, Random.nextLong())
 
-        mediaProgressRepository.mediaProgressDO = mediaProgressDO
+        fakeMediaProgressRepository.mediaProgressDO = mediaProgressDO
 
         val viewModel =
             viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.PlayerConnected }.build()
@@ -426,7 +403,7 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        mediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.mediaItemDO = mediaItemDO
 
         val viewModel = viewModelBuilder.apply {
             testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
@@ -463,12 +440,12 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        mediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.mediaItemDO = mediaItemDO
 
         val mediaProgressDO =
             MediaProgressDO(Random.nextBoolean(), mediaItemDO.mediaItemId, Random.nextLong())
 
-        mediaProgressRepository.mediaProgressDO = mediaProgressDO
+        fakeMediaProgressRepository.mediaProgressDO = mediaProgressDO
 
         val viewModel =
             viewModelBuilder.apply {
@@ -506,7 +483,7 @@ class NavigationActivityViewModelTest {
         advanceUntilIdle()
 
         //Then
-        val savedMediaProgress = mediaProgressRepository.mediaProgressDO
+        val savedMediaProgress = fakeMediaProgressRepository.mediaProgressDO
 
         assert(
             savedMediaProgress != null
@@ -614,7 +591,7 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        mediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.mediaItemDO = mediaItemDO
 
         val viewModel = viewModelBuilder.apply {
             testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
