@@ -2,8 +2,8 @@ package com.deathhit.data.media_item
 
 import com.deathhit.core.app_database.entity.MediaItemEntity
 import com.deathhit.core.media_api.model.Media
-import com.deathhit.data.media_item.model.MediaItemDO
-import com.deathhit.data.media_item.model.MediaItemLabel
+import com.deathhit.domain.model.MediaItemDO
+import com.deathhit.domain.enum_type.MediaItemLabel
 
 internal fun Media.toMediaItemEntity() =
     MediaItemEntity(

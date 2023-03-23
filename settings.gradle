@@ -17,9 +17,10 @@ dependencyResolutionManagement {
 rootProject.name = "YouTooBeAlike"
 include ':app'
 include ':core:app_database'
-include ':core:ui'
-include ':data:media_item'
 include ':core:media_api'
+include ':core:ui'
+include ':domain'
+include ':data:media_item'
 include ':data:media_progress'
 include ':feature:media_item_list'
 include ':feature:navigation'

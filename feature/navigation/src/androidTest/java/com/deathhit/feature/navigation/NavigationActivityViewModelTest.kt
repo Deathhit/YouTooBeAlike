@@ -3,10 +3,11 @@ package com.deathhit.feature.navigation
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import androidx.paging.PagingData
-import com.deathhit.data.media_item.MediaItemRepository
-import com.deathhit.data.media_item.model.MediaItemDO
-import com.deathhit.data.media_progress.MediaProgressRepository
-import com.deathhit.data.media_progress.model.MediaProgressDO
+import com.deathhit.domain.MediaItemRepository
+import com.deathhit.domain.model.MediaItemDO
+import com.deathhit.domain.MediaProgressRepository
+import com.deathhit.domain.model.MediaProgressDO
+import com.deathhit.domain.enum_type.MediaItemLabel
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.media_item_list.model.toMediaItemVO
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -171,7 +172,7 @@ class NavigationActivityViewModelTest {
     private val mediaItemRepository = object : MediaItemRepository {
         var mediaItemDO: MediaItemDO? = null
 
-        override suspend fun clearByLabel(mediaItemLabel: com.deathhit.data.media_item.model.MediaItemLabel) {
+        override suspend fun clearByLabel(mediaItemLabel: MediaItemLabel) {
 
         }
 
@@ -180,7 +181,7 @@ class NavigationActivityViewModelTest {
 
         override fun getMediaItemPagingDataFlow(
             exclusiveId: String?,
-            mediaItemLabel: com.deathhit.data.media_item.model.MediaItemLabel,
+            mediaItemLabel: MediaItemLabel,
             subtitle: String?
         ): Flow<PagingData<MediaItemDO>> = flowOf(PagingData.empty())
     }

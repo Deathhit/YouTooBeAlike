@@ -1,6 +1,7 @@
 package com.deathhit.data.media_progress
 
 import com.deathhit.data.media_progress.data_source.MediaProgressLocalDataSource
+import com.deathhit.domain.MediaProgressRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

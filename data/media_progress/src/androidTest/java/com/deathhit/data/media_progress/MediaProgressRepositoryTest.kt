@@ -1,7 +1,8 @@
 package com.deathhit.data.media_progress
 
 import com.deathhit.data.media_progress.config.TestMediaProgressLocalDataSource
-import com.deathhit.data.media_progress.model.MediaProgressDO
+import com.deathhit.domain.model.MediaProgressDO
+import com.deathhit.domain.MediaProgressRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi

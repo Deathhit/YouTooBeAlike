@@ -8,8 +8,8 @@ enum class MediaItemLabel {
 }
 
 fun MediaItemLabel.toMediaItemLabelDO() = when(this) {
-    MediaItemLabel.DASHBOARD -> com.deathhit.data.media_item.model.MediaItemLabel.DASHBOARD
-    MediaItemLabel.HOME -> com.deathhit.data.media_item.model.MediaItemLabel.HOME
-    MediaItemLabel.NOTIFICATIONS -> com.deathhit.data.media_item.model.MediaItemLabel.NOTIFICATIONS
-    MediaItemLabel.RECOMMENDED -> com.deathhit.data.media_item.model.MediaItemLabel.RECOMMENDED
+    MediaItemLabel.DASHBOARD -> com.deathhit.domain.enum_type.MediaItemLabel.DASHBOARD
+    MediaItemLabel.HOME -> com.deathhit.domain.enum_type.MediaItemLabel.HOME
+    MediaItemLabel.NOTIFICATIONS -> com.deathhit.domain.enum_type.MediaItemLabel.NOTIFICATIONS
+    MediaItemLabel.RECOMMENDED -> com.deathhit.domain.enum_type.MediaItemLabel.RECOMMENDED
 }

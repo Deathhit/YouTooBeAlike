@@ -7,7 +7,7 @@ import androidx.paging.RemoteMediator
 import com.deathhit.core.app_database.entity.MediaItemEntity
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
-import com.deathhit.data.media_item.model.MediaItemLabel
+import com.deathhit.domain.enum_type.MediaItemLabel
 
 @ExperimentalPagingApi
 internal class MediaItemRemoteMediator(

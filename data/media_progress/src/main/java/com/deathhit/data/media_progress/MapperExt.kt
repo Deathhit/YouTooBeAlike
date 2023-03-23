@@ -1,7 +1,7 @@
 package com.deathhit.data.media_progress
 
 import com.deathhit.core.app_database.entity.MediaProgressEntity
-import com.deathhit.data.media_progress.model.MediaProgressDO
+import com.deathhit.domain.model.MediaProgressDO
 
 internal fun MediaProgressDO.toMediaProgressEntity() =
     MediaProgressEntity(isEnded = isEnded, mediaItemId = mediaItemId, position = position)

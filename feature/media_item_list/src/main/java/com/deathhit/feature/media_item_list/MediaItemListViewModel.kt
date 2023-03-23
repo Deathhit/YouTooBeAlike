@@ -6,9 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import androidx.paging.map
-import com.deathhit.data.media_item.MediaItemRepository
-import com.deathhit.data.media_progress.MediaProgressRepository
-import com.deathhit.data.media_progress.model.MediaProgressDO
+import com.deathhit.domain.MediaItemRepository
+import com.deathhit.domain.MediaProgressRepository
+import com.deathhit.domain.model.MediaProgressDO
 import com.deathhit.feature.media_item_list.model.MediaItemLabel
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.media_item_list.model.toMediaItemLabelDO

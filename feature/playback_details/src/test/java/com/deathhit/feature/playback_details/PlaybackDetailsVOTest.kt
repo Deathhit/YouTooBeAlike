@@ -1,6 +1,6 @@
 package com.deathhit.feature.playback_details
 
-import com.deathhit.data.media_item.model.MediaItemDO
+import com.deathhit.domain.model.MediaItemDO
 import com.deathhit.feature.playback_details.model.toPlaybackDetailsVO
 import org.junit.Test
 

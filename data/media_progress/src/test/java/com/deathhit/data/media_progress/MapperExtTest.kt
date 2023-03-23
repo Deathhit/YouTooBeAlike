@@ -1,7 +1,7 @@
 package com.deathhit.data.media_progress
 
 import com.deathhit.core.app_database.entity.MediaProgressEntity
-import com.deathhit.data.media_progress.model.MediaProgressDO
+import com.deathhit.domain.model.MediaProgressDO
 import org.junit.Test
 import kotlin.random.Random
 

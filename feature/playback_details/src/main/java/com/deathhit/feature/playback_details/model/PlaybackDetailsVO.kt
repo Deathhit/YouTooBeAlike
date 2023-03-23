@@ -1,6 +1,6 @@
 package com.deathhit.feature.playback_details.model
 
-import com.deathhit.data.media_item.model.MediaItemDO
+import com.deathhit.domain.model.MediaItemDO
 
 data class PlaybackDetailsVO(
     val description: String,

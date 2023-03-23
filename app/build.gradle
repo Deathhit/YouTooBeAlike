@@ -39,6 +39,9 @@ android {
 }
 
 dependencies {
+
+    implementation project(':data:media_item')
+    implementation project(':data:media_progress')
     implementation project(':feature:media_item_list')
     implementation project(':feature:navigation')
 

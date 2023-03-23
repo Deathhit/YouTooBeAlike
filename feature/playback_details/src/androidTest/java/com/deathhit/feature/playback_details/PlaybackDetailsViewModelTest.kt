@@ -3,8 +3,9 @@ package com.deathhit.feature.playback_details
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import androidx.paging.PagingData
-import com.deathhit.data.media_item.MediaItemRepository
-import com.deathhit.data.media_item.model.MediaItemDO
+import com.deathhit.domain.MediaItemRepository
+import com.deathhit.domain.model.MediaItemDO
+import com.deathhit.domain.enum_type.MediaItemLabel
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.playback_details.model.PlaybackDetailsVO
 import com.deathhit.feature.playback_details.model.toPlaybackDetailsVO
@@ -87,7 +88,7 @@ class PlaybackDetailsViewModelTest {
         var isClearByLabelCalled = false
         var mediaItemDO: MediaItemDO? = null
 
-        override suspend fun clearByLabel(mediaItemLabel: com.deathhit.data.media_item.model.MediaItemLabel) {
+        override suspend fun clearByLabel(mediaItemLabel: MediaItemLabel) {
             isClearByLabelCalled = true
         }
 
@@ -96,7 +97,7 @@ class PlaybackDetailsViewModelTest {
 
         override fun getMediaItemPagingDataFlow(
             exclusiveId: String?,
-            mediaItemLabel: com.deathhit.data.media_item.model.MediaItemLabel,
+            mediaItemLabel: MediaItemLabel,
             subtitle: String?
         ): Flow<PagingData<MediaItemDO>> = flowOf(PagingData.empty())
     }

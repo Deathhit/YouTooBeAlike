@@ -9,7 +9,7 @@ import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSourceImp
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSourceImp
-import com.deathhit.data.media_item.model.MediaItemLabel
+import com.deathhit.domain.enum_type.MediaItemLabel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi

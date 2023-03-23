@@ -1,7 +1,7 @@
 package com.deathhit.feature.media_item_list.model
 
 import android.os.Parcelable
-import com.deathhit.data.media_item.model.MediaItemDO
+import com.deathhit.domain.model.MediaItemDO
 import kotlinx.parcelize.Parcelize
 
 @Parcelize

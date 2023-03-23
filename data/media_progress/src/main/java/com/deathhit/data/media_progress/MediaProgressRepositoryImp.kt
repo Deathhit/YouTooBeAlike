@@ -1,7 +1,8 @@
 package com.deathhit.data.media_progress
 
 import com.deathhit.data.media_progress.data_source.MediaProgressLocalDataSource
-import com.deathhit.data.media_progress.model.MediaProgressDO
+import com.deathhit.domain.model.MediaProgressDO
+import com.deathhit.domain.MediaProgressRepository
 
 internal class MediaProgressRepositoryImp(private val mediaProgressLocalDataSource: MediaProgressLocalDataSource) :
     MediaProgressRepository {

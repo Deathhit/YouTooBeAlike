@@ -1,8 +1,8 @@
-package com.deathhit.data.media_item
+package com.deathhit.domain
 
 import androidx.paging.PagingData
-import com.deathhit.data.media_item.model.MediaItemDO
-import com.deathhit.data.media_item.model.MediaItemLabel
+import com.deathhit.domain.enum_type.MediaItemLabel
+import com.deathhit.domain.model.MediaItemDO
 import kotlinx.coroutines.flow.Flow
 
 interface MediaItemRepository {

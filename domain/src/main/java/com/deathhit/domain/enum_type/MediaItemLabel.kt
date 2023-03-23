@@ -1,4 +1,4 @@
-package com.deathhit.data.media_item.model
+package com.deathhit.domain.enum_type
 
 enum class MediaItemLabel {
     DASHBOARD,

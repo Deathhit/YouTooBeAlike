@@ -1,6 +1,6 @@
 package com.deathhit.feature.media_item_list
 
-import com.deathhit.data.media_item.model.MediaItemDO
+import com.deathhit.domain.model.MediaItemDO
 import com.deathhit.feature.media_item_list.model.toMediaItemVO
 import org.junit.Test
 

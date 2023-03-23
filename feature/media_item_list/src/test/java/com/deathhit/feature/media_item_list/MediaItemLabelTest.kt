@@ -20,9 +20,9 @@ class MediaItemLabelTest {
         val recommendedDO = recommended.toMediaItemLabelDO()
 
         //Then
-        assert(com.deathhit.data.media_item.model.MediaItemLabel.DASHBOARD == dashboardDO)
-        assert(com.deathhit.data.media_item.model.MediaItemLabel.HOME == homeDO)
-        assert(com.deathhit.data.media_item.model.MediaItemLabel.NOTIFICATIONS == notificationsDO)
-        assert(com.deathhit.data.media_item.model.MediaItemLabel.RECOMMENDED == recommendedDO)
+        assert(com.deathhit.domain.enum_type.MediaItemLabel.DASHBOARD == dashboardDO)
+        assert(com.deathhit.domain.enum_type.MediaItemLabel.HOME == homeDO)
+        assert(com.deathhit.domain.enum_type.MediaItemLabel.NOTIFICATIONS == notificationsDO)
+        assert(com.deathhit.domain.enum_type.MediaItemLabel.RECOMMENDED == recommendedDO)
     }
 }

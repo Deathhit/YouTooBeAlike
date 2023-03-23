@@ -2,10 +2,10 @@ package com.deathhit.feature.media_item_list
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.paging.PagingData
-import com.deathhit.data.media_item.MediaItemRepository
-import com.deathhit.data.media_item.model.MediaItemDO
-import com.deathhit.data.media_progress.MediaProgressRepository
-import com.deathhit.data.media_progress.model.MediaProgressDO
+import com.deathhit.domain.MediaItemRepository
+import com.deathhit.domain.model.MediaItemDO
+import com.deathhit.domain.MediaProgressRepository
+import com.deathhit.domain.model.MediaProgressDO
 import com.deathhit.feature.media_item_list.model.MediaItemLabel
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -178,7 +178,7 @@ class MediaItemListViewModelTest {
     private val mediaItemLabel = MediaItemLabel.values().run { get(Random.nextInt(size)) }
 
     private val mediaItemRepository = object : MediaItemRepository {
-        override suspend fun clearByLabel(mediaItemLabel: com.deathhit.data.media_item.model.MediaItemLabel) {
+        override suspend fun clearByLabel(mediaItemLabel: com.deathhit.domain.enum_type.MediaItemLabel) {
 
         }
 
@@ -186,7 +186,7 @@ class MediaItemListViewModelTest {
 
         override fun getMediaItemPagingDataFlow(
             exclusiveId: String?,
-            mediaItemLabel: com.deathhit.data.media_item.model.MediaItemLabel,
+            mediaItemLabel: com.deathhit.domain.enum_type.MediaItemLabel,
             subtitle: String?
         ): Flow<PagingData<MediaItemDO>> = flowOf(PagingData.empty())
     }

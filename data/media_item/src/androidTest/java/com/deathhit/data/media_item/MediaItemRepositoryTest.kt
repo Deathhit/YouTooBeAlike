@@ -1,8 +1,8 @@
 package com.deathhit.data.media_item
 
-import com.deathhit.core.app_database.AppDatabase
 import com.deathhit.data.media_item.config.TestMediaItemLocalDataSource
-import com.deathhit.data.media_item.model.MediaItemLabel
+import com.deathhit.domain.MediaItemRepository
+import com.deathhit.domain.enum_type.MediaItemLabel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
