@@ -142,22 +142,29 @@ class MediaItemListFragment : Fragment() {
                 override fun onClickItem(item: MediaItemVO) {
                     viewModel.openItem(item)
                 }
-            }.also {
-                adapter =
-                    it.apply {
-                        addOnPagesUpdatedListener {
-                            if (itemCount > 0)
-                                viewModel.scrollToTopOnFirstPageLoaded()
+            }.also { mediaItemAdapter ->
+                adapter = mediaItemAdapter.apply {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        launch {
+                            loadStateFlow.map { it.refresh is LoadState.Loading }
+                                .distinctUntilChanged().collect {
+                                    viewModel.setIsRefreshingList(it)
+                                }
                         }
 
-                        addLoadStateListener { loadStates ->
-                            viewModel.setIsRefreshingList(loadStates.refresh is LoadState.Loading)
+                        launch {
+                            loadStateFlow.map { it.source.refresh is LoadState.NotLoading } //No need to wait for the remote feed to scroll to the top.
+                                .distinctUntilChanged().collect {
+                                    if (it)
+                                        viewModel.scrollToTopOnFirstPageLoaded()
+                            }
                         }
-                    }.withLoadStateFooter(object : AppLoadStateAdapter() {
-                        override fun onRetryLoading() {
-                            viewModel.retryLoadingList()
-                        }
-                    })
+                    }
+                }.withLoadStateFooter(object : AppLoadStateAdapter() {
+                    override fun onRetryLoading() {
+                        viewModel.retryLoadingList()
+                    }
+                })
             }
         }
 
