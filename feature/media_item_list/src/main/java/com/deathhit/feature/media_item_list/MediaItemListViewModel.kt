@@ -97,6 +97,10 @@ class MediaItemListViewModel @Inject constructor(
 
     val mediaItemPagingDataFlow =
         stateFlow.map { it.mediaItemLabel }.distinctUntilChanged().flatMapLatest {
+            _stateFlow.update { state ->
+                state.copy(isFirstPageLoaded = false)
+            }
+
             mediaItemRepository.getMediaItemPagingDataFlow(mediaItemLabel = mediaItemLabel.toMediaItemLabelDO())
                 .map { pagingData -> pagingData.map { it.toMediaItemVO() } }
         }.cachedIn(viewModelScope)

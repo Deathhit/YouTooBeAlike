@@ -24,9 +24,7 @@ import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -144,20 +142,17 @@ class MediaItemListFragment : Fragment() {
                 }
             }.also { mediaItemAdapter ->
                 adapter = mediaItemAdapter.apply {
+                    addOnPagesUpdatedListener {
+                        if (itemCount > 0)
+                            viewModel.scrollToTopOnFirstPageLoaded()
+                    }
+
                     viewLifecycleOwner.lifecycleScope.launch {
                         launch {
                             loadStateFlow.map { it.refresh is LoadState.Loading }
                                 .distinctUntilChanged().collect {
                                     viewModel.setIsRefreshingList(it)
                                 }
-                        }
-
-                        launch {
-                            loadStateFlow.map { it.source.refresh is LoadState.NotLoading } //No need to wait for the remote feed to scroll to the top.
-                                .distinctUntilChanged().collect {
-                                    if (it)
-                                        viewModel.scrollToTopOnFirstPageLoaded()
-                            }
                         }
                     }
                 }.withLoadStateFooter(object : AppLoadStateAdapter() {
