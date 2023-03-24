@@ -144,11 +144,11 @@ class NavigationActivity : AppCompatActivity() {
     }
 
     private val onNavigationSelectedListener = OnItemSelectedListener {
-        viewModel.setTab(
+        viewModel.setCurrentPage(
             when (it.itemId) {
-                R.id.dashboard -> NavigationActivityViewModel.State.Tab.DASHBOARD
-                R.id.notifications -> NavigationActivityViewModel.State.Tab.NOTIFICATIONS
-                R.id.home -> NavigationActivityViewModel.State.Tab.HOME
+                R.id.dashboard -> NavigationActivityViewModel.State.Page.DASHBOARD
+                R.id.notifications -> NavigationActivityViewModel.State.Page.NOTIFICATIONS
+                R.id.home -> NavigationActivityViewModel.State.Page.HOME
                 else -> throw java.lang.RuntimeException("Unexpected item id of ${it.itemId}!")
             }
         )
@@ -205,11 +205,11 @@ class NavigationActivity : AppCompatActivity() {
             }
 
             when (fragment.tag) {
-                TAG_DASHBOARD -> NavigationActivityViewModel.State.Tab.DASHBOARD
-                TAG_HOME -> NavigationActivityViewModel.State.Tab.HOME
-                TAG_NOTIFICATIONS -> NavigationActivityViewModel.State.Tab.NOTIFICATIONS
+                TAG_DASHBOARD -> NavigationActivityViewModel.State.Page.DASHBOARD
+                TAG_HOME -> NavigationActivityViewModel.State.Page.HOME
+                TAG_NOTIFICATIONS -> NavigationActivityViewModel.State.Page.NOTIFICATIONS
                 else -> null
-            }?.let { viewModel.addAttachedTab(it) }
+            }?.let { viewModel.notifyPageAttached(it) }
         }
 
         super.onCreate(savedInstanceState)
@@ -325,6 +325,45 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
+                    viewModel.stateFlow.map { it.currentPage }.distinctUntilChanged().collect { tab ->
+                        binding.bottomNavigationView.selectedItemId = when (tab) {
+                            NavigationActivityViewModel.State.Page.DASHBOARD -> R.id.dashboard
+                            NavigationActivityViewModel.State.Page.HOME -> R.id.home
+                            NavigationActivityViewModel.State.Page.NOTIFICATIONS -> R.id.notifications
+                        }
+
+                        supportFragmentManager.commit {
+                            if (tab == NavigationActivityViewModel.State.Page.DASHBOARD)
+                                dashboardFragment?.let { show(it) } ?: add(
+                                    binding.containerNavigationTabPage.id,
+                                    MediaItemListFragment.create(MediaItemLabel.DASHBOARD),
+                                    TAG_DASHBOARD
+                                )
+                            else
+                                dashboardFragment?.let { hide(it) }
+
+                            if (tab == NavigationActivityViewModel.State.Page.HOME)
+                                homeFragment?.let { show(it) } ?: add(
+                                    binding.containerNavigationTabPage.id,
+                                    MediaItemListFragment.create(MediaItemLabel.HOME),
+                                    TAG_HOME
+                                )
+                            else
+                                homeFragment?.let { hide(it) }
+
+                            if (tab == NavigationActivityViewModel.State.Page.NOTIFICATIONS)
+                                notificationsFragment?.let { show(it) } ?: add(
+                                    binding.containerNavigationTabPage.id,
+                                    MediaItemListFragment.create(MediaItemLabel.NOTIFICATIONS),
+                                    TAG_NOTIFICATIONS
+                                )
+                            else
+                                notificationsFragment?.let { hide(it) }
+                        }
+                    }
+                }
+
+                launch {
                     viewModel.stateFlow.map { it.isFirstFrameRendered }.distinctUntilChanged()
                         .collect {
                             binding.imageViewThumbnail.isInvisible = it
@@ -419,22 +458,22 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.playTab }.distinctUntilChanged()
-                        .collect { playTab ->
+                    viewModel.stateFlow.map { it.playPage }.distinctUntilChanged()
+                        .collect { playPage ->
                             dashboardFragment?.player =
-                                if (playTab == NavigationActivityViewModel.State.Tab.DASHBOARD)
+                                if (playPage == NavigationActivityViewModel.State.Page.DASHBOARD)
                                     player
                                 else
                                     null
 
                             homeFragment?.player =
-                                if (playTab == NavigationActivityViewModel.State.Tab.HOME)
+                                if (playPage == NavigationActivityViewModel.State.Page.HOME)
                                     player
                                 else
                                     null
 
                             notificationsFragment?.player =
-                                if (playTab == NavigationActivityViewModel.State.Tab.NOTIFICATIONS)
+                                if (playPage == NavigationActivityViewModel.State.Page.NOTIFICATIONS)
                                     player
                                 else
                                     null
@@ -450,45 +489,6 @@ class NavigationActivity : AppCompatActivity() {
                                 NavigationActivityViewModel.State.ScreenOrientation.UNSPECIFIED -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                             }
                         }
-                }
-
-                launch {
-                    viewModel.stateFlow.map { it.tab }.distinctUntilChanged().collect { tab ->
-                        binding.bottomNavigationView.selectedItemId = when (tab) {
-                            NavigationActivityViewModel.State.Tab.DASHBOARD -> R.id.dashboard
-                            NavigationActivityViewModel.State.Tab.HOME -> R.id.home
-                            NavigationActivityViewModel.State.Tab.NOTIFICATIONS -> R.id.notifications
-                        }
-
-                        supportFragmentManager.commit {
-                            if (tab == NavigationActivityViewModel.State.Tab.DASHBOARD)
-                                dashboardFragment?.let { show(it) } ?: add(
-                                    binding.containerNavigationTabPage.id,
-                                    MediaItemListFragment.create(MediaItemLabel.DASHBOARD),
-                                    TAG_DASHBOARD
-                                )
-                            else
-                                dashboardFragment?.let { hide(it) }
-
-                            if (tab == NavigationActivityViewModel.State.Tab.HOME)
-                                homeFragment?.let { show(it) } ?: add(
-                                    binding.containerNavigationTabPage.id,
-                                    MediaItemListFragment.create(MediaItemLabel.HOME),
-                                    TAG_HOME
-                                )
-                            else
-                                homeFragment?.let { hide(it) }
-
-                            if (tab == NavigationActivityViewModel.State.Tab.NOTIFICATIONS)
-                                notificationsFragment?.let { show(it) } ?: add(
-                                    binding.containerNavigationTabPage.id,
-                                    MediaItemListFragment.create(MediaItemLabel.NOTIFICATIONS),
-                                    TAG_NOTIFICATIONS
-                                )
-                            else
-                                notificationsFragment?.let { hide(it) }
-                        }
-                    }
                 }
             }
         }

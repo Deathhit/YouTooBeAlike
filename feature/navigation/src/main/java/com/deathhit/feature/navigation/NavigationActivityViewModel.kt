@@ -30,17 +30,17 @@ class NavigationActivityViewModel @Inject constructor(
 
     data class State(
         val actions: List<Action>,
-        val attachedTabs: Set<Tab>,
+        val attachedPages: Set<Page>,
+        val currentPage: Page,
         val isFirstFrameRendered: Boolean,
-        val isForTabToPlay: Boolean,
+        val isForPageToPlay: Boolean,
         val isPlayerConnected: Boolean,
         val isPlayerViewExpanded: Boolean,
         val isViewInForeground: Boolean,
         val isViewInLandscape: Boolean,
         val playItem: MediaItemVO?,
         val playItemId: String?,
-        val requestedScreenOrientation: ScreenOrientation,
-        val tab: Tab
+        val requestedScreenOrientation: ScreenOrientation
     ) {
         sealed interface Action {
             object CollapsePlayerView : Action
@@ -65,7 +65,7 @@ class NavigationActivityViewModel @Inject constructor(
             UNSPECIFIED
         }
 
-        enum class Tab {
+        enum class Page {
             DASHBOARD,
             HOME,
             NOTIFICATIONS
@@ -73,31 +73,32 @@ class NavigationActivityViewModel @Inject constructor(
 
         val isFullscreen = isPlayerViewExpanded && isViewInLandscape
         val isMediaSessionActive = if (isPlayerConnected) isViewInForeground else null
-        val isPlayingByPlayerView = !isForTabToPlay && isPlayerConnected
-        val playTab =
-            if (attachedTabs.contains(tab) && isForTabToPlay && isPlayerConnected) tab else null
+        val isPlayingByPlayerView = !isForPageToPlay && isPlayerConnected
+        val playPage =
+            if (attachedPages.contains(currentPage) && isForPageToPlay && isPlayerConnected) currentPage else null
     }
 
     private val _stateFlow =
         MutableStateFlow(
             State(
                 actions = emptyList(),
-                attachedTabs = emptySet(),
+                attachedPages = emptySet(),
+                currentPage = savedStateHandle[KEY_TAB] ?: State.Page.HOME,
                 isFirstFrameRendered = false,
-                isForTabToPlay = savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] ?: true,
+                isForPageToPlay = savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] ?: true,
                 isPlayerConnected = false,
                 isPlayerViewExpanded = savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] ?: false,
                 isViewInForeground = false,
                 isViewInLandscape = false,
                 playItem = null,
                 playItemId = savedStateHandle[KEY_PLAY_ITEM_ID],
-                requestedScreenOrientation = State.ScreenOrientation.UNSPECIFIED,
-                tab = savedStateHandle[KEY_TAB] ?: State.Tab.HOME
+                requestedScreenOrientation = State.ScreenOrientation.UNSPECIFIED
             )
         )
     val stateFlow = _stateFlow.asStateFlow()
 
-    private val isForTabToPlay get() = stateFlow.value.isForTabToPlay
+    private val currentPage get() = stateFlow.value.currentPage
+    private val isForPageToPlay get() = stateFlow.value.isForPageToPlay
     private val isFullscreen get() = stateFlow.value.isFullscreen
     private val isPlayerConnected get() = stateFlow.value.isPlayerConnected
     private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded
@@ -105,7 +106,6 @@ class NavigationActivityViewModel @Inject constructor(
     private val isViewInLandscape get() = stateFlow.value.isViewInLandscape
     private val playItemId get() = stateFlow.value.playItemId
     private val requestedScreenOrientation get() = stateFlow.value.requestedScreenOrientation
-    private val tab get() = stateFlow.value.tab
 
     private val playItemFlow: Flow<MediaItemVO?> =
         stateFlow.map { it.playItemId }.distinctUntilChanged().flatMapLatest { playItemId ->
@@ -127,20 +127,12 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
-    fun addAttachedTab(tab: State.Tab) {
-        _stateFlow.update { state ->
-            state.copy(
-                attachedTabs = state.attachedTabs + tab
-            )
-        }
-    }
-
     fun clearPlayerViewPlayback() {
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.HidePlayerView + State.Action.StopPlayback,
                 isFirstFrameRendered = false,
-                isForTabToPlay = true,
+                isForPageToPlay = true,
                 playItemId = null
             )
         }
@@ -168,6 +160,14 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
+    fun notifyPageAttached(page: State.Page) {
+        _stateFlow.update { state ->
+            state.copy(
+                attachedPages = state.attachedPages + page
+            )
+        }
+    }
+
     fun onAction(action: State.Action) {
         _stateFlow.update { state ->
             state.copy(actions = state.actions - action)
@@ -181,7 +181,7 @@ class NavigationActivityViewModel @Inject constructor(
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.ExpandPlayerView + State.Action.PlayPlayback,
-                isForTabToPlay = false
+                isForPageToPlay = false
             )
         }
 
@@ -217,10 +217,16 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun saveState() {
-        savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] = isForTabToPlay
+        savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] = isForPageToPlay
         savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] = isPlayerViewExpanded
         savedStateHandle[KEY_PLAY_ITEM_ID] = playItemId
-        savedStateHandle[KEY_TAB] = tab
+        savedStateHandle[KEY_TAB] = currentPage
+    }
+
+    fun setCurrentPage(page: State.Page) {
+        _stateFlow.update { state ->
+            state.copy(currentPage = page)
+        }
     }
 
     fun setIsPlayerConnected(isPlayerConnected: Boolean) {
@@ -244,12 +250,6 @@ class NavigationActivityViewModel @Inject constructor(
     fun setIsViewInLandscape(isViewInLandscape: Boolean) {
         _stateFlow.update { state ->
             state.copy(isViewInLandscape = isViewInLandscape)
-        }
-    }
-
-    fun setTab(tab: State.Tab) {
-        _stateFlow.update { state ->
-            state.copy(tab = tab)
         }
     }
 

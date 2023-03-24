@@ -78,9 +78,10 @@ class NavigationActivityViewModelTest {
 
         fun assertInitialState() = with(currentState) {
             assert(actions.isEmpty())
-            assert(attachedTabs.isEmpty())
+            assert(attachedPages.isEmpty())
+            assert(currentPage == NavigationActivityViewModel.State.Page.HOME)
             assert(!isFirstFrameRendered)
-            assert(isForTabToPlay)
+            assert(isForPageToPlay)
             assert(!isPlayerConnected)
             assert(!isPlayerViewExpanded)
             assert(!isViewInForeground)
@@ -88,17 +89,20 @@ class NavigationActivityViewModelTest {
             assert(playItem == null)
             assert(playItemId == null)
             assert(requestedScreenOrientation == NavigationActivityViewModel.State.ScreenOrientation.UNSPECIFIED)
-            assert(tab == NavigationActivityViewModel.State.Tab.HOME)
         }
 
         fun assertActionsIsEmpty() {
             assert(currentState.actions.isEmpty())
         }
 
-        fun assertAttachedTabs(vararg tabs: NavigationActivityViewModel.State.Tab) {
-            tabs.forEach {
-                assert(currentState.attachedTabs.contains(it))
+        fun assertAttachedPages(vararg pages: NavigationActivityViewModel.State.Page) {
+            pages.forEach {
+                assert(currentState.attachedPages.contains(it))
             }
+        }
+
+        fun assertCurrentPage(page: NavigationActivityViewModel.State.Page) {
+            assert(currentState.currentPage == page)
         }
 
         fun assertIsFirstFrameRendered(isFirstFrameRendered: Boolean) {
@@ -159,10 +163,6 @@ class NavigationActivityViewModelTest {
         fun assertStateUnchanged() {
             assert(currentState == startState)
         }
-
-        fun assertTab(tab: NavigationActivityViewModel.State.Tab) {
-            assert(currentState.tab == tab)
-        }
     }
 
     @get:Rule
@@ -203,23 +203,6 @@ class NavigationActivityViewModelTest {
 
         //Then
         viewModelStateAsserter.assertInitialState()
-    }
-
-    @Test
-    fun addAttachedTab_initialState_addValue() = runTest {
-        //Given
-        val tab = NavigationActivityViewModel.State.Tab.values().run { get(Random.nextInt(size)) }
-
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-        viewModel.addAttachedTab(tab)
-
-        advanceUntilIdle()
-
-        //Then
-        viewModelStateAsserter.assertAttachedTabs(tab)
     }
 
     @Test
@@ -313,6 +296,23 @@ class NavigationActivityViewModelTest {
 
         //Then
         viewModelStateAsserter.assertIsFirstFrameRendered(true)
+    }
+
+    @Test
+    fun notifyPageAttached_initialState_addValue() = runTest {
+        //Given
+        val page = NavigationActivityViewModel.State.Page.values().run { get(Random.nextInt(size)) }
+
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.notifyPageAttached(page)
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertAttachedPages(page)
     }
 
     @Test
@@ -494,6 +494,23 @@ class NavigationActivityViewModelTest {
     }
 
     @Test
+    fun setCurrentPage_initialState_setValue() = runTest {
+        //Given
+        val page = NavigationActivityViewModel.State.Page.DASHBOARD
+
+        val viewModel = viewModelBuilder.build()
+        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+
+        //When
+        viewModel.setCurrentPage(page)
+
+        advanceUntilIdle()
+
+        //Then
+        viewModelStateAsserter.assertCurrentPage(page)
+    }
+
+    @Test
     fun setIsPlayerConnected_initialState_setValue() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
@@ -551,23 +568,6 @@ class NavigationActivityViewModelTest {
 
         //Then
         viewModelStateAsserter.assertIsViewInLandscape(true)
-    }
-
-    @Test
-    fun setTab_initialState_setValue() = runTest {
-        //Given
-        val tab = NavigationActivityViewModel.State.Tab.DASHBOARD
-
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-        viewModel.setTab(tab)
-
-        advanceUntilIdle()
-
-        //Then
-        viewModelStateAsserter.assertTab(tab)
     }
 
     @Test
