@@ -21,7 +21,6 @@
             <option value="$PROJECT_DIR$/data/media_progress" />
             <option value="$PROJECT_DIR$/domain" />
             <option value="$PROJECT_DIR$/feature" />
-            <option value="$PROJECT_DIR$/feature/data_mapper" />
             <option value="$PROJECT_DIR$/feature/media_item_list" />
             <option value="$PROJECT_DIR$/feature/navigation" />
             <option value="$PROJECT_DIR$/feature/playback_details" />
