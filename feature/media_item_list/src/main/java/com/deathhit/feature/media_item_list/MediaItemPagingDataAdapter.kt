@@ -6,11 +6,11 @@ import androidx.core.view.isInvisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.bumptech.glide.RequestManager
-import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.ItemMediaItemBinding
+import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.google.android.exoplayer2.Player
 
-abstract class MediaItemAdapter(private val glideRequestManager: RequestManager) :
+abstract class MediaItemPagingDataAdapter(private val glideRequestManager: RequestManager) :
     PagingDataAdapter<MediaItemVO, MediaItemViewHolder>(COMPARATOR) {
     companion object {
         private const val TAG = "MediaItemAdapter"
@@ -113,7 +113,7 @@ abstract class MediaItemAdapter(private val glideRequestManager: RequestManager)
 
         holder.binding.styledPlayerView?.apply {
             //Set the player to the player view first to render the first frame.
-            player = if (isAtPlayPosition) this@MediaItemAdapter.player else null
+            player = if (isAtPlayPosition) this@MediaItemPagingDataAdapter.player else null
 
             if (isFirstFrameRendered)
                 showController()

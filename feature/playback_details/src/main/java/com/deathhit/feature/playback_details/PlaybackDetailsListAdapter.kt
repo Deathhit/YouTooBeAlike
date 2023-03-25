@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import com.deathhit.feature.playback_details.databinding.ItemPlaybackDetailsBinding
 import com.deathhit.feature.playback_details.model.PlaybackDetailsVO
 
-class PlaybackDetailsAdapter : ListAdapter<PlaybackDetailsVO, PlaybackDetailsViewHolder>(COMPARATOR) {
+class PlaybackDetailsListAdapter : ListAdapter<PlaybackDetailsVO, PlaybackDetailsViewHolder>(COMPARATOR) {
     companion object {
         private val COMPARATOR = object : DiffUtil.ItemCallback<PlaybackDetailsVO>() {
             override fun areItemsTheSame(oldItem: PlaybackDetailsVO, newItem: PlaybackDetailsVO): Boolean =

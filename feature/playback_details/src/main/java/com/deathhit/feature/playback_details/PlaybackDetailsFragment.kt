@@ -12,8 +12,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
-import com.deathhit.core.ui.AppLoadStateAdapter
-import com.deathhit.feature.media_item_list.MediaItemAdapter
+import com.deathhit.feature.media_item_list.MediaItemLoadStateAdapter
+import com.deathhit.feature.media_item_list.MediaItemPagingDataAdapter
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.playback_details.databinding.FragmentPlaybackDetailsBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -44,10 +44,10 @@ class PlaybackDetailsFragment : Fragment() {
     private var _glideRequestManager: RequestManager? = null
 
     private val playbackDetailsAdapter get() = _playbackDetailsAdapter!!
-    private var _playbackDetailsAdapter: PlaybackDetailsAdapter? = null
+    private var _playbackDetailsAdapter: PlaybackDetailsListAdapter? = null
 
     private val recommendedItemAdapter get() = _recommendedItemAdapter!!
-    private var _recommendedItemAdapter: MediaItemAdapter? = null
+    private var _recommendedItemAdapter: MediaItemPagingDataAdapter? = null
 
     private var setPlayItemIdJob: Job? = null
 
@@ -62,7 +62,7 @@ class PlaybackDetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         _glideRequestManager = Glide.with(this)
 
-        _recommendedItemAdapter = object : MediaItemAdapter(glideRequestManager) {
+        _recommendedItemAdapter = object : MediaItemPagingDataAdapter(glideRequestManager) {
             override fun onBindPlayPosition(item: MediaItemVO) {}
 
             override fun onClickItem(item: MediaItemVO) {
@@ -70,13 +70,13 @@ class PlaybackDetailsFragment : Fragment() {
             }
         }
 
-        _playbackDetailsAdapter = PlaybackDetailsAdapter()
+        _playbackDetailsAdapter = PlaybackDetailsListAdapter()
 
         with(binding.recyclerView) {
             adapter = ConcatAdapter(
                 playbackDetailsAdapter,
                 recommendedItemAdapter.withLoadStateFooter(object :
-                    AppLoadStateAdapter() {
+                    MediaItemLoadStateAdapter() {
                     override fun onRetryLoading() {
                         viewModel.retryLoadingRecommendedList()
                     }

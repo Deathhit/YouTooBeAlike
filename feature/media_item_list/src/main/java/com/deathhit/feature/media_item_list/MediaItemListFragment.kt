@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
-import com.deathhit.core.ui.AppLoadStateAdapter
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.media_item_list.databinding.FragmentMediaItemListBinding
 import com.deathhit.feature.media_item_list.enum_type.MediaItemLabel
@@ -78,7 +77,7 @@ class MediaItemListFragment : Fragment() {
         }
 
     private val mediaItemAdapter get() = _mediaItemAdapter!!
-    private var _mediaItemAdapter: MediaItemAdapter? = null
+    private var _mediaItemAdapter: MediaItemPagingDataAdapter? = null
 
     private var setPlayerJob: Job? = null
 
@@ -132,7 +131,7 @@ class MediaItemListFragment : Fragment() {
 
             _linearLayoutManger = (layoutManager!! as LinearLayoutManager)
 
-            _mediaItemAdapter = object : MediaItemAdapter(Glide.with(view)) {
+            _mediaItemAdapter = object : MediaItemPagingDataAdapter(Glide.with(view)) {
                 override fun onBindPlayPosition(item: MediaItemVO) {
                     viewModel.prepareItemIfNotPrepared(item)
                 }
@@ -155,7 +154,7 @@ class MediaItemListFragment : Fragment() {
                                 }
                         }
                     }
-                }.withLoadStateFooter(object : AppLoadStateAdapter() {
+                }.withLoadStateFooter(object : MediaItemLoadStateAdapter() {
                     override fun onRetryLoading() {
                         viewModel.retryLoadingList()
                     }

@@ -52,6 +52,7 @@ dependencies {
 
     //Exo Player
     def exo_version = '2.18.4'
+    implementation "com.google.android.exoplayer:exoplayer:$exo_version"
     implementation "com.google.android.exoplayer:extension-mediasession:$exo_version"
 
     //Glide
@@ -68,7 +69,7 @@ dependencies {
 
     //KTX
     implementation 'androidx.fragment:fragment-ktx:1.5.5'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
