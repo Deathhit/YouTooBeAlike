@@ -16,6 +16,7 @@
     </style>
 
     <style name="Widget.YouTooBeAlike.PlayerView.List" parent="Widget.YouTooBeAlike.PlayerView">
+        <item name="android:layout_height">@dimen/min_height_player_view</item>
         <item name="android:minHeight">@dimen/min_height_player_view</item>
         <item name="auto_show">false</item>
         <item name="controller_layout_id">@layout/block_player_control_list</item>
