@@ -6,14 +6,15 @@ import com.deathhit.domain.MediaItemRepository
 import com.deathhit.domain.model.MediaItemDO
 import com.deathhit.domain.MediaProgressRepository
 import com.deathhit.domain.model.MediaProgressDO
+import com.deathhit.domain.test.FakeMediaItemRepository
+import com.deathhit.domain.test.FakeMediaProgressRepository
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import com.deathhit.feature.media_item_list.model.toMediaItemVO
-import com.deathhit.feature.navigation.config.FakeMediaItemRepository
-import com.deathhit.feature.navigation.config.FakeMediaProgressRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
@@ -211,7 +212,9 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        fakeMediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.funcGetMediaItemFlowById = { mediaItemId ->
+            if (mediaItemId == mediaItemDO.mediaItemId) flowOf(mediaItemDO) else flowOf(null)
+        }
 
         val viewModel = viewModelBuilder.apply {
             testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
@@ -224,6 +227,16 @@ class NavigationActivityViewModelTest {
         advanceUntilIdle()
 
         //Then
+        with(fakeMediaItemRepository.stateFlow.value) {
+            assert(
+                actions == listOf(
+                    FakeMediaItemRepository.State.Action.GetMediaItemFlowById(
+                        mediaItemId = mediaItemDO.mediaItemId
+                    )
+                )
+            )
+        }
+
         with(viewModelStateAsserter) {
             assertIsFirstFrameRendered(false)
             assertIsPlayingByPlayerView(false)
@@ -282,7 +295,9 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        fakeMediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.funcGetMediaItemFlowById = { mediaItemId ->
+            if (mediaItemId == mediaItemDO.mediaItemId) flowOf(mediaItemDO) else flowOf(null)
+        }
 
         val viewModel = viewModelBuilder.apply {
             testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
@@ -342,7 +357,9 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        fakeMediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.funcGetMediaItemFlowById = { mediaItemId ->
+            if (mediaItemId == mediaItemDO.mediaItemId) flowOf(mediaItemDO) else flowOf(null)
+        }
 
         val viewModel = viewModelBuilder.build()
         val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
@@ -362,12 +379,15 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        fakeMediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.funcGetMediaItemFlowById = { mediaItemId ->
+            if (mediaItemId == mediaItemDO.mediaItemId) flowOf(mediaItemDO) else flowOf(null)
+        }
 
         val mediaProgressDO =
             MediaProgressDO(Random.nextBoolean(), mediaItemDO.mediaItemId, Random.nextLong())
 
-        fakeMediaProgressRepository.mediaProgressDO = mediaProgressDO
+        fakeMediaProgressRepository.funcGetMediaProgressByMediaItemId =
+            { mediaItemId -> if (mediaItemId == mediaProgressDO.mediaItemId) mediaProgressDO else null }
 
         val viewModel =
             viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.PlayerConnected }.build()
@@ -403,7 +423,9 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        fakeMediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.funcGetMediaItemFlowById = { mediaItemId ->
+            if (mediaItemId == mediaItemDO.mediaItemId) flowOf(mediaItemDO) else flowOf(null)
+        }
 
         val viewModel = viewModelBuilder.apply {
             testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)
@@ -440,12 +462,15 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        fakeMediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.funcGetMediaItemFlowById = { mediaItemId ->
+            if (mediaItemId == mediaItemDO.mediaItemId) flowOf(mediaItemDO) else flowOf(null)
+        }
 
         val mediaProgressDO =
             MediaProgressDO(Random.nextBoolean(), mediaItemDO.mediaItemId, Random.nextLong())
 
-        fakeMediaProgressRepository.mediaProgressDO = mediaProgressDO
+        fakeMediaProgressRepository.funcGetMediaProgressByMediaItemId =
+            { mediaItemId -> if (mediaItemId == mediaProgressDO.mediaItemId) mediaProgressDO else null }
 
         val viewModel =
             viewModelBuilder.apply {
@@ -483,14 +508,15 @@ class NavigationActivityViewModelTest {
         advanceUntilIdle()
 
         //Then
-        val savedMediaProgress = fakeMediaProgressRepository.mediaProgressDO
-
-        assert(
-            savedMediaProgress != null
-                    && savedMediaProgress.isEnded == isEnded
-                    && savedMediaProgress.mediaItemId == mediaItemId
-                    && savedMediaProgress.position == position
-        )
+        with(fakeMediaProgressRepository.stateFlow.value) {
+            assert(
+                actions == listOf(
+                    FakeMediaProgressRepository.State.Action.SetMediaProgress(
+                        MediaProgressDO(isEnded, mediaItemId, position)
+                    )
+                )
+            )
+        }
     }
 
     @Test
@@ -591,7 +617,9 @@ class NavigationActivityViewModelTest {
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        fakeMediaItemRepository.mediaItemDO = mediaItemDO
+        fakeMediaItemRepository.funcGetMediaItemFlowById = { mediaItemId ->
+            if (mediaItemId == mediaItemDO.mediaItemId) flowOf(mediaItemDO) else flowOf(null)
+        }
 
         val viewModel = viewModelBuilder.apply {
             testCase = ViewModelBuilder.TestCase.PlayingByPlayerView(mediaItemDO.mediaItemId)

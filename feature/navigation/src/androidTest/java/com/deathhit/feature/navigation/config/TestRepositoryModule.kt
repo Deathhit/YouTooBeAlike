@@ -2,6 +2,8 @@ package com.deathhit.feature.navigation.config
 
 import com.deathhit.domain.MediaItemRepository
 import com.deathhit.domain.MediaProgressRepository
+import com.deathhit.domain.test.FakeMediaItemRepository
+import com.deathhit.domain.test.FakeMediaProgressRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

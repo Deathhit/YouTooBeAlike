@@ -6,9 +6,7 @@ import com.deathhit.core.app_database.entity.MediaItemEntity
 import com.deathhit.core.media_api.model.Media
 import com.deathhit.data.media_item.config.FakeMediaApiService
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
-import com.deathhit.data.media_item.data_source.MediaItemLocalDataSourceImp
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
-import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSourceImp
 import com.deathhit.domain.enum_type.MediaItemLabel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -45,9 +43,6 @@ class MediaItemRemoteMediatorTest {
     @Before
     fun before() {
         hiltRule.inject()
-
-        mediaItemLocalDataSource = MediaItemLocalDataSourceImp(appDatabase)
-        mediaItemRemoteDataSource = MediaItemRemoteDataSourceImp(fakeMediaApiService)
 
         remoteMediator = MediaItemRemoteMediator(
             null,

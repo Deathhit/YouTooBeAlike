@@ -4,8 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import com.deathhit.domain.MediaItemRepository
 import com.deathhit.domain.MediaProgressRepository
 import com.deathhit.domain.model.MediaProgressDO
-import com.deathhit.feature.media_item_list.config.FakeMediaItemRepository
-import com.deathhit.feature.media_item_list.config.FakeMediaProgressRepository
+import com.deathhit.domain.test.FakeMediaItemRepository
+import com.deathhit.domain.test.FakeMediaProgressRepository
 import com.deathhit.feature.media_item_list.enum_type.MediaItemLabel
 import com.deathhit.feature.media_item_list.model.MediaItemVO
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -43,7 +43,7 @@ class MediaItemListViewModelTest {
             SavedStateHandle.createHandle(null, MediaItemListViewModel.createArgs(mediaItemLabel))
         ).apply {
             runTest {
-                when(val testCase = testCase) {
+                when (val testCase = testCase) {
                     TestCase.FirstPageLoaded -> scrollToTopOnFirstPageLoaded()
                     is TestCase.PlayItemPrepared -> {
                         setFirstCompletelyVisibleItemPosition(Random.nextInt())
@@ -233,7 +233,9 @@ class MediaItemListViewModelTest {
         //Given
         val mediaItem = MediaItemVO("id", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        val viewModel = viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.PlayItemPrepared(mediaItem) }.build()
+        val viewModel = viewModelBuilder.apply {
+            testCase = ViewModelBuilder.TestCase.PlayItemPrepared(mediaItem)
+        }.build()
         val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
@@ -313,9 +315,13 @@ class MediaItemListViewModelTest {
             Random.nextBoolean(),
             mediaItem.id,
             Random.nextLong()
-        ).also { fakeMediaProgressRepository.mediaProgressDO = it }
+        )
 
-        val viewModel = viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.ReadyToPlay }.build()
+        fakeMediaProgressRepository.funcGetMediaProgressByMediaItemId =
+            { mediaItemId -> if (mediaItemId == mediaProgress.mediaItemId) mediaProgress else null }
+
+        val viewModel =
+            viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.ReadyToPlay }.build()
         val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
@@ -324,6 +330,16 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
+        with(fakeMediaProgressRepository.stateFlow.value) {
+            assert(
+                actions == listOf(
+                    FakeMediaProgressRepository.State.Action.GetMediaProgressByMediaItemId(
+                        mediaItemId = mediaProgress.mediaItemId
+                    )
+                )
+            )
+        }
+
         with(viewModelStateAsserter) {
             assertIsReadyToPlay()
             assertLastActionIsPrepareAndPlayPlaybackWithGivenParameters(
@@ -381,14 +397,15 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        val savedMediaProgress = fakeMediaProgressRepository.mediaProgressDO
-
-        assert(
-            savedMediaProgress != null
-                    && savedMediaProgress.isEnded == isEnded
-                    && savedMediaProgress.mediaItemId == mediaItemId
-                    && savedMediaProgress.position == position
-        )
+        with(fakeMediaProgressRepository.stateFlow.value) {
+            assert(
+                actions == listOf(
+                    FakeMediaProgressRepository.State.Action.SetMediaProgress(
+                        MediaProgressDO(isEnded, mediaItemId, position)
+                    )
+                )
+            )
+        }
     }
 
     @Test
@@ -409,7 +426,8 @@ class MediaItemListViewModelTest {
     @Test
     fun scrollToTopOnFirstPageLoaded_firstPageLoaded_doNothing() = runTest {
         //Given
-        val viewModel = viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.FirstPageLoaded }.build()
+        val viewModel =
+            viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.FirstPageLoaded }.build()
         val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When

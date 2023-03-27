@@ -49,7 +49,7 @@ class PlaybackDetailsFragment : Fragment() {
     private val recommendedItemAdapter get() = _recommendedItemAdapter!!
     private var _recommendedItemAdapter: MediaItemPagingDataAdapter? = null
 
-    private var setPlayItemIdJob: Job? = null
+    private var loadPlaybackDetailsJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -142,11 +142,11 @@ class PlaybackDetailsFragment : Fragment() {
         super.onSaveInstanceState(outState)
     }
 
-    fun setPlayItemId(playItemId: String?) {
-        setPlayItemIdJob?.cancel()
-        setPlayItemIdJob = lifecycleScope.launch {
+    fun loadPlaybackDetails(playItemId: String?) {
+        loadPlaybackDetailsJob?.cancel()
+        loadPlaybackDetailsJob = lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
-                viewModel.setPlayItemId(playItemId)
+                viewModel.loadPlaybackDetails(playItemId)
             }
         }
     }

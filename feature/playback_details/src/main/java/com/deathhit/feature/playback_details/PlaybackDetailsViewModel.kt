@@ -27,6 +27,8 @@ class PlaybackDetailsViewModel @Inject constructor(
     companion object {
         private const val TAG = "PlaybackDetailsViewModel"
         private const val KEY_PLAY_ITEM_ID = "$TAG.KEY_PLAY_ITEM_ID"
+
+        private val VALUE_RECOMMENDED_ITEM_LABEL = MediaItemLabel.RECOMMENDED
     }
 
     data class State(
@@ -52,34 +54,45 @@ class PlaybackDetailsViewModel @Inject constructor(
     private val playItemId get() = stateFlow.value.playItemId
 
     val recommendedItemPagingDataFlow =
-        stateFlow.map { it.playbackDetails }.distinctUntilChanged().flatMapLatest { playbackDetails ->
-            val mediaItemLabel = MediaItemLabel.RECOMMENDED
-
-            mediaItemRepository.clearByLabel(mediaItemLabel)   //Clear items before fetching remote data.
-
-            if (playbackDetails != null)
-                mediaItemRepository.getMediaItemPagingDataFlow(
-                    playItemId,
-                    mediaItemLabel,
-                    playbackDetails.subtitle
-                ).map { pagingData -> pagingData.map { it.toMediaItemVO() } }
-            else
-                flowOf(PagingData.empty())
-        }.cachedIn(viewModelScope)
+        stateFlow.map { it.playbackDetails }.distinctUntilChanged()
+            .flatMapLatest { playbackDetails ->
+                if (playbackDetails != null)
+                    mediaItemRepository.getMediaItemPagingDataFlow(
+                        playItemId,
+                        VALUE_RECOMMENDED_ITEM_LABEL,
+                        playbackDetails.subtitle
+                    ).map { pagingData -> pagingData.map { it.toMediaItemVO() } }
+                else
+                    flowOf(PagingData.empty())
+            }.cachedIn(viewModelScope)
 
     init {
         viewModelScope.launch {
             launch {
-                stateFlow.map { it.playItemId }.flatMapLatest { playableItemId ->
-                    playableItemId?.let { mediaItemRepository.getMediaItemFlowById(it) } ?: emptyFlow()
-                }.collectLatest {
-                    _stateFlow.update { state ->
-                        state.copy(
-                            playbackDetails = it?.toPlaybackDetailsVO(),
-                        )
+                stateFlow.map { it.playItemId }.distinctUntilChanged()
+                    .flatMapLatest {
+                        it?.let { mediaItemRepository.getMediaItemFlowById(it) } ?: flowOf(null)
+                    }.collectLatest {
+                        _stateFlow.update { state ->
+                            state.copy(
+                                playbackDetails = it?.toPlaybackDetailsVO(),
+                            )
+                        }
                     }
-                }
             }
+        }
+    }
+
+    fun loadPlaybackDetails(playItemId: String?) {
+        if (playItemId == this.playItemId)
+            return
+
+        _stateFlow.update { state ->
+            state.copy(playItemId = playItemId)
+        }
+
+        viewModelScope.launch {
+            mediaItemRepository.clearByLabel(VALUE_RECOMMENDED_ITEM_LABEL)
         }
     }
 
@@ -103,11 +116,5 @@ class PlaybackDetailsViewModel @Inject constructor(
 
     fun saveState() {
         savedStateHandle[KEY_PLAY_ITEM_ID] = playItemId
-    }
-
-    fun setPlayItemId(playItemId: String?) {
-        _stateFlow.update { state ->
-            state.copy(playItemId = playItemId)
-        }
     }
 }

@@ -107,7 +107,7 @@ class NavigationActivityViewModel @Inject constructor(
     private val playItemId get() = stateFlow.value.playItemId
     private val requestedScreenOrientation get() = stateFlow.value.requestedScreenOrientation
 
-    private val playItemFlow: Flow<MediaItemVO?> =
+    private val playItemFlow =
         stateFlow.map { it.playItemId }.distinctUntilChanged().flatMapLatest { playItemId ->
             playItemId?.let {
                 mediaItemRepository.getMediaItemFlowById(playItemId).map { it?.toMediaItemVO() }
