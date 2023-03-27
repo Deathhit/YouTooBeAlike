@@ -13,7 +13,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class NavigationActivityViewModel @Inject constructor(
     private val mediaItemRepository: MediaItemRepository,
@@ -22,7 +21,6 @@ class NavigationActivityViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private const val TAG = "NavigationActivityViewModel"
-        private const val KEY_IS_FOR_TAB_TO_PLAY = "$TAG.KEY_IS_FOR_TAB_TO_PLAY"
         private const val KEY_IS_PLAYER_VIEW_EXPANDED = "$TAG.KEY_IS_PLAYER_VIEW_EXPANDED"
         private const val KEY_PLAY_ITEM_ID = "$TAG.KEY_PLAY_ITEM_ID"
         private const val KEY_TAB = "$TAG.KEY_TAB"
@@ -33,7 +31,6 @@ class NavigationActivityViewModel @Inject constructor(
         val attachedPages: Set<Page>,
         val currentPage: Page,
         val isFirstFrameRendered: Boolean,
-        val isForPageToPlay: Boolean,
         val isPlayerConnected: Boolean,
         val isPlayerViewExpanded: Boolean,
         val isViewInForeground: Boolean,
@@ -51,7 +48,7 @@ class NavigationActivityViewModel @Inject constructor(
             data class PreparePlayback(
                 val isEnded: Boolean,
                 val mediaItemId: String,
-                val position: Long,
+                val position: Long?,
                 val sourceUrl: String
             ) : Action
 
@@ -73,9 +70,9 @@ class NavigationActivityViewModel @Inject constructor(
 
         val isFullscreen = isPlayerViewExpanded && isViewInLandscape
         val isMediaSessionActive = if (isPlayerConnected) isViewInForeground else null
-        val isPlayingByPlayerView = !isForPageToPlay && isPlayerConnected
+        val isPlayingByPlayerView = isPlayerConnected && playItemId != null
         val playPage =
-            if (attachedPages.contains(currentPage) && isForPageToPlay && isPlayerConnected) currentPage else null
+            if (attachedPages.contains(currentPage) && isPlayerConnected && playItemId == null) currentPage else null
     }
 
     private val _stateFlow =
@@ -85,7 +82,6 @@ class NavigationActivityViewModel @Inject constructor(
                 attachedPages = emptySet(),
                 currentPage = savedStateHandle[KEY_TAB] ?: State.Page.HOME,
                 isFirstFrameRendered = false,
-                isForPageToPlay = savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] ?: true,
                 isPlayerConnected = false,
                 isPlayerViewExpanded = savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] ?: false,
                 isViewInForeground = false,
@@ -98,7 +94,6 @@ class NavigationActivityViewModel @Inject constructor(
     val stateFlow = _stateFlow.asStateFlow()
 
     private val currentPage get() = stateFlow.value.currentPage
-    private val isForPageToPlay get() = stateFlow.value.isForPageToPlay
     private val isFullscreen get() = stateFlow.value.isFullscreen
     private val isPlayerConnected get() = stateFlow.value.isPlayerConnected
     private val isPlayerViewExpanded get() = stateFlow.value.isPlayerViewExpanded
@@ -107,23 +102,22 @@ class NavigationActivityViewModel @Inject constructor(
     private val playItemId get() = stateFlow.value.playItemId
     private val requestedScreenOrientation get() = stateFlow.value.requestedScreenOrientation
 
-    private val playItemFlow =
-        stateFlow.map { it.playItemId }.distinctUntilChanged().flatMapLatest { playItemId ->
-            playItemId?.let {
-                mediaItemRepository.getMediaItemFlowById(playItemId).map { it?.toMediaItemVO() }
-            } ?: flowOf(null)
-        }
-
     private var prepareItemJob: Job? = null
     private var unlockScreenOrientationJob: Job? = null
 
     init {
         viewModelScope.launch {
-            playItemFlow.distinctUntilChanged().collectLatest {
-                _stateFlow.update { state ->
-                    state.copy(playItem = it)
+            stateFlow.filter { it.isPlayerConnected }.map { it.playItemId }.filterNotNull()
+                .distinctUntilChanged().collectLatest {
+                    _stateFlow.update { state ->
+                        state.copy(
+                            actions = state.actions + State.Action.StopPlayback,
+                            isFirstFrameRendered = false
+                        )
+                    }
+
+                    prepareItem(this, it)
                 }
-            }
         }
     }
 
@@ -132,7 +126,6 @@ class NavigationActivityViewModel @Inject constructor(
             state.copy(
                 actions = state.actions + State.Action.HidePlayerView + State.Action.StopPlayback,
                 isFirstFrameRendered = false,
-                isForPageToPlay = true,
                 playItemId = null
             )
         }
@@ -181,11 +174,9 @@ class NavigationActivityViewModel @Inject constructor(
         _stateFlow.update { state ->
             state.copy(
                 actions = state.actions + State.Action.ExpandPlayerView + State.Action.PlayPlayback,
-                isForPageToPlay = false
+                playItemId = itemId
             )
         }
-
-        prepareItem(itemId)
     }
 
     fun pausePlayerViewPlayback() {
@@ -195,13 +186,6 @@ class NavigationActivityViewModel @Inject constructor(
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.PausePlayback)
         }
-    }
-
-    fun resumePlayerViewPlayback() {
-        if (!isPlayingByPlayerView)
-            return
-
-        playItemId?.let { prepareItem(it) }
     }
 
     fun saveMediaProgress(isEnded: Boolean, mediaItemId: String, mediaPosition: Long) {
@@ -217,7 +201,6 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun saveState() {
-        savedStateHandle[KEY_IS_FOR_TAB_TO_PLAY] = isForPageToPlay
         savedStateHandle[KEY_IS_PLAYER_VIEW_EXPANDED] = isPlayerViewExpanded
         savedStateHandle[KEY_PLAY_ITEM_ID] = playItemId
         savedStateHandle[KEY_TAB] = currentPage
@@ -286,20 +269,22 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
-    private fun prepareItem(itemId: String) {
-        _stateFlow.update { state ->
-            state.copy(
-                actions = state.actions + State.Action.StopPlayback, isFirstFrameRendered = false
-            )
-        }
-
+    private fun prepareItem(coroutineScope: CoroutineScope, playItemId: String) {
         prepareItemJob?.cancel()
-        prepareItemJob = viewModelScope.launch {
-            _stateFlow.update { state ->
-                state.copy(playItemId = itemId)
-            }
+        prepareItemJob = coroutineScope.launch {
+            val playItem = mediaItemRepository.getMediaItemFlowById(playItemId)
+                .map { it?.toMediaItemVO() }
+                .distinctUntilChanged().stateIn(this).run {
+                    launch {
+                        collectLatest {
+                            _stateFlow.update { state ->
+                                state.copy(playItem = it)
+                            }
+                        }
+                    }
 
-            val playItem = playItemFlow.first()
+                    value
+                }
 
             if (playItem != null)
                 _stateFlow.update { state ->
@@ -310,7 +295,7 @@ class NavigationActivityViewModel @Inject constructor(
                         actions = state.actions + State.Action.PreparePlayback(
                             progress?.isEnded ?: false,
                             playItem.id,
-                            progress?.position ?: 0L,
+                            progress?.position,
                             playItem.sourceUrl
                         )
                     )

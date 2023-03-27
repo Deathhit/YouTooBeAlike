@@ -92,12 +92,7 @@ class NavigationActivity : AppCompatActivity() {
                     }
                 }
 
-                with(viewModel) {
-                    setIsPlayerConnected(true)
-
-                    if (player!!.playbackState == Player.STATE_IDLE)
-                        resumePlayerViewPlayback()
-                }
+                viewModel.setIsPlayerConnected(true)
             }
         }
 
@@ -312,6 +307,7 @@ class NavigationActivity : AppCompatActivity() {
                                             MediaItem.Builder().setMediaId(action.mediaItemId)
                                                 .setUri(action.sourceUrl).build(),
                                             if (action.isEnded) C.TIME_UNSET else action.position
+                                                ?: C.TIME_UNSET
                                         )
                                         prepare()
                                     }
@@ -325,42 +321,43 @@ class NavigationActivity : AppCompatActivity() {
                 }
 
                 launch {
-                    viewModel.stateFlow.map { it.currentPage }.distinctUntilChanged().collect { tab ->
-                        binding.bottomNavigationView.selectedItemId = when (tab) {
-                            NavigationActivityViewModel.State.Page.DASHBOARD -> R.id.dashboard
-                            NavigationActivityViewModel.State.Page.HOME -> R.id.home
-                            NavigationActivityViewModel.State.Page.NOTIFICATIONS -> R.id.notifications
+                    viewModel.stateFlow.map { it.currentPage }.distinctUntilChanged()
+                        .collect { tab ->
+                            binding.bottomNavigationView.selectedItemId = when (tab) {
+                                NavigationActivityViewModel.State.Page.DASHBOARD -> R.id.dashboard
+                                NavigationActivityViewModel.State.Page.HOME -> R.id.home
+                                NavigationActivityViewModel.State.Page.NOTIFICATIONS -> R.id.notifications
+                            }
+
+                            supportFragmentManager.commit {
+                                if (tab == NavigationActivityViewModel.State.Page.DASHBOARD)
+                                    dashboardFragment?.let { show(it) } ?: add(
+                                        binding.containerNavigationTabPage.id,
+                                        MediaItemListFragment.create(MediaItemLabel.DASHBOARD),
+                                        TAG_DASHBOARD
+                                    )
+                                else
+                                    dashboardFragment?.let { hide(it) }
+
+                                if (tab == NavigationActivityViewModel.State.Page.HOME)
+                                    homeFragment?.let { show(it) } ?: add(
+                                        binding.containerNavigationTabPage.id,
+                                        MediaItemListFragment.create(MediaItemLabel.HOME),
+                                        TAG_HOME
+                                    )
+                                else
+                                    homeFragment?.let { hide(it) }
+
+                                if (tab == NavigationActivityViewModel.State.Page.NOTIFICATIONS)
+                                    notificationsFragment?.let { show(it) } ?: add(
+                                        binding.containerNavigationTabPage.id,
+                                        MediaItemListFragment.create(MediaItemLabel.NOTIFICATIONS),
+                                        TAG_NOTIFICATIONS
+                                    )
+                                else
+                                    notificationsFragment?.let { hide(it) }
+                            }
                         }
-
-                        supportFragmentManager.commit {
-                            if (tab == NavigationActivityViewModel.State.Page.DASHBOARD)
-                                dashboardFragment?.let { show(it) } ?: add(
-                                    binding.containerNavigationTabPage.id,
-                                    MediaItemListFragment.create(MediaItemLabel.DASHBOARD),
-                                    TAG_DASHBOARD
-                                )
-                            else
-                                dashboardFragment?.let { hide(it) }
-
-                            if (tab == NavigationActivityViewModel.State.Page.HOME)
-                                homeFragment?.let { show(it) } ?: add(
-                                    binding.containerNavigationTabPage.id,
-                                    MediaItemListFragment.create(MediaItemLabel.HOME),
-                                    TAG_HOME
-                                )
-                            else
-                                homeFragment?.let { hide(it) }
-
-                            if (tab == NavigationActivityViewModel.State.Page.NOTIFICATIONS)
-                                notificationsFragment?.let { show(it) } ?: add(
-                                    binding.containerNavigationTabPage.id,
-                                    MediaItemListFragment.create(MediaItemLabel.NOTIFICATIONS),
-                                    TAG_NOTIFICATIONS
-                                )
-                            else
-                                notificationsFragment?.let { hide(it) }
-                        }
-                    }
                 }
 
                 launch {
