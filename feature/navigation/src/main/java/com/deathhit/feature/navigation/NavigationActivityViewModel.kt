@@ -119,8 +119,13 @@ class NavigationActivityViewModel @Inject constructor(
 
                         prepareItemJob?.cancel()
 
-                        if (it == null)
+                        if (it == null) {
+                            _stateFlow.update { state ->
+                                state.copy(playItem = null)
+                            }
+
                             return@collectLatest
+                        }
 
                         prepareItemJob = launch {
                             prepareItem(this, it)

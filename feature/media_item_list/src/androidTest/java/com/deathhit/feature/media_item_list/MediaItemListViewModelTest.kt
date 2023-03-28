@@ -211,7 +211,12 @@ class MediaItemListViewModelTest {
         val endState = viewModel.stateFlow.value
 
         assert(!endState.isFirstFrameRendered)
-        assert(endState.actions - startState.actions.toSet() == emptyList<MediaItemListViewModel.State.Action>())
+        assert(endState.actions.run {
+            subList(
+                startState.actions.size,
+                size
+            )
+        } == emptyList<MediaItemListViewModel.State.Action>())
     }
 
     @Test
@@ -253,7 +258,9 @@ class MediaItemListViewModelTest {
         //Then
         val endState = viewModel.stateFlow.value
 
-        assert(endState.actions - startState.actions.toSet() == listOf(MediaItemListViewModel.State.Action.OpenItem(mediaItemVO)))
+        assert(endState.actions.run { subList(startState.actions.size, size) } == listOf(
+            MediaItemListViewModel.State.Action.OpenItem(mediaItemVO)
+        ))
     }
 
     @Test
@@ -270,7 +277,9 @@ class MediaItemListViewModelTest {
         //Then
         val endState = viewModel.stateFlow.value
 
-        assert(endState.actions - startState.actions.toSet() == listOf(MediaItemListViewModel.State.Action.RefreshList))
+        assert(endState.actions.run { subList(startState.actions.size, size) } == listOf(
+            MediaItemListViewModel.State.Action.RefreshList
+        ))
     }
 
     @Test
@@ -287,7 +296,9 @@ class MediaItemListViewModelTest {
         //Then
         val endState = viewModel.stateFlow.value
 
-        assert(endState.actions - startState.actions.toSet() == listOf(MediaItemListViewModel.State.Action.RetryLoadingList))
+        assert(endState.actions.run { subList(startState.actions.size, size) } == listOf(
+            MediaItemListViewModel.State.Action.RetryLoadingList
+        ))
     }
 
     @Test
@@ -331,7 +342,9 @@ class MediaItemListViewModelTest {
         val endState = viewModel.stateFlow.value
 
         assert(endState.isFirstPageLoaded)
-        assert(endState.actions - startState.actions.toSet() == listOf(MediaItemListViewModel.State.Action.ScrollToTop))
+        assert(endState.actions.run { subList(startState.actions.size, size) } == listOf(
+            MediaItemListViewModel.State.Action.ScrollToTop
+        ))
     }
 
     @Test
@@ -349,7 +362,6 @@ class MediaItemListViewModelTest {
         //Then
         val endState = viewModel.stateFlow.value
 
-        assert(endState.isFirstPageLoaded)
-        assert(endState.actions - startState.actions.toSet() == emptyList<MediaItemListViewModel.State.Action>())
+        assert(endState == startState)
     }
 }

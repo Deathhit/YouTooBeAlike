@@ -180,7 +180,7 @@ class PlaybackDetailsViewModelTest {
         val endState = viewModel.stateFlow.value
 
         assert(
-            endState.actions - startState.actions.toSet() == listOf(
+            endState.actions.run {  subList(startState.actions.size, size) } == listOf(
                 PlaybackDetailsViewModel.State.Action.OpenItem(
                     mediaItemVO
                 )
@@ -203,7 +203,7 @@ class PlaybackDetailsViewModelTest {
         val endState = viewModel.stateFlow.value
 
         assert(
-            endState.actions - startState.actions.toSet() == listOf(
+            endState.actions.run {  subList(startState.actions.size, size) } == listOf(
                 PlaybackDetailsViewModel.State.Action.RetryLoadingRecommendedList
             )
         )
