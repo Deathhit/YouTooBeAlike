@@ -107,30 +107,36 @@ class NavigationActivityViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            stateFlow.filter { it.isPlayerConnected }.map { it.playItemId }.filterNotNull()
-                .distinctUntilChanged().collectLatest {
-                    _stateFlow.update { state ->
-                        state.copy(
-                            actions = state.actions + State.Action.StopPlayback,
-                            isFirstFrameRendered = false
-                        )
-                    }
+            launch {
+                stateFlow.filter { it.isPlayerConnected }.map { it.playItemId }.distinctUntilChanged()
+                    .collectLatest {
+                        _stateFlow.update { state ->
+                            state.copy(
+                                actions = state.actions + State.Action.StopPlayback,
+                                isFirstFrameRendered = false
+                            )
+                        }
 
-                    prepareItem(this, it)
-                }
+                        prepareItemJob?.cancel()
+
+                        if (it == null)
+                            return@collectLatest
+
+                        prepareItemJob = launch {
+                            prepareItem(this, it)
+                        }
+                    }
+            }
         }
     }
 
     fun clearPlayerViewPlayback() {
         _stateFlow.update { state ->
             state.copy(
-                actions = state.actions + State.Action.HidePlayerView + State.Action.StopPlayback,
-                isFirstFrameRendered = false,
+                actions = state.actions + State.Action.HidePlayerView,
                 playItemId = null
             )
         }
-
-        prepareItemJob?.cancel()
     }
 
     fun collapsePlayerView() {
@@ -145,7 +151,7 @@ class NavigationActivityViewModel @Inject constructor(
     }
 
     fun notifyFirstFrameRendered(mediaItemId: String) {
-        if (!isPlayingByPlayerView || mediaItemId != playItemId)
+        if (mediaItemId != playItemId)
             return
 
         _stateFlow.update { state ->
@@ -269,16 +275,14 @@ class NavigationActivityViewModel @Inject constructor(
         }
     }
 
-    private fun prepareItem(coroutineScope: CoroutineScope, playItemId: String) {
-        prepareItemJob?.cancel()
-        prepareItemJob = coroutineScope.launch {
-            val playItem = mediaItemRepository.getMediaItemFlowById(playItemId)
-                .map { it?.toMediaItemVO() }
+    private suspend fun prepareItem(coroutineScope: CoroutineScope, playItemId: String) =
+        with(coroutineScope) {
+            val playItemDO = mediaItemRepository.getMediaItemFlowById(playItemId)
                 .distinctUntilChanged().stateIn(this).run {
                     launch {
                         collectLatest {
                             _stateFlow.update { state ->
-                                state.copy(playItem = it)
+                                state.copy(playItem = it?.toMediaItemVO())
                             }
                         }
                     }
@@ -286,20 +290,19 @@ class NavigationActivityViewModel @Inject constructor(
                     value
                 }
 
-            if (playItem != null)
+            if (playItemDO != null)
                 _stateFlow.update { state ->
                     val progress =
-                        mediaProgressRepository.getMediaProgressByMediaItemId(playItem.id)
+                        mediaProgressRepository.getMediaProgressByMediaItemId(playItemId)
 
                     state.copy(
                         actions = state.actions + State.Action.PreparePlayback(
                             progress?.isEnded ?: false,
-                            playItem.id,
+                            playItemId,
                             progress?.position,
-                            playItem.sourceUrl
+                            playItemDO.sourceUrl
                         )
                     )
                 }
         }
-    }
 }

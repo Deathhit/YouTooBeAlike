@@ -298,11 +298,9 @@ class NavigationActivity : AppCompatActivity() {
                                         setTransition(R.id.hide)
                                         transitionToEnd()
                                     }
-                                    NavigationActivityViewModel.State.Action.PausePlayback -> player!!.pause()
-                                    NavigationActivityViewModel.State.Action.PlayPlayback -> player!!.play()
-                                    is NavigationActivityViewModel.State.Action.PreparePlayback -> with(
-                                        player!!
-                                    ) {
+                                    NavigationActivityViewModel.State.Action.PausePlayback -> player?.pause()
+                                    NavigationActivityViewModel.State.Action.PlayPlayback -> player?.play()
+                                    is NavigationActivityViewModel.State.Action.PreparePlayback -> player?.run {
                                         setMediaItem(
                                             MediaItem.Builder().setMediaId(action.mediaItemId)
                                                 .setUri(action.sourceUrl).build(),
@@ -312,7 +310,7 @@ class NavigationActivity : AppCompatActivity() {
                                         prepare()
                                     }
                                     NavigationActivityViewModel.State.Action.ShowPlayerViewControls -> binding.playerView.showController()
-                                    NavigationActivityViewModel.State.Action.StopPlayback -> player!!.stop()
+                                    NavigationActivityViewModel.State.Action.StopPlayback -> player?.stop()
                                 }
 
                                 viewModel.onAction(action)

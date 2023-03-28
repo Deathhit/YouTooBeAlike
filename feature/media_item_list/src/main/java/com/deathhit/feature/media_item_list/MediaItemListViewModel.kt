@@ -21,7 +21,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MediaItemListViewModel @Inject constructor(
-    mediaItemRepository: MediaItemRepository,
+    private val mediaItemRepository: MediaItemRepository,
     private val mediaProgressRepository: MediaProgressRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -48,14 +48,14 @@ class MediaItemListViewModel @Inject constructor(
         val isViewHidden: Boolean,
         val isViewInLandscape: Boolean,
         val mediaItemLabel: MediaItemLabel,
-        val playItem: MediaItemVO?
+        val playItemId: String?
     ) {
         sealed interface Action {
             data class OpenItem(val item: MediaItemVO) : Action
             data class PrepareAndPlayPlayback(
                 val isEnded: Boolean,
                 val mediaItemId: String,
-                val position: Long,
+                val position: Long?,
                 val sourceUrl: String
             ) : Action
 
@@ -90,7 +90,7 @@ class MediaItemListViewModel @Inject constructor(
                 isViewInLandscape = false,
                 mediaItemLabel = savedStateHandle[KEY_MEDIA_ITEM_LABEL]
                     ?: throw RuntimeException("mediaItemLabel can not be null!"),
-                playItem = null
+                playItemId = null
             )
         )
     val stateFlow = _stateFlow.asStateFlow()
@@ -106,37 +106,43 @@ class MediaItemListViewModel @Inject constructor(
         }.cachedIn(viewModelScope)
 
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
-    private val isPlayerSet get() = stateFlow.value.isPlayerSet
     private val isReadyToPlay get() = stateFlow.value.isReadyToPlay
     private val mediaItemLabel get() = stateFlow.value.mediaItemLabel
-    private val playItem get() = stateFlow.value.playItem
+    private val playItemId get() = stateFlow.value.playItemId
 
     private var prepareItemJob: Job? = null
 
     init {
         viewModelScope.launch {
             launch {
+                stateFlow.map { it.playItemId }.distinctUntilChanged().collectLatest {
+                    prepareItemJob?.cancel()
+
+                    if (it == null)
+                        return@collectLatest
+
+                    prepareItemJob = viewModelScope.launch {
+                        prepareItem(it)
+                    }
+                }
+            }
+
+            launch {
                 stateFlow.map { it.playPosition }.distinctUntilChanged().collectLatest {
                     _stateFlow.update { state ->
                         state.copy(
+                            actions = state.actions + State.Action.StopPlayback,
                             isFirstFrameRendered = false,
-                            playItem = null
+                            playItemId = null
                         )
                     }
-
-                    if (isPlayerSet)
-                        _stateFlow.update { state ->
-                            state.copy(actions = state.actions + State.Action.StopPlayback)
-                        }
-
-                    prepareItemJob?.cancel()
                 }
             }
         }
     }
 
     fun notifyFirstFrameRendered(mediaItemId: String) {
-        if (!isReadyToPlay || mediaItemId != playItem?.id)
+        if (!isReadyToPlay || mediaItemId != playItemId)
             return
 
         _stateFlow.update { state ->
@@ -153,31 +159,6 @@ class MediaItemListViewModel @Inject constructor(
     fun openItem(item: MediaItemVO) {
         _stateFlow.update { state ->
             state.copy(actions = state.actions + State.Action.OpenItem(item))
-        }
-    }
-
-    fun prepareItemIfNotPrepared(item: MediaItemVO) {
-        if (!isReadyToPlay || item == playItem)
-            return
-
-        prepareItemJob?.cancel()
-        prepareItemJob = viewModelScope.launch {
-            delay(MEDIA_SWITCHING_DELAY)
-
-            _stateFlow.update { state ->
-                val progress =
-                    mediaProgressRepository.getMediaProgressByMediaItemId(item.id)
-
-                state.copy(
-                    actions = state.actions + State.Action.PrepareAndPlayPlayback(
-                        progress?.isEnded ?: false,
-                        item.id,
-                        progress?.position ?: 0L,
-                        item.sourceUrl
-                    ),
-                    playItem = item
-                )
-            }
         }
     }
 
@@ -252,5 +233,32 @@ class MediaItemListViewModel @Inject constructor(
         _stateFlow.update { state ->
             state.copy(isViewInLandscape = isViewInLandscape)
         }
+    }
+
+    fun setPlayItemId(playItemId: String?) {
+        _stateFlow.update { state ->
+            state.copy(playItemId = playItemId)
+        }
+    }
+
+    private suspend fun prepareItem(playItemId: String) {
+        delay(MEDIA_SWITCHING_DELAY)
+
+        val playItemDO = mediaItemRepository.getMediaItemFlowById(playItemId).first()
+
+        if (playItemDO != null)
+            _stateFlow.update { state ->
+                val progress =
+                    mediaProgressRepository.getMediaProgressByMediaItemId(playItemId)
+
+                state.copy(
+                    actions = state.actions + State.Action.PrepareAndPlayPlayback(
+                        progress?.isEnded ?: false,
+                        playItemId,
+                        progress?.position,
+                        playItemDO.sourceUrl
+                    )
+                )
+            }
     }
 }

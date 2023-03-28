@@ -133,7 +133,7 @@ class MediaItemListFragment : Fragment() {
 
             _mediaItemAdapter = object : MediaItemPagingDataAdapter(Glide.with(view)) {
                 override fun onBindPlayPosition(item: MediaItemVO) {
-                    viewModel.prepareItemIfNotPrepared(item)
+                    viewModel.setPlayItemId(item.id)
                 }
 
                 override fun onClickItem(item: MediaItemVO) {
@@ -172,11 +172,12 @@ class MediaItemListFragment : Fragment() {
                                     is MediaItemListViewModel.State.Action.OpenItem -> callback?.onOpenItem(
                                         action.item.id
                                     )
-                                    is MediaItemListViewModel.State.Action.PrepareAndPlayPlayback -> player!!.run {
+                                    is MediaItemListViewModel.State.Action.PrepareAndPlayPlayback -> player?.run {
                                         setMediaItem(
                                             MediaItem.Builder().setMediaId(action.mediaItemId)
                                                 .setUri(action.sourceUrl).build(),
                                             if (action.isEnded) C.TIME_UNSET else action.position
+                                                ?: C.TIME_UNSET
                                         )
                                         prepare()
                                         play()
@@ -186,7 +187,7 @@ class MediaItemListFragment : Fragment() {
                                     MediaItemListViewModel.State.Action.ScrollToTop -> binding.recyclerView.scrollToPosition(
                                         0
                                     )
-                                    MediaItemListViewModel.State.Action.StopPlayback -> player!!.stop()
+                                    MediaItemListViewModel.State.Action.StopPlayback -> player?.stop()
                                 }
 
                                 viewModel.onAction(action)
