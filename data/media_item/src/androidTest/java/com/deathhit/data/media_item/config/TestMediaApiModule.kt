@@ -2,6 +2,7 @@ package com.deathhit.data.media_item.config
 
 import com.deathhit.core.media_api.MediaApiModule
 import com.deathhit.core.media_api.MediaApiService
+import com.deathhit.core.media_api.test.FakeMediaApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent

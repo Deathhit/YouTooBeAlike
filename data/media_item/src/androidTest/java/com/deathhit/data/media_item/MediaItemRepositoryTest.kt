@@ -6,6 +6,9 @@ import com.deathhit.domain.enum_type.MediaItemLabel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -44,11 +47,15 @@ class MediaItemRepositoryTest {
         mediaItemRepository.clearByLabel(mediaItemLabel)
 
         //Then
-        testMediaItemLocalDataSource.actions.contains(
-            TestMediaItemLocalDataSource.Action.ClearByLabel(
-                mediaItemLabel.toLabelString()
+        with(testMediaItemLocalDataSource.stateFlow.value) {
+            assert(
+                actions == listOf(
+                    TestMediaItemLocalDataSource.State.Action.ClearByLabel(
+                        mediaItemLabel.toLabelString()
+                    )
+                )
             )
-        )
+        }
     }
 
     @Test
@@ -60,21 +67,35 @@ class MediaItemRepositoryTest {
         mediaItemRepository.getMediaItemFlowById(mediaItemId)
 
         //Then
-        testMediaItemLocalDataSource.actions.contains(
-            TestMediaItemLocalDataSource.Action.GetMediaItemFlowById(mediaItemId)
-        )
+        with(testMediaItemLocalDataSource.stateFlow.value) {
+            assert(
+                actions == listOf(
+                    TestMediaItemLocalDataSource.State.Action.GetMediaItemFlowById(
+                        mediaItemId
+                    )
+                )
+            )
+        }
     }
 
     @Test
-    fun getMediaItemPagingDataFlow_initialState_invokeGetMediaItemPagingSource() = runTest {
+    fun getMediaItemPagingDataFlowFirst_initialState_invokeGetMediaItemPagingSource() = runTest {
         //Given
 
         //When
-        mediaItemRepository.getMediaItemPagingDataFlow("exclusiveId", mediaItemLabel, "subtitle")
+        mediaItemRepository.getMediaItemPagingDataFlow("exclusiveId", mediaItemLabel, "subtitle").first()
+
+        advanceUntilIdle()
 
         //Then
-        testMediaItemLocalDataSource.actions.contains(
-            TestMediaItemLocalDataSource.Action.GetMediaItemPagingSource(mediaItemLabel.toLabelString())
-        )
+        with(testMediaItemLocalDataSource.stateFlow.value) {
+            assert(
+                actions == listOf(
+                    TestMediaItemLocalDataSource.State.Action.GetMediaItemPagingSource(
+                        mediaItemLabel.toLabelString()
+                    )
+                )
+            )
+        }
     }
 }

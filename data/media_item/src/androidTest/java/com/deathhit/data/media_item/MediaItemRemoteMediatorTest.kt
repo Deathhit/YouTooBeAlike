@@ -4,7 +4,7 @@ import androidx.paging.*
 import com.deathhit.core.app_database.AppDatabase
 import com.deathhit.core.app_database.entity.MediaItemEntity
 import com.deathhit.core.media_api.model.Media
-import com.deathhit.data.media_item.config.FakeMediaApiService
+import com.deathhit.core.media_api.test.FakeMediaApiService
 import com.deathhit.data.media_item.data_source.MediaItemLocalDataSource
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
 import com.deathhit.domain.enum_type.MediaItemLabel
@@ -61,7 +61,7 @@ class MediaItemRemoteMediatorTest {
     @Test
     fun refreshLoad_errorOccurs_returnsErrorResult() = runTest {
         //Given
-        fakeMediaApiService.isThrowingError = true
+        fakeMediaApiService.funcGetMediaList = { _, _, _, _ -> throw RuntimeException("Test") }
 
         //When
         val pagingState = PagingState<Int, MediaItemEntity>(
@@ -80,7 +80,7 @@ class MediaItemRemoteMediatorTest {
     @Test
     fun refreshLoad_moreDataIsPresent_returnsSuccessResult() = runTest {
         //Given
-        fakeMediaApiService.mediaList = listOf(
+        val mediaList = listOf(
             Media(
                 "0",
                 "description",
@@ -90,6 +90,8 @@ class MediaItemRemoteMediatorTest {
                 "title"
             )
         )
+
+        fakeMediaApiService.funcGetMediaList = { _, _, _, _ -> mediaList }
 
         //When
         val pagingState = PagingState<Int, MediaItemEntity>(

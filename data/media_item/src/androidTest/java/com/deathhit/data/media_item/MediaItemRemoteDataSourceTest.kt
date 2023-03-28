@@ -1,6 +1,6 @@
 package com.deathhit.data.media_item
 
-import com.deathhit.data.media_item.config.FakeMediaApiService
+import com.deathhit.core.media_api.test.FakeMediaApiService
 import com.deathhit.data.media_item.data_source.MediaItemRemoteDataSource
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -41,13 +41,17 @@ class MediaItemRemoteDataSourceTest {
         mediaRemoteDataSource.getMediaList(exclusiveId, page, pageSize, subtitle)
 
         //Then
-        assert(
-            fakeMediaApiService.getMediaList == FakeMediaApiService.GetMediaList(
-                exclusiveId,
-                page,
-                pageSize,
-                subtitle
+        with(fakeMediaApiService.stateFlow.value) {
+            assert(
+                actions == listOf(
+                    FakeMediaApiService.State.Action.GetMediaList(
+                        exclusiveId,
+                        page,
+                        pageSize,
+                        subtitle
+                    )
+                )
             )
-        )
+        }
     }
 }

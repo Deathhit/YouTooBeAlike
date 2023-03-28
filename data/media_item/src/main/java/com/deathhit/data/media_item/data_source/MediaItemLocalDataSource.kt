@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.Flow
 internal interface MediaItemLocalDataSource {
     suspend fun clearByLabel(label: String)
 
-    fun getMediaItemPagingSource(label: String): PagingSource<Int, MediaItemEntity>
-
     fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemEntity?>
+
+    fun getMediaItemPagingSource(label: String): PagingSource<Int, MediaItemEntity>
 
     suspend fun getRemoteKeysByLabelAndMediaItemId(
         label: String,

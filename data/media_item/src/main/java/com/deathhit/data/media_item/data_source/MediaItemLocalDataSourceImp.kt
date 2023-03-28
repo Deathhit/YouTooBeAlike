@@ -15,11 +15,11 @@ internal class MediaItemLocalDataSourceImp(private val appDatabase: AppDatabase)
     override suspend fun clearByLabel(label: String) =
         mediaItemDao.clearByLabel(label)
 
-    override fun getMediaItemPagingSource(label: String): PagingSource<Int, MediaItemEntity> =
-        mediaItemDao.getPagingSource(label)
-
     override fun getMediaItemFlowById(mediaItemId: String): Flow<MediaItemEntity?> =
         mediaItemDao.getFlowById(mediaItemId)
+
+    override fun getMediaItemPagingSource(label: String): PagingSource<Int, MediaItemEntity> =
+        mediaItemDao.getPagingSource(label)
 
     override suspend fun getRemoteKeysByLabelAndMediaItemId(
         label: String,
