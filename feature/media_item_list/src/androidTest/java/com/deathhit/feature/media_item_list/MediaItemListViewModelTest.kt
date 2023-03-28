@@ -86,9 +86,7 @@ class MediaItemListViewModelTest {
                 with(fakeMediaItemRepository) {
                     funcGetMediaItemFlowById =
                         { mediaItemId -> flowOf(if (mediaItemId == mediaItemDO.mediaItemId) mediaItemDO else null) }
-
                 }
-
 
                 with(fakeMediaProgressRepository) {
                     funcGetMediaProgressByMediaItemId =

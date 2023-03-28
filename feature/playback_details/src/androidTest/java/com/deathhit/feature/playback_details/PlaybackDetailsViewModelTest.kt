@@ -2,20 +2,16 @@ package com.deathhit.feature.playback_details
 
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
-import com.deathhit.domain.MediaItemRepository
 import com.deathhit.domain.enum_type.MediaItemLabel
 import com.deathhit.domain.model.MediaItemDO
 import com.deathhit.domain.test.FakeMediaItemRepository
 import com.deathhit.feature.media_item_list.model.MediaItemVO
-import com.deathhit.feature.playback_details.model.PlaybackDetailsVO
 import com.deathhit.feature.playback_details.model.toPlaybackDetailsVO
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
@@ -26,61 +22,70 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltAndroidTest
 class PlaybackDetailsViewModelTest {
-    private class ViewModelBuilder(private val mediaItemRepository: MediaItemRepository) {
+    private class ViewModelBuilder(private val fakeMediaItemRepository: FakeMediaItemRepository) {
         sealed interface TestCase {
             object InitialState : TestCase
-            data class PlaybackDetailsLoaded(val playItemId: String) : TestCase
+            data class PlaybackDetailsLoaded(val mediaItemDO: MediaItemDO) : TestCase
         }
 
         var testCase: TestCase = TestCase.InitialState
 
-        fun build() = PlaybackDetailsViewModel(
-            mediaItemRepository,
-            SavedStateHandle.createHandle(null, Bundle.EMPTY)
-        ).apply {
-            runTest {
-                when (val testCase = testCase) {
-                    is TestCase.PlaybackDetailsLoaded -> loadPlaybackDetails(testCase.playItemId)
-                    else -> {}
+        fun build() = when (val testCase = testCase) {
+            TestCase.InitialState -> createViewModel().apply {
+                runTest {
+                    //Given
+
+                    //When
+                    advanceUntilIdle()
+
+                    with(stateFlow.value) {
+                        assert(actions.isEmpty())
+                        assert(playbackDetails == null)
+                        assert(playItemId == null)
+                    }
                 }
+            }
+            is TestCase.PlaybackDetailsLoaded -> {
+                //Given
+                val mediaItemDO = testCase.mediaItemDO
 
-                advanceUntilIdle()
+                fakeMediaItemRepository.funcGetMediaItemFlowById =
+                    { mediaItemId -> flowOf(if (mediaItemId == mediaItemDO.mediaItemId) mediaItemDO else null) }
+
+                createViewModel().apply {
+                    runTest {
+                        //Given
+
+                        //When
+                        loadPlaybackDetails(mediaItemDO.mediaItemId)
+
+                        advanceUntilIdle()
+
+                        //Then
+                        with(fakeMediaItemRepository.stateFlow.value) {
+                            assert(
+                                actions == listOf(
+                                    FakeMediaItemRepository.State.Action.ClearByLabel(MediaItemLabel.RECOMMENDED),
+                                    FakeMediaItemRepository.State.Action.GetMediaItemFlowById(
+                                        mediaItemDO.mediaItemId
+                                    )
+                                )
+                            )
+                        }
+
+                        with(stateFlow.value) {
+                            assert(playbackDetails == mediaItemDO.toPlaybackDetailsVO())
+                            assert(playItemId == mediaItemDO.mediaItemId)
+                        }
+                    }
+                }
             }
         }
-    }
 
-    private class ViewModelStateAsserter(private val viewModel: PlaybackDetailsViewModel) {
-        private val currentState get() = viewModel.stateFlow.value
-
-        fun assertInitialState(
-            playbackDetails: PlaybackDetailsVO? = null,
-            playItemId: String? = null
-        ) = with(currentState) {
-            assert(actions.isEmpty())
-            assert(this.playbackDetails == playbackDetails)
-            assert(this.playItemId == playItemId)
-        }
-
-        fun assertActionsIsEmpty() {
-            assert(currentState.actions.isEmpty())
-        }
-
-        fun assertLastActionIsOpenItem(item: MediaItemVO) =
-            currentState.actions.last().let {
-                assert(it is PlaybackDetailsViewModel.State.Action.OpenItem && it.item == item)
-            }
-
-        fun assertLastActionIsRetryLoadingRecommendedList() {
-            assert(currentState.actions.last() is PlaybackDetailsViewModel.State.Action.RetryLoadingRecommendedList)
-        }
-
-        fun assertPlaybackDetails(playbackDetails: PlaybackDetailsVO?) {
-            assert(currentState.playbackDetails == playbackDetails)
-        }
-
-        fun assertPlayItemId(playItemId: String?) {
-            assert(currentState.playItemId == playItemId)
-        }
+        private fun createViewModel() = PlaybackDetailsViewModel(
+            fakeMediaItemRepository,
+            SavedStateHandle.createHandle(null, Bundle.EMPTY)
+        )
     }
 
     @get:Rule
@@ -106,106 +111,88 @@ class PlaybackDetailsViewModelTest {
     }
 
     @Test
-    fun initialState() = runTest {
-        //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-
-        //Then
-        viewModelStateAsserter.assertInitialState()
-    }
-
-    @Test
-    fun loadPlaybackDetails_initialState_setValueAndUpdatePlaybackDetails() = runTest {
+    fun loadPlaybackDetails_playbackDetailsLoaded_clearState() = runTest {
         //Given
         val mediaItemDO =
             MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        fakeMediaItemRepository.funcGetMediaItemFlowById =
-            { mediaItemId: String -> if (mediaItemId == mediaItemDO.mediaItemId) flowOf(mediaItemDO) else flowOf(null) }
-
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        val pagingDataCollectJob = launch {
-            viewModel.recommendedItemPagingDataFlow.collect()
-        }
+        val viewModel = viewModelBuilder.apply {
+            testCase = ViewModelBuilder.TestCase.PlaybackDetailsLoaded(mediaItemDO)
+        }.build()
 
         //When
-        viewModel.loadPlaybackDetails(mediaItemDO.mediaItemId)
+        viewModel.loadPlaybackDetails(null)
 
         advanceUntilIdle()
 
         //Then
-        with(fakeMediaItemRepository.stateFlow.value) {
-            val mediaItemLabel = MediaItemLabel.RECOMMENDED
+        val endState = viewModel.stateFlow.value
 
-            assert(
-                actions == listOf(
-                    FakeMediaItemRepository.State.Action.GetMediaItemFlowById(mediaItemId = mediaItemDO.mediaItemId),
-                    FakeMediaItemRepository.State.Action.ClearByLabel(mediaItemLabel = mediaItemLabel),
-                    FakeMediaItemRepository.State.Action.GetMediaItemPagingDataFlow(
-                        exclusiveId = mediaItemDO.mediaItemId,
-                        mediaItemLabel = mediaItemLabel,
-                        subtitle = mediaItemDO.subtitle
-                    )
-                )
-            )
+        with(endState) {
+            assert(playbackDetails == null)
+            assert(playItemId == null)
         }
-
-        with(viewModelStateAsserter) {
-            assertPlaybackDetails(mediaItemDO.toPlaybackDetailsVO())
-            assertPlayItemId(mediaItemDO.mediaItemId)
-        }
-
-        pagingDataCollectJob.cancel()
     }
 
     @Test
-    fun onAction_initialState_clearGivenAction() = runTest {
+    fun loadPlaybackDetails_playbackDetailsLoaded_updateState() = runTest {
         //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+        val mediaItemDO =
+            MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
 
-        viewModel.retryLoadingRecommendedList()
-
-        advanceUntilIdle()
-
-        val action = viewModel.stateFlow.value.actions.last()
+        val viewModel = viewModelBuilder.apply {
+            testCase = ViewModelBuilder.TestCase.PlaybackDetailsLoaded(mediaItemDO)
+        }.build()
 
         //When
-        viewModel.onAction(action)
+        val newMediaItemDO = mediaItemDO.copy(mediaItemId = "newMediaItemId")
+
+        fakeMediaItemRepository.funcGetMediaItemFlowById =
+            { mediaItemId -> flowOf(if (mediaItemId == newMediaItemDO.mediaItemId) newMediaItemDO else null) }
+
+        viewModel.loadPlaybackDetails(newMediaItemDO.mediaItemId)
 
         advanceUntilIdle()
 
         //Then
-        viewModelStateAsserter.assertActionsIsEmpty()
+        val endState = viewModel.stateFlow.value
+
+        with(endState) {
+            assert(playbackDetails == newMediaItemDO.toPlaybackDetailsVO())
+            assert(playItemId == newMediaItemDO.mediaItemId)
+        }
     }
 
     @Test
     fun openItem_initialState_addAction() = runTest {
         //Given
-        val mediaItem = MediaItemVO("id", "sourceUrl", "subtitle", "thumbUrl", "title")
+        val mediaItemVO = MediaItemVO("id", "subtitle", "thumbUrl", "title")
 
         val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+        val startState = viewModel.stateFlow.value
 
         //When
-        viewModel.openItem(mediaItem)
+        viewModel.openItem(mediaItemVO)
 
         advanceUntilIdle()
 
         //Then
-        viewModelStateAsserter.assertLastActionIsOpenItem(mediaItem)
+        val endState = viewModel.stateFlow.value
+
+        assert(
+            endState.actions - startState.actions.toSet() == listOf(
+                PlaybackDetailsViewModel.State.Action.OpenItem(
+                    mediaItemVO
+                )
+            )
+        )
     }
 
     @Test
     fun retryLoadingRecommendedList_initialState_addAction() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+        val startState = viewModel.stateFlow.value
 
         //When
         viewModel.retryLoadingRecommendedList()
@@ -213,6 +200,12 @@ class PlaybackDetailsViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateAsserter.assertLastActionIsRetryLoadingRecommendedList()
+        val endState = viewModel.stateFlow.value
+
+        assert(
+            endState.actions - startState.actions.toSet() == listOf(
+                PlaybackDetailsViewModel.State.Action.RetryLoadingRecommendedList
+            )
+        )
     }
 }
