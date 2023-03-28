@@ -12,9 +12,9 @@ class FakeMediaItemRepository : MediaItemRepository {
             data class ClearByLabel(val mediaItemLabel: MediaItemLabel) : Action
             data class GetMediaItemFlowById(val mediaItemId: String) : Action
             data class GetMediaItemPagingDataFlow(
-                val exclusiveId: String?,
+                val exclusiveId: String? = null,
                 val mediaItemLabel: MediaItemLabel,
-                val subtitle: String?
+                val subtitle: String? = null
             ) : Action
         }
     }

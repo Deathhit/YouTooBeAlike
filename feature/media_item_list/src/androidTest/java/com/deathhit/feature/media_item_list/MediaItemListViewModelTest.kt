@@ -1,8 +1,7 @@
 package com.deathhit.feature.media_item_list
 
 import androidx.lifecycle.SavedStateHandle
-import com.deathhit.domain.MediaItemRepository
-import com.deathhit.domain.MediaProgressRepository
+import com.deathhit.domain.model.MediaItemDO
 import com.deathhit.domain.model.MediaProgressDO
 import com.deathhit.domain.test.FakeMediaItemRepository
 import com.deathhit.domain.test.FakeMediaProgressRepository
@@ -12,6 +11,7 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
@@ -24,150 +24,150 @@ import kotlin.random.Random
 @HiltAndroidTest
 class MediaItemListViewModelTest {
     private class ViewModelBuilder(
-        private val mediaItemLabel: MediaItemLabel,
-        private val mediaItemRepository: MediaItemRepository,
-        private val mediaProgressRepository: MediaProgressRepository
+        private val fakeMediaItemRepository: FakeMediaItemRepository,
+        private val fakeMediaProgressRepository: FakeMediaProgressRepository,
+        private val mediaItemLabel: MediaItemLabel
     ) {
         sealed interface TestCase {
-            object InitialState : TestCase
             object FirstPageLoaded : TestCase
-            data class PlayItemPrepared(val mediaItem: MediaItemVO) : TestCase
-            object ReadyToPlay : TestCase
+            object InitialState : TestCase
+            data class PlayItemPrepared(
+                val mediaItemDO: MediaItemDO,
+                val mediaProgressDO: MediaProgressDO
+            ) : TestCase
         }
 
         var testCase: TestCase = TestCase.InitialState
 
-        fun build() = MediaItemListViewModel(
-            mediaItemRepository,
-            mediaProgressRepository,
-            SavedStateHandle.createHandle(null, MediaItemListViewModel.createArgs(mediaItemLabel))
-        ).apply {
-            runTest {
-                when (val testCase = testCase) {
-                    TestCase.FirstPageLoaded -> scrollToTopOnFirstPageLoaded()
-                    is TestCase.PlayItemPrepared -> {
-                        setFirstCompletelyVisibleItemPosition(Random.nextInt())
-                        setIsPlayerSet(true)
-                        setIsViewActive(true)
-                        setIsViewHidden(false)
-                        setIsViewInLandscape(false)
+        fun build() = when (val testCase = testCase) {
+            TestCase.FirstPageLoaded -> createViewModel().apply {
+                runTest {
+                    //Given
+
+                    //When
+                    scrollToTopOnFirstPageLoaded()
+
+                    advanceUntilIdle()
+
+                    //Then
+                    with(stateFlow.value) {
+                        assert(isFirstPageLoaded)
+                    }
+                }
+            }
+            TestCase.InitialState -> createViewModel().apply {
+                runTest {
+                    //Given
+
+                    //When
+                    advanceUntilIdle()
+
+                    //Then
+                    with(stateFlow.value) {
+                        assert(actions == listOf(MediaItemListViewModel.State.Action.StopPlayback))
+                        assert(firstCompletelyVisibleItemPosition == null)
+                        assert(!isFirstFrameRendered)
+                        assert(!isFirstPageLoaded)
+                        assert(!isPlayerSet)
+                        assert(!isRefreshingList)
+                        assert(!isViewActive)
+                        assert(!isViewHidden)
+                        assert(!isViewInLandscape)
+                        assert(mediaItemLabel == this@ViewModelBuilder.mediaItemLabel)
+                        assert(playItemId == null)
+                    }
+                }
+            }
+            is TestCase.PlayItemPrepared -> {
+                //Given
+                val mediaItemDO = testCase.mediaItemDO
+                val mediaProgressDO = testCase.mediaProgressDO
+
+                with(fakeMediaItemRepository) {
+                    funcGetMediaItemFlowById =
+                        { mediaItemId -> flowOf(if (mediaItemId == mediaItemDO.mediaItemId) mediaItemDO else null) }
+
+                }
+
+
+                with(fakeMediaProgressRepository) {
+                    funcGetMediaProgressByMediaItemId =
+                        { mediaItemId -> if (mediaItemId == mediaProgressDO.mediaItemId) mediaProgressDO else null }
+                }
+
+                createViewModel().apply {
+                    runTest {
+                        //Given
+                        val firstCompletelyVisibleItemPosition = Random.nextInt()
+                        val isPlayerSet = true
+                        val isViewActive = true
+                        val isViewHidden = false
+                        val isViewInLandscape = false
+                        val playItemId = mediaItemDO.mediaItemId
+
+                        //When
+                        setFirstCompletelyVisibleItemPosition(firstCompletelyVisibleItemPosition)
+                        setIsPlayerSet(isPlayerSet)
+                        setIsViewActive(isViewActive)
+                        setIsViewHidden(isViewHidden)
+                        setIsViewInLandscape(isViewInLandscape)
 
                         advanceUntilIdle()
 
-                        prepareItemIfNotPrepared(testCase.mediaItem)
+                        setPlayItemId(playItemId)
+
+                        advanceUntilIdle()
+
+                        //Then
+                        with(fakeMediaItemRepository.stateFlow.value) {
+                            assert(
+                                actions == listOf(
+                                    FakeMediaItemRepository.State.Action.GetMediaItemFlowById(
+                                        mediaItemId = mediaItemDO.mediaItemId
+                                    )
+                                )
+                            )
+                        }
+
+                        with(fakeMediaProgressRepository.stateFlow.value) {
+                            assert(
+                                actions == listOf(
+                                    FakeMediaProgressRepository.State.Action.GetMediaProgressByMediaItemId(
+                                        mediaItemId = mediaProgressDO.mediaItemId
+                                    )
+                                )
+                            )
+                        }
+
+                        with(stateFlow.value) {
+                            assert(
+                                actions == listOf(
+                                    MediaItemListViewModel.State.Action.StopPlayback,
+                                    MediaItemListViewModel.State.Action.PrepareAndPlayPlayback(
+                                        mediaProgressDO.isEnded,
+                                        mediaItemDO.mediaItemId,
+                                        mediaProgressDO.position,
+                                        mediaItemDO.sourceUrl
+                                    )
+                                )
+                            )
+                            assert(this.firstCompletelyVisibleItemPosition == firstCompletelyVisibleItemPosition)
+                            assert(this.isPlayerSet == isPlayerSet)
+                            assert(this.isViewActive == isViewActive)
+                            assert(this.isViewHidden == isViewHidden)
+                            assert((this.isViewInLandscape == isViewInLandscape))
+                            assert(this.playItemId == playItemId)
+                        }
                     }
-                    TestCase.ReadyToPlay -> {
-                        setFirstCompletelyVisibleItemPosition(Random.nextInt())
-                        setIsPlayerSet(true)
-                        setIsViewActive(true)
-                        setIsViewHidden(false)
-                        setIsViewInLandscape(false)
-                    }
-                    else -> {}
                 }
-
-                advanceUntilIdle()
             }
         }
-    }
 
-    private class ViewModelStateAsserter(private val viewModel: MediaItemListViewModel) {
-        private val currentState get() = viewModel.stateFlow.value
-        private val startState = viewModel.stateFlow.value
-
-        fun assertInitialState() = with(currentState) {
-            assert(actions.isEmpty())
-            assert(firstCompletelyVisibleItemPosition == null)
-            assert(!isFirstFrameRendered)
-            assert(!isFirstPageLoaded)
-            assert(!isPlayerSet)
-            assert(!isRefreshingList)
-            assert(!isViewActive)
-            assert(!isViewHidden)
-            assert(!isViewInLandscape)
-            assert(mediaItemLabel == startState.mediaItemLabel)
-            assert(playItem == null)
-        }
-
-        fun assertActionsIsEmpty() {
-            assert(currentState.actions.isEmpty())
-        }
-
-        fun assertFirstCompletelyVisiblePositionIsValue(value: Int?) {
-            assert(currentState.firstCompletelyVisibleItemPosition == value)
-        }
-
-        fun assertIsFirstFrameRendered() {
-            assert(currentState.isFirstFrameRendered)
-        }
-
-        fun assertIsFirstPageLoaded() {
-            assert(currentState.isFirstPageLoaded)
-        }
-
-        fun assertIsPlayerSet() {
-            assert(currentState.isPlayerSet)
-        }
-
-        fun assertIsReadyToPlay() {
-            assert(currentState.isReadyToPlay)
-        }
-
-        fun assertIsRefreshingList() {
-            assert(currentState.isRefreshingList)
-        }
-
-        fun assertIsViewActive() {
-            assert(currentState.isViewActive)
-        }
-
-        fun assertIsViewHidden() {
-            assert(currentState.isViewHidden)
-        }
-
-        fun assertIsViewInLandscape() {
-            assert(currentState.isViewInLandscape)
-        }
-
-        fun assertLastActionIsOpenItem(item: MediaItemVO) =
-            currentState.actions.last().let {
-                assert(it is MediaItemListViewModel.State.Action.OpenItem && it.item == item)
-            }
-
-        fun assertLastActionIsPrepareAndPlayPlaybackWithGivenParameters(
-            isEnded: Boolean,
-            mediaItemId: String,
-            position: Long,
-            sourceUrl: String
-        ) = currentState.actions.last().let {
-            assert(
-                it is MediaItemListViewModel.State.Action.PrepareAndPlayPlayback
-                        && it.isEnded == isEnded
-                        && it.mediaItemId == mediaItemId
-                        && it.position == position
-                        && it.sourceUrl == sourceUrl
-            )
-        }
-
-        fun assertLastActionIsRefreshList() {
-            assert(currentState.actions.last() is MediaItemListViewModel.State.Action.RefreshList)
-        }
-
-        fun assertLastActionIsRetryLoadingList() {
-            assert(currentState.actions.last() is MediaItemListViewModel.State.Action.RetryLoadingList)
-        }
-
-        fun assertLastActionIsScrollToTop() {
-            assert(currentState.actions.last() is MediaItemListViewModel.State.Action.ScrollToTop)
-        }
-
-        fun assertPlayItemIsItem(item: MediaItemVO) {
-            assert(currentState.playItem == item)
-        }
-
-        fun assertStateUnchanged() {
-            assert(currentState == startState)
-        }
+        private fun createViewModel() = MediaItemListViewModel(
+            fakeMediaItemRepository,
+            fakeMediaProgressRepository,
+            SavedStateHandle.createHandle(null, MediaItemListViewModel.createArgs(mediaItemLabel))
+        )
     }
 
     @get:Rule
@@ -189,11 +189,8 @@ class MediaItemListViewModelTest {
 
         hiltRule.inject()
 
-        viewModelBuilder = ViewModelBuilder(
-            mediaItemLabel,
-            fakeMediaItemRepository,
-            fakeMediaProgressRepository
-        )
+        viewModelBuilder =
+            ViewModelBuilder(fakeMediaItemRepository, fakeMediaProgressRepository, mediaItemLabel)
     }
 
     @After
@@ -202,22 +199,10 @@ class MediaItemListViewModelTest {
     }
 
     @Test
-    fun initialState() = runTest {
-        //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-
-        //Then
-        viewModelStateAsserter.assertInitialState()
-    }
-
-    @Test
     fun notifyFirstFrameRendered_initialState_doNothing() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+        val startState = viewModel.stateFlow.value
 
         //When
         viewModel.notifyFirstFrameRendered("mediaItemId")
@@ -225,138 +210,59 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateAsserter.assertStateUnchanged()
+        val endState = viewModel.stateFlow.value
+
+        assert(!endState.isFirstFrameRendered)
+        assert(endState.actions - startState.actions.toSet() == emptyList<MediaItemListViewModel.State.Action>())
     }
 
     @Test
     fun notifyFirstFrameRendered_playItemPrepared_setValueToTrue() = runTest {
         //Given
-        val mediaItem = MediaItemVO("id", "sourceUrl", "subtitle", "thumbUrl", "title")
+        val mediaItemDO =
+            MediaItemDO("description", "mediaItemId", "sourceUrl", "subtitle", "thumbUrl", "title")
+        val mediaProgressDO =
+            MediaProgressDO(Random.nextBoolean(), mediaItemDO.mediaItemId, Random.nextLong())
 
         val viewModel = viewModelBuilder.apply {
-            testCase = ViewModelBuilder.TestCase.PlayItemPrepared(mediaItem)
+            testCase = ViewModelBuilder.TestCase.PlayItemPrepared(mediaItemDO, mediaProgressDO)
         }.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
 
         //When
-        viewModel.notifyFirstFrameRendered(mediaItem.id)
+        viewModel.notifyFirstFrameRendered(mediaItemDO.mediaItemId)
 
         advanceUntilIdle()
 
         //Then
-        with(viewModelStateAsserter) {
-            assertIsFirstFrameRendered()
-            assertIsReadyToPlay()
-            assertPlayItemIsItem(mediaItem)
-        }
-    }
+        val endState = viewModel.stateFlow.value
 
-    @Test
-    fun onAction_initialState_clearGivenAction() = runTest {
-        //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        viewModel.refreshList()
-
-        advanceUntilIdle()
-
-        val action = viewModel.stateFlow.value.actions.last()
-
-        //When
-        viewModel.onAction(action)
-
-        advanceUntilIdle()
-
-        //Then
-        viewModelStateAsserter.assertActionsIsEmpty()
+        assert(endState.isFirstFrameRendered)
     }
 
     @Test
     fun openItem_initialState_addAction() = runTest {
         //Given
-        val mediaItem = MediaItemVO("id", "sourceUrl", "subtitle", "thumbUrl", "title")
+        val mediaItemVO = MediaItemVO("id", "subtitle", "thumbUrl", "title")
 
         val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+        val startState = viewModel.stateFlow.value
 
         //When
-        viewModel.openItem(mediaItem)
+        viewModel.openItem(mediaItemVO)
 
         advanceUntilIdle()
 
         //Then
-        viewModelStateAsserter.assertLastActionIsOpenItem(mediaItem)
-    }
+        val endState = viewModel.stateFlow.value
 
-    @Test
-    fun prepareItemIfNotePrepared_initialState_doNothing() = runTest {
-        //Given
-        val mediaItem = MediaItemVO("id", "sourceUrl", "subtitle", "thumbUrl", "title")
-
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-        viewModel.prepareItemIfNotPrepared(mediaItem)
-
-        advanceUntilIdle()
-
-        //Then
-        viewModelStateAsserter.assertStateUnchanged()
-    }
-
-    @Test
-    fun prepareItemIfNotePrepared_readyToPlay_addAction() = runTest {
-        //Given
-        val mediaItem = MediaItemVO("id", "sourceUrl", "subtitle", "thumbUrl", "title")
-
-        val mediaProgress = MediaProgressDO(
-            Random.nextBoolean(),
-            mediaItem.id,
-            Random.nextLong()
-        )
-
-        fakeMediaProgressRepository.funcGetMediaProgressByMediaItemId =
-            { mediaItemId -> if (mediaItemId == mediaProgress.mediaItemId) mediaProgress else null }
-
-        val viewModel =
-            viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.ReadyToPlay }.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-        viewModel.prepareItemIfNotPrepared(mediaItem)
-
-        advanceUntilIdle()
-
-        //Then
-        with(fakeMediaProgressRepository.stateFlow.value) {
-            assert(
-                actions == listOf(
-                    FakeMediaProgressRepository.State.Action.GetMediaProgressByMediaItemId(
-                        mediaItemId = mediaProgress.mediaItemId
-                    )
-                )
-            )
-        }
-
-        with(viewModelStateAsserter) {
-            assertIsReadyToPlay()
-            assertLastActionIsPrepareAndPlayPlaybackWithGivenParameters(
-                mediaProgress.isEnded,
-                mediaItem.id,
-                mediaProgress.position,
-                mediaItem.sourceUrl
-            )
-            assertPlayItemIsItem(mediaItem)
-        }
+        assert(endState.actions - startState.actions.toSet() == listOf(MediaItemListViewModel.State.Action.OpenItem(mediaItemVO)))
     }
 
     @Test
     fun refreshList_initialState_addAction() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+        val startState = viewModel.stateFlow.value
 
         //When
         viewModel.refreshList()
@@ -364,14 +270,16 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateAsserter.assertLastActionIsRefreshList()
+        val endState = viewModel.stateFlow.value
+
+        assert(endState.actions - startState.actions.toSet() == listOf(MediaItemListViewModel.State.Action.RefreshList))
     }
 
     @Test
     fun retryLoadingList_initialState_addAction() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+        val startState = viewModel.stateFlow.value
 
         //When
         viewModel.retryLoadingList()
@@ -379,7 +287,9 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateAsserter.assertLastActionIsRetryLoadingList()
+        val endState = viewModel.stateFlow.value
+
+        assert(endState.actions - startState.actions.toSet() == listOf(MediaItemListViewModel.State.Action.RetryLoadingList))
     }
 
     @Test
@@ -412,7 +322,7 @@ class MediaItemListViewModelTest {
     fun scrollToTopOnFirstPageLoaded_initialState_addAction() = runTest {
         //Given
         val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+        val startState = viewModel.stateFlow.value
 
         //When
         viewModel.scrollToTopOnFirstPageLoaded()
@@ -420,7 +330,10 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        viewModelStateAsserter.assertLastActionIsScrollToTop()
+        val endState = viewModel.stateFlow.value
+
+        assert(endState.isFirstPageLoaded)
+        assert(endState.actions - startState.actions.toSet() == listOf(MediaItemListViewModel.State.Action.ScrollToTop))
     }
 
     @Test
@@ -428,7 +341,7 @@ class MediaItemListViewModelTest {
         //Given
         val viewModel =
             viewModelBuilder.apply { testCase = ViewModelBuilder.TestCase.FirstPageLoaded }.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
+        val startState = viewModel.stateFlow.value
 
         //When
         viewModel.scrollToTopOnFirstPageLoaded()
@@ -436,101 +349,9 @@ class MediaItemListViewModelTest {
         advanceUntilIdle()
 
         //Then
-        with(viewModelStateAsserter) {
-            assertIsFirstPageLoaded()
-            assertStateUnchanged()
-        }
-    }
+        val endState = viewModel.stateFlow.value
 
-    @Test
-    fun setFirstCompletelyVisibleItemPosition_initialState_setValue() = runTest {
-        //Given
-        val position = Random.nextInt()
-
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-        viewModel.setFirstCompletelyVisibleItemPosition(position)
-
-        advanceUntilIdle()
-
-        //Then
-        viewModelStateAsserter.assertFirstCompletelyVisiblePositionIsValue(position)
-    }
-
-    @Test
-    fun setIsPlayerSet_initialState_setValue() = runTest {
-        //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-        viewModel.setIsPlayerSet(true)
-
-        advanceUntilIdle()
-
-        //Then
-        viewModelStateAsserter.assertIsPlayerSet()
-    }
-
-    @Test
-    fun setIsRefreshingList_initialState_setValue() = runTest {
-        //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-        viewModel.setIsRefreshingList(true)
-
-        advanceUntilIdle()
-
-        //Then
-        viewModelStateAsserter.assertIsRefreshingList()
-    }
-
-    @Test
-    fun setIsViewActive_initialState_setValue() = runTest {
-        //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-        viewModel.setIsViewActive(true)
-
-        advanceUntilIdle()
-
-        //Then
-        viewModelStateAsserter.assertIsViewActive()
-    }
-
-    @Test
-    fun setIsViewHidden_initialState_setValue() = runTest {
-        //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-        viewModel.setIsViewHidden(true)
-
-        advanceUntilIdle()
-
-        //Then
-        viewModelStateAsserter.assertIsViewHidden()
-    }
-
-    @Test
-    fun setIsViewInLandscape_initialState_setValue() = runTest {
-        //Given
-        val viewModel = viewModelBuilder.build()
-        val viewModelStateAsserter = ViewModelStateAsserter(viewModel)
-
-        //When
-        viewModel.setIsViewInLandscape(true)
-
-        advanceUntilIdle()
-
-        //Then
-        viewModelStateAsserter.assertIsViewInLandscape()
+        assert(endState.isFirstPageLoaded)
+        assert(endState.actions - startState.actions.toSet() == emptyList<MediaItemListViewModel.State.Action>())
     }
 }

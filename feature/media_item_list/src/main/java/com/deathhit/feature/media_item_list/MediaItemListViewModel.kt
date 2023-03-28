@@ -72,7 +72,6 @@ class MediaItemListViewModel @Inject constructor(
 
         val playPosition =
             if (isPlayerSet && isViewActive && !isViewHidden && !isViewInLandscape) firstCompletelyVisibleItemPosition else null
-        val isReadyToPlay = playPosition != null
         val listState = ListState(isFirstFrameRendered, playPosition)
     }
 
@@ -106,7 +105,6 @@ class MediaItemListViewModel @Inject constructor(
         }.cachedIn(viewModelScope)
 
     private val isFirstPageLoaded get() = stateFlow.value.isFirstPageLoaded
-    private val isReadyToPlay get() = stateFlow.value.isReadyToPlay
     private val mediaItemLabel get() = stateFlow.value.mediaItemLabel
     private val playItemId get() = stateFlow.value.playItemId
 
@@ -142,7 +140,7 @@ class MediaItemListViewModel @Inject constructor(
     }
 
     fun notifyFirstFrameRendered(mediaItemId: String) {
-        if (!isReadyToPlay || mediaItemId != playItemId)
+        if (mediaItemId != playItemId)
             return
 
         _stateFlow.update { state ->
