@@ -58,7 +58,7 @@ class MediaProgressLocalDataSourceTest {
     @Test
     fun getMediaProgressByMediaItemId_withoutDataInDatabase_returnNull() = runTest {
         //Given
-        val mediaProgress = MediaProgressEntity(isEnded = Random.nextBoolean(), mediaItemId = "mediaItemId", position = Random.nextLong())
+        val mediaProgress = MediaProgressEntity(Random.nextBoolean(), "mediaItemId", Random.nextLong())
 
         //When
         val result = mediaProgressLocalDataSource.getMediaProgressByMediaItemId(mediaProgress.mediaItemId)
@@ -70,7 +70,7 @@ class MediaProgressLocalDataSourceTest {
     @Test
     fun setMediaProgress_initialState_insertEntity() = runTest {
         //Given
-        val mediaProgress = MediaProgressEntity(isEnded = Random.nextBoolean(), mediaItemId = "mediaItemId", position = Random.nextLong())
+        val mediaProgress = MediaProgressEntity(Random.nextBoolean(), "mediaItemId", Random.nextLong())
 
         //When
         mediaProgressLocalDataSource.setMediaProgress(mediaProgress)

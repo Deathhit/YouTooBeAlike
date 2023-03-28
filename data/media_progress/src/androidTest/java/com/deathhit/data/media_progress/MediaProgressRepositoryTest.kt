@@ -39,13 +39,15 @@ class MediaProgressRepositoryTest {
         testMediaProgressLocalDataSource.getMediaProgressByMediaItemId(mediaItemId)
 
         //Then
-        assert(
-            testMediaProgressLocalDataSource.actions.contains(
-                TestMediaProgressLocalDataSource.Action.GetMediaProgressByMediaItemId(
-                    mediaItemId
+        with(testMediaProgressLocalDataSource.stateFlow.value) {
+            assert(
+                actions == listOf(
+                    TestMediaProgressLocalDataSource.State.Action.GetMediaProgressByMediaItemId(
+                        mediaItemId
+                    )
                 )
             )
-        )
+        }
     }
 
     @Test
@@ -57,10 +59,14 @@ class MediaProgressRepositoryTest {
         mediaProgressRepository.setMediaProgress(mediaProgress)
 
         //Then
-        assert(
-            testMediaProgressLocalDataSource.actions.contains(
-                TestMediaProgressLocalDataSource.Action.SetMediaProgress(mediaProgress.toMediaProgressEntity())
+        with(testMediaProgressLocalDataSource.stateFlow.value) {
+            assert(
+                actions == listOf(
+                    TestMediaProgressLocalDataSource.State.Action.SetMediaProgress(
+                        mediaProgress.toMediaProgressEntity()
+                    )
+                )
             )
-        )
+        }
     }
 }
