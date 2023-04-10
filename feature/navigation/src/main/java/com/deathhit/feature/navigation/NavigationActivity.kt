@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
 import android.view.OrientationEventListener
 import android.view.View.OnClickListener
+import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
@@ -208,6 +209,8 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         binding = ActivityNavigationBinding.inflate(layoutInflater).also {
             setContentView(it.root)
 
