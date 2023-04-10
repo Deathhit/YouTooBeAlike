@@ -209,10 +209,10 @@ class NavigationActivity : AppCompatActivity() {
         }
 
         super.onCreate(savedInstanceState)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
         binding = ActivityNavigationBinding.inflate(layoutInflater).also {
             setContentView(it.root)
+
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
             buttonFullscreen =
                 it.playerView.findViewById(com.deathhit.core.ui.R.id.button_fullscreen)
@@ -249,6 +249,82 @@ class NavigationActivity : AppCompatActivity() {
             )
         }
 
+        viewModel.setIsViewInLandscape(resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+
+        bindViewModelState()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.setIsViewInForeground(true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        with(binding) {
+            bottomNavigationView.setOnItemSelectedListener(onNavigationSelectedListener)
+            buttonClear.setOnClickListener(onClearListener)
+            motionLayout.addTransitionListener(motionTransitionListener)
+        }
+
+        buttonFullscreen.setOnClickListener(onFullscreenListener)
+
+        orientationEventListener.enable()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        with(binding) {
+            bottomNavigationView.setOnItemSelectedListener(null)
+            buttonClear.setOnClickListener(null)
+            motionLayout.removeTransitionListener(motionTransitionListener)
+        }
+
+        buttonFullscreen.setOnClickListener(null)
+
+        orientationEventListener.disable()
+
+        if (!isChangingConfigurations)
+            viewModel.pausePlayerViewPlayback()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.setIsViewInForeground(false)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        //Releases the internal listeners from the player.
+        binding.playerControlViewPlayPause.player = null
+        binding.playerView.player = null
+
+        mediaSession = null
+
+        player?.removeListener(playerListener)
+        player = null
+
+        MediaPlayerService.unbindService(this, mediaPlayerServiceConnection)
+        if (isFinishing)
+            MediaPlayerService.stopService(this)
+
+        viewModel.setIsPlayerConnected(false)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        binding.motionLayout.transitionState =
+            savedInstanceState.getBundle(KEY_MOTION_TRANSITION_STATE)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBundle(KEY_MOTION_TRANSITION_STATE, binding.motionLayout.transitionState)
+
+        viewModel.saveState()
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun bindViewModelState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 launch {
@@ -490,77 +566,5 @@ class NavigationActivity : AppCompatActivity() {
                 }
             }
         }
-
-        viewModel.setIsViewInLandscape(resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        viewModel.setIsViewInForeground(true)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        with(binding) {
-            bottomNavigationView.setOnItemSelectedListener(onNavigationSelectedListener)
-            buttonClear.setOnClickListener(onClearListener)
-            motionLayout.addTransitionListener(motionTransitionListener)
-        }
-
-        buttonFullscreen.setOnClickListener(onFullscreenListener)
-
-        orientationEventListener.enable()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        with(binding) {
-            bottomNavigationView.setOnItemSelectedListener(null)
-            buttonClear.setOnClickListener(null)
-            motionLayout.removeTransitionListener(motionTransitionListener)
-        }
-
-        buttonFullscreen.setOnClickListener(null)
-
-        orientationEventListener.disable()
-
-        if (!isChangingConfigurations)
-            viewModel.pausePlayerViewPlayback()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        viewModel.setIsViewInForeground(false)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        //Releases the internal listeners from the player.
-        binding.playerControlViewPlayPause.player = null
-        binding.playerView.player = null
-
-        mediaSession = null
-
-        player?.removeListener(playerListener)
-        player = null
-
-        MediaPlayerService.unbindService(this, mediaPlayerServiceConnection)
-        if (isFinishing)
-            MediaPlayerService.stopService(this)
-
-        viewModel.setIsPlayerConnected(false)
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        binding.motionLayout.transitionState =
-            savedInstanceState.getBundle(KEY_MOTION_TRANSITION_STATE)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBundle(KEY_MOTION_TRANSITION_STATE, binding.motionLayout.transitionState)
-
-        viewModel.saveState()
-        super.onSaveInstanceState(outState)
     }
 }

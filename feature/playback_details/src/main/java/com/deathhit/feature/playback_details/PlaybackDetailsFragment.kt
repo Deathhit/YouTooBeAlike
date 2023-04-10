@@ -86,37 +86,7 @@ class PlaybackDetailsFragment : Fragment() {
             setHasFixedSize(true)
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    viewModel.stateFlow.map { it.actions }.distinctUntilChanged()
-                        .collect { actions ->
-                            actions.forEach { action ->
-                                when (action) {
-                                    is PlaybackDetailsViewModel.State.Action.OpenItem -> callback?.onOpenItem(
-                                        action.item.id
-                                    )
-                                    PlaybackDetailsViewModel.State.Action.RetryLoadingRecommendedList -> recommendedItemAdapter.retry()
-                                }
-
-                                viewModel.onAction(action)
-                            }
-                        }
-                }
-
-                launch {
-                    viewModel.stateFlow.map { it.playbackDetails }.distinctUntilChanged().collect {
-                        playbackDetailsAdapter.submitList(listOf(it))
-                    }
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.recommendedItemPagingDataFlow.collectLatest {
-                recommendedItemAdapter.submitData(lifecycle, it)
-            }
-        }
+        bindViewModelState()
     }
 
     override fun onDestroyView() {
@@ -147,6 +117,40 @@ class PlaybackDetailsFragment : Fragment() {
         loadPlaybackDetailsJob = lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 viewModel.loadPlaybackDetails(playItemId)
+            }
+        }
+    }
+
+    private fun bindViewModelState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.stateFlow.map { it.actions }.distinctUntilChanged()
+                        .collect { actions ->
+                            actions.forEach { action ->
+                                when (action) {
+                                    is PlaybackDetailsViewModel.State.Action.OpenItem -> callback?.onOpenItem(
+                                        action.item.id
+                                    )
+                                    PlaybackDetailsViewModel.State.Action.RetryLoadingRecommendedList -> recommendedItemAdapter.retry()
+                                }
+
+                                viewModel.onAction(action)
+                            }
+                        }
+                }
+
+                launch {
+                    viewModel.stateFlow.map { it.playbackDetails }.distinctUntilChanged().collect {
+                        playbackDetailsAdapter.submitList(listOf(it))
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.recommendedItemPagingDataFlow.collectLatest {
+                recommendedItemAdapter.submitData(lifecycle, it)
             }
         }
     }

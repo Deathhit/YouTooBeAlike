@@ -162,6 +162,61 @@ class MediaItemListFragment : Fragment() {
             }
         }
 
+        bindViewModelState()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.apply {
+            recyclerView.addOnScrollListener(onScrollListener)
+            swipeRefreshLayout.setOnRefreshListener(onRefreshListener)
+        }
+
+        viewModel.setIsViewActive(true)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        binding.apply {
+            recyclerView.removeOnScrollListener(onScrollListener)
+            swipeRefreshLayout.setOnRefreshListener(null)
+        }
+
+        viewModel.setIsViewActive(false)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        //Triggers RecyclerView.Adapter.onViewRecycled() to clear resources.
+        binding.recyclerView.adapter = null
+
+        _binding = null
+
+        _linearLayoutManger = null
+
+        _mediaItemAdapter = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        callback = null
+
+        player = null
+
+        viewModel.setIsPlayerSet(false) //Update state before onCreate() to ensure correctness.
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        viewModel.setIsViewHidden(hidden)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        viewModel.saveState()
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun bindViewModelState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -224,56 +279,5 @@ class MediaItemListFragment : Fragment() {
                 mediaItemAdapter.submitData(lifecycle, it)
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        binding.apply {
-            recyclerView.addOnScrollListener(onScrollListener)
-            swipeRefreshLayout.setOnRefreshListener(onRefreshListener)
-        }
-
-        viewModel.setIsViewActive(true)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        binding.apply {
-            recyclerView.removeOnScrollListener(onScrollListener)
-            swipeRefreshLayout.setOnRefreshListener(null)
-        }
-
-        viewModel.setIsViewActive(false)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        //Triggers RecyclerView.Adapter.onViewRecycled() to clear resources.
-        binding.recyclerView.adapter = null
-
-        _binding = null
-
-        _linearLayoutManger = null
-
-        _mediaItemAdapter = null
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        callback = null
-
-        player = null
-
-        viewModel.setIsPlayerSet(false) //Update state before onCreate() to ensure correctness.
-    }
-
-    override fun onHiddenChanged(hidden: Boolean) {
-        super.onHiddenChanged(hidden)
-        viewModel.setIsViewHidden(hidden)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        viewModel.saveState()
-        super.onSaveInstanceState(outState)
     }
 }
